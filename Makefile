@@ -10,7 +10,7 @@ build:
 	@./setup.py build
 
 test:
-	@python -m unittest discover
+	@./setup.py test
 
 clean:
 	@find . -name '*.pyc' -exec rm {} \;
