@@ -1,7 +1,5 @@
 import pytest
 
-import design
-
 
 def foo(x):
     if x != 3:

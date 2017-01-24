@@ -17,6 +17,7 @@ install:
     - source activate test-environment
 
 script:
+    - ./setup.py flake8
     - ./setup.py test
     - ./setup.py install
 

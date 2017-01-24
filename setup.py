@@ -21,7 +21,7 @@ setup(
     url='https://github.com/AntoineGagne/design-3-glo',
     packages=['design'],
     long_description=read('README.md'),
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest-runner', 'flake8'],
     tests_require=['pytest'],
     test_suite='tests'
 )
