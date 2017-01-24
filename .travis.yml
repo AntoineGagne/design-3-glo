@@ -19,3 +19,8 @@ install:
 script:
     - ./setup.py test
     - ./setup.py install
+
+notifications:
+  slack:
+    rooms:
+      - picasso-team7:1rGdx7yTSlh29PGqPf9cMDhG#build-glo
