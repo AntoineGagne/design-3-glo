@@ -9,6 +9,9 @@ install:
 build:
 	@./setup.py build
 
+check:
+	@flake8 --show-source --statistics design tests
+
 test:
 	@./setup.py test
 
