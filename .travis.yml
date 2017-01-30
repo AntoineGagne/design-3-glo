@@ -20,8 +20,7 @@ install:
 
 script:
     - make check
-    - ./setup.py install
-    - extract_data_samples.py
+    - make extract_tar_archives
     - ./setup.py test
 
 notifications:
