@@ -31,7 +31,6 @@ def extract_data_files(data_files):
 
     :param data_files: The data files to extract
     :param directory_path: The path in which to extract the data files
-                           (default: '.')
     :type directory_path: str
     """
     threads = []
