@@ -20,8 +20,8 @@ install:
 
 script:
     - make check
+    - make extract_tar_archives
     - ./setup.py test
-    - ./setup.py install
 
 notifications:
   slack:
