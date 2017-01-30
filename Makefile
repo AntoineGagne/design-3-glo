@@ -17,3 +17,4 @@ test:
 
 clean:
 	@find . -name '*.pyc' -exec rm {} \;
+	@rm -rf samples/
