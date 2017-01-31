@@ -523,3 +523,6 @@ build/
 !.vscode/extensions.json
 
 # End of https://www.gitignore.io/api/visualstudiocode
+
+# The samples directory
+samples/
