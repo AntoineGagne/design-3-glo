@@ -1,4 +1,5 @@
 import os.path as path
+import re
 
 import cv2
 
@@ -6,12 +7,15 @@ import design.vision.contours as contours
 
 SAMPLE_IMAGES_PATH = path.realpath('./samples')
 CONTOURS_NUMBER_BY_IMAGES_WITH_GREEN_SQUARES = {
-    'boot.png': 9,
-    'arrow.png': 7,
-    'hat.png': 9,
-    'm.png': 9,
-    'house.png': 12,
-    'cat.png': 10
+    re.compile('boot*'): 9,
+    re.compile('arrow*'): 7,
+    re.compile('hat*'): 9,
+    re.compile('m*'): 9,
+    re.compile('house*'): 12,
+    re.compile('cat*'): 10,
+    re.compile('cross*'): 12,
+    re.compile('chess_piece*'): 11,
+    re.compile('polygon*'): 9
 }
 
 
