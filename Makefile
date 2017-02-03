@@ -6,7 +6,10 @@ init:
 install:
 	@./setup.py install
 
-extract_tar_archives: install
+download_datasets: install
+	@download_datasets.py
+
+extract_tar_archives: download_datasets
 	@extract_data_samples.py
 
 build:
