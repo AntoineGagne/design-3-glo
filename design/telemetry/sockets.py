@@ -50,13 +50,14 @@ class Socket:
         else:
             self.socket = socket_
 
-    def connect(self, host: str, port: str):
+    def connect(self, host: str, port: int):
         """Connect with a specific host on a specific host.
 
         :param host: The host with which you want to connect (i.e. '127.0.0.1').
         :type host: str
-        :param port: The port to connect
-        :type port: str
+        :param port: The port to connect to
+        :type port: int
+        :raises :mod:`socket`.`timeout`: On timeout
         """
         self.socket.connect((host, port))
 
@@ -91,6 +92,14 @@ class Socket:
                                       self._delimiter,
                                       serialized_message)
         return encoded_message
+
+    def poll(self) -> Packet:
+        """Receive a message (simply an alias for the `receive` method).
+
+        :returns: A deserialized message
+        :rtype: `Packet`
+        """
+        return self.receive()
 
     def receive(self) -> Packet:
         """Receive a message.
