@@ -110,11 +110,14 @@ class Socket:
         chunks = bytearray()
         total_received = 0
         message_length = inf
+        # Necessary because there could be more than one delimiter in a given
+        # message
         delimiter_found = False
         while total_received < message_length:
             if self._delimiter in chunks and not delimiter_found:
                 length, *chunks = chunks.split(self._delimiter)
                 message_length = int.from_bytes(length, 'big')
+                # If there was other delimiters
                 chunks = b':'.join(chunks)
                 delimiter_found = True
             chunk = self.socket.recv(1024)
