@@ -135,3 +135,10 @@ class Socket:
             total_received += len(chunk)
 
         return chunks
+
+    def close(self):
+        """Close the socket.
+
+        :raises OSError: If an error occurs
+        """
+        self.socket.close()
