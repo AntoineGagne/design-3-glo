@@ -8,6 +8,7 @@ import struct
 
 from math import inf
 
+from .constants import CHUNK_SIZE, MESSAGE_DELIMITER
 from .packets import serialize_packet, deserialize_packet, Packet
 
 
@@ -42,7 +43,7 @@ class Socket:
         """
         self._serialize = kwargs.get('serialize', serialize_packet)
         self._deserialize = kwargs.get('deserialize', deserialize_packet)
-        self._delimiter = kwargs.get('delimiter', b':')
+        self._delimiter = kwargs.get('delimiter', MESSAGE_DELIMITER)
         if not socket_:
             self.socket = socket.socket(socket.AF_INET,
                                         socket.SOCK_STREAM)
@@ -120,7 +121,7 @@ class Socket:
                 # If there was other delimiters
                 chunks = b':'.join(chunks)
                 delimiter_found = True
-            chunk = self.socket.recv(1024)
+            chunk = self.socket.recv(CHUNK_SIZE)
             chunks.extend(chunk)
             total_received += len(chunk)
 
