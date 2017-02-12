@@ -51,7 +51,7 @@ class Socket:
         else:
             self.socket = socket_
 
-    def accept(self, host: str, port: int) -> Tuple[Packet, str]:
+    def accept(self, host: str, port: int) -> Tuple['Socket', str]:
         """Accept incoming connection to the socket.
 
         :param host: The host on which to bind (i.e. '127.0.0.1')
