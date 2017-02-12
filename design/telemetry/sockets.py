@@ -7,6 +7,7 @@ import socket
 import struct
 
 from math import inf
+from typing import Tuple
 
 from .constants import CHUNK_SIZE, MESSAGE_DELIMITER
 from .packets import serialize_packet, deserialize_packet, Packet
@@ -49,6 +50,22 @@ class Socket:
                                         socket.SOCK_STREAM)
         else:
             self.socket = socket_
+
+    def accept(self, host: str, port: int) -> Tuple[Packet, str]:
+        """Accept incoming connection to the socket.
+
+        :param host: The host on which to bind (i.e. '127.0.0.1')
+        :type host: str
+        :param port: The port on which to bind (i.e. 8000)
+        :type port: int
+        :returns: A tuple that contains a `Socket` usable to receive/send data
+                  to the other connected socket and the address of the connected socket
+        :rtype: tuple<`Socket`, str>
+        """
+        self.socket.bind((host, port))
+        self.socket.listen()
+        socket_, address = self.socket.accept()
+        return Socket(socket_), address
 
     def connect(self, host: str, port: int):
         """Connect with a specific host on a specific host.
@@ -131,6 +148,8 @@ class Socket:
                 chunks = self._delimiter.join(chunks)
                 delimiter_found = True
             chunk = self.socket.recv(CHUNK_SIZE)
+            if not chunk:
+                break
             chunks.extend(chunk)
             total_received += len(chunk)
 
@@ -141,4 +160,5 @@ class Socket:
 
         :raises OSError: If an error occurs
         """
+        self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
