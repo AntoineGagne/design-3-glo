@@ -23,3 +23,5 @@ def test_that_given_a_socket_and_a_server_when_connect_then_it_connects_to_the_s
     socket = sockets.Socket()
     socket.connect(SERVER_ADDRESS, SERVER_PORT)
     socket.close()
+
+    server_thread.join()
