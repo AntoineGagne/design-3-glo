@@ -117,7 +117,7 @@ class Socket:
         :rtype: `Packet`
         """
         message = self._receive_all()
-        return self._deserialize(message)
+        return self._deserialize(message) if message else None
 
     def _receive_all(self) -> bytes:
         """Block and iterate over the message stream until it has successfully
@@ -152,5 +152,4 @@ class Socket:
 
         :raises OSError: If an error occurs
         """
-        self.socket.shutdown(socket.SHUT_RDWR)
         self.socket.close()
