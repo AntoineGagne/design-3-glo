@@ -110,14 +110,6 @@ class Socket:
                                       serialized_message)
         return encoded_message
 
-    def poll(self) -> Packet:
-        """Receive a message (simply an alias for the `receive` method).
-
-        :returns: A deserialized message
-        :rtype: `Packet`
-        """
-        return self.receive()
-
     def receive(self) -> Packet:
         """Receive a message.
 
