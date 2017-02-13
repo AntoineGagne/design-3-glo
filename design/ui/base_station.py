@@ -1,10 +1,6 @@
 """
     This is the main base station class
 """
-import ui.main_ui
-import time
-
-
 class BaseStation:
     def __init__(self):
         self.__image_coordinates = []

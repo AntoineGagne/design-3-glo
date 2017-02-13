@@ -7,7 +7,7 @@ References
 
 import os
 
-resources_path = "../resources/"
+resources_path = "./resources/"
 
 
 def get_latest_image(valid_extensions=['jpg', 'jpeg', 'png']):

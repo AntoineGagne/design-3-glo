@@ -7,9 +7,9 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsEllipseItem, QGraphicsPixmapItem
 from PyQt5 import QtGui
 from PyQt5.QtCore import QTimer, pyqtSlot, pyqtSignal, Qt
-from ui.main_window import Ui_main_window
-from base_station import BaseStation
-import utils
+from design.ui.main_window import Ui_main_window
+from design.ui.base_station import BaseStation
+import design.ui.utils
 import time
 
 
@@ -48,7 +48,7 @@ class MainWindow(QMainWindow, Ui_main_window):
         self.world_view.setResizeAnchor(0)  # stuff always on top left corner
 
     def display_world(self):
-        scene_img = QGraphicsPixmapItem(QtGui.QPixmap(utils.get_latest_image()))
+        scene_img = QGraphicsPixmapItem(QtGui.QPixmap(design.ui.utils.get_latest_image()))
         self.actual_scene.addItem(scene_img)
         self.draw_real_path()
 
@@ -95,4 +95,5 @@ def run_ui():
 
 
 if __name__ == "__main__":          # if we're running file directly and not importing it
-    run_ui()                        # run the main function
+    run_ui()
+    print("I've run the UI")# run the main function
