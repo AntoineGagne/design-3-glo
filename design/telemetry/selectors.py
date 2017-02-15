@@ -12,11 +12,14 @@ from .sockets import Socket
 
 
 class Selector:
+    """Select sockets according to some events such as readable/writable and
+       perform actions.
+    """
     def __init__(self,
                  reader_socket: Socket,
                  writer_socket: Socket,
-                 consumed,
-                 produced):
+                 consumed: queue.Queue,
+                 produced: queue.Queue):
         """Initialize the `Selector`.
 
         :param reader_socket: The socket that will receive inputs
@@ -24,7 +27,9 @@ class Selector:
         :param writer_socket: The socket that will write outputs
         :type writer_socket: :mod:`sockets`.`Socket`
         :param consumed: The queue of elements that needs to be sent
+        :type consumed: :mod:`queue`.`Queue`
         :param produced: The queue of elements that were read
+        :type produced: :mod:`queue`.`Queue`
         """
         self.selector = selectors.DefaultSelector()
         self._register_sockets(reader_socket, writer_socket)
@@ -80,3 +85,87 @@ class Selector:
             socket_.send(data)
         except queue.Empty:
             pass
+
+
+class ClientSelectorFactory:
+    """Create a `Selector` object that contains the client side sockets."""
+    def __init__(self,
+                 host: str,
+                 reader_port: int,
+                 writer_port: int):
+        """Initialize the `ClientSelectorFactory`.
+
+        :param host: The host on which to bind (i.e. '127.0.0.1')
+        :type host: str
+        :param reader_port: The port on which to bind the reader socket
+                            (i.e. 8000)
+        :type port: int
+        :param writer_port: The port on which to bind the writer socket
+                            (i.e. 8000)
+        .. The *reader_port* and *writer_port* must be different.
+        """
+        assert reader_port != writer_port
+        self.reader_address = (host, reader_port)
+        self.writer_address = (host, writer_port)
+
+    def create_selector(self,
+                        consumed: queue.Queue,
+                        produced: queue.Queue) -> Selector:
+        """Create the `Selector` object.
+
+        :param consumed: The queue of elements that needs to be sent
+        :type consumed: :mod:`queue`.`Queue`
+        :param produced: The queue of elements that were read
+        :type produced: :mod:`queue`.`Queue`
+        :returns: A selector with the given sockets
+        :rtype: `Selector`
+        """
+        reader_socket = Socket()
+        reader_socket.connect(*self.reader_address)
+
+        writer_socket = Socket()
+        writer_socket.connect(*self.writer_address)
+
+        return Selector(reader_socket, writer_socket, consumed, produced)
+
+
+class ServerSelectorFactory:
+    """Create a `Selector` object that contains the server side sockets."""
+    def __init__(self,
+                 host: str,
+                 reader_port: int,
+                 writer_port: int):
+        """Initialize the `ServerSelectorFactory`.
+
+        :param host: The host on which to bind (i.e. '127.0.0.1')
+        :type host: str
+        :param reader_port: The port on which to bind the reader socket
+                            (i.e. 8000)
+        :type port: int
+        :param writer_port: The port on which to bind the writer socket
+                            (i.e. 8000)
+        .. The *reader_port* and *writer_port* must be different.
+        """
+        assert reader_port != writer_port
+        self.reader_address = (host, reader_port)
+        self.writer_address = (host, writer_port)
+
+    def create_selector(self,
+                        consumed: queue.Queue,
+                        produced: queue.Queue) -> Selector:
+        """Create the `Selector` object.
+
+        :param consumed: The queue of elements that needs to be sent
+        :type consumed: :mod:`queue`.`Queue`
+        :param produced: The queue of elements that were read
+        :type produced: :mod:`queue`.`Queue`
+        :returns: A selector with the given sockets
+        :rtype: `Selector`
+        """
+        reader_socket = Socket()
+        reader_socket.connect(*self.reader_address)
+
+        writer_socket = Socket()
+        writer_socket.connect(*self.writer_address)
+
+        return Selector(reader_socket, writer_socket, consumed, produced)
