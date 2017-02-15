@@ -2,6 +2,6 @@
 
 
 # The size of the messages' chunks
-CHUNK_SIZE = 1024
+CHUNK_SIZE = 4096
 # The default messages' delimiter
 MESSAGE_DELIMITER = b':'

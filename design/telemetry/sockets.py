@@ -119,6 +119,24 @@ class Socket:
         message = self._receive_all()
         return self._deserialize(message) if message else None
 
+    def fileno(self) -> int:
+        """Get the socket's file descriptor or -1 on failure.
+
+        :returns: The socket's file descriptor
+        :rtype: int
+        """
+        return self.socket.fileno()
+
+    def setblocking(self, flag: bool):
+        """Set blocking or non-blocking mode of the socket.
+
+        :param flag: The flag that indicates if the socket is blocking or not.
+                     If `False`, the socket is non-blocking otherwise, it is
+                     blocking.
+        :type flag: bool
+        """
+        self.socket.setblocking(flag)
+
     def _receive_all(self) -> bytes:
         """Block and iterate over the message stream until it has successfully
            received all of the message chunks.
