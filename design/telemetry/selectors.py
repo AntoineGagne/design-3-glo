@@ -163,9 +163,9 @@ class ServerSelectorFactory:
         :rtype: `Selector`
         """
         reader_socket = Socket()
-        reader_socket.connect(*self.reader_address)
+        reader_socket_, _ = reader_socket.accept(*self.reader_address)
 
         writer_socket = Socket()
-        writer_socket.connect(*self.writer_address)
+        writer_socket_, _ = writer_socket.accept(*self.writer_address)
 
-        return Selector(reader_socket, writer_socket, consumed, produced)
+        return Selector(reader_socket_, writer_socket_, consumed, produced)
