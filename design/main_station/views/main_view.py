@@ -11,11 +11,13 @@ from design.main_station.views.generated.ui_main_view import Ui_main_window
 
 class MainView(QMainWindow):
 
-    def __init__(self, world_model, world_controller):
+    def __init__(self, world_model, world_controller, time_model, time_controller):
         super().__init__()
         self.world_ctrl = world_controller
-
         self.world_model = world_model
+
+        self.time_ctrl = time_controller
+        self.time_model = time_model
 
         self.build_ui()
 
@@ -23,7 +25,7 @@ class MainView(QMainWindow):
 
         # the methods are called by the model when it executes announce_update
         self.world_model.subscribe_update_func(self.update_world)
-        self.world_model.subscribe_update_func(self.update_lcd)
+        self.time_model.subscribe_update_func(self.update_lcd)
 
     def build_ui(self):
         self.ui = Ui_main_window()
@@ -33,7 +35,7 @@ class MainView(QMainWindow):
         self.setup_connections()
 
     def update_lcd(self):
-        self.ui.chrono_lcd.display(self.world_model.timer)
+        self.ui.chrono_lcd.display(self.time_model.timer)
 
     def setup_connections(self):
         """

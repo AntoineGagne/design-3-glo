@@ -27,7 +27,3 @@ class WorldController:
     def update_path(self, path):
         self.world_model.path_coords = path
         self.world_model.announce_update()
-
-    def update_lcd_display(self, value):
-        self.world_model.timer = value
-        self.world_model.announce_update()

@@ -11,8 +11,9 @@ from PyQt5.QtWidgets import QApplication
 from design.main_station.models.world_model import WorldModel
 from design.main_station.controllers.world_controller import WorldController
 from design.main_station.views.main_view import MainView
+from design.main_station.controllers.time_controller import TimeController
+from design.main_station.models.time_model import TimeModel
 import threading
-
 
 class BaseStation(QApplication):
     def __init__(self, sys_argv):
@@ -21,7 +22,10 @@ class BaseStation(QApplication):
         self.world_model = WorldModel()
         self.world_controller = WorldController(self.world_model)
 
-        self.main_view = MainView(self.world_model, self.world_controller)
+        self.time_model = TimeModel()
+        self.time_controller = TimeController(self.time_model)
+
+        self.main_view = MainView(self.world_model, self.world_controller, self.time_model, self.time_controller)
 
         self.main_view.show()
 
@@ -31,7 +35,7 @@ class BaseStation(QApplication):
 
     def printer(self):
         for i in range(20):
-            self.world_controller.update_lcd_display(i)
+            self.time_controller.update_lcd_display(i)
             time.sleep(1)
 
 
