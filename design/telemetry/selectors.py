@@ -64,7 +64,6 @@ class Selector:
         """Receive a packet and put it in the produced queue."""
         if self.read_socket.poll(POLL_TIMEOUT):
             data = self.read_socket.recv()
-            print(self._deserialize(data))
             self.produced.put_nowait(self._deserialize(data))
 
 
