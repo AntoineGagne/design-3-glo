@@ -7,6 +7,7 @@ import queue
 
 import zmq
 
+from .constants import POLL_TIMEOUT
 from .packets import serialize_packet, deserialize_packet
 
 
@@ -61,8 +62,9 @@ class Selector:
 
     def _produce(self):
         """Receive a packet and put it in the produced queue."""
-        if self.read_socket.poll(10):
+        if self.read_socket.poll(POLL_TIMEOUT):
             data = self.read_socket.recv()
+            print(self._deserialize(data))
             self.produced.put_nowait(self._deserialize(data))
 
 
