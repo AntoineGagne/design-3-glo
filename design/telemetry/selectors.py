@@ -3,12 +3,11 @@
 """
 
 
-from selectors import EVENT_READ, EVENT_WRITE
-
 import queue
-import selectors
 
-from .sockets import Socket
+import zmq
+
+from .packets import serialize_packet, deserialize_packet
 
 
 class Selector:
@@ -16,97 +15,70 @@ class Selector:
        perform actions.
     """
     def __init__(self,
-                 reader_socket: Socket,
-                 writer_socket: Socket,
+                 read_socket: zmq.Socket,
+                 write_socket: zmq.Socket,
                  consumed: queue.Queue,
                  produced: queue.Queue):
         """Initialize the `Selector`.
 
-        :param reader_socket: The socket that will receive inputs
-        :type reader_socket: :mod:`sockets`.`Socket`
-        :param writer_socket: The socket that will write outputs
-        :type writer_socket: :mod:`sockets`.`Socket`
-        :param consumed: The queue of elements that needs to be sent
-        :type consumed: :mod:`queue`.`Queue`
-        :param produced: The queue of elements that were read
-        :type produced: :mod:`queue`.`Queue`
+        :param read_socket: The socket that will receive inputs
+        :type read_socket: :mod:`zmq`.`Socket`
+        :param write_socket: The socket that will write outputs
+        :type write_socket: :mod:`zmq`.`Socket`
+        :param consumed: The packets to be sent
+        :type consumed: :mod:queue.Queue
+        :param produced: The received packets
+        :type produced: :mod:queue.Queue
         """
-        self.selector = selectors.DefaultSelector()
-        self._register_sockets(reader_socket, writer_socket)
+        self.read_socket = read_socket
+        self.write_socket = write_socket
         self.consumed = consumed
         self.produced = produced
 
     def run(self):
         """Loop and block until a socket is ready to be read from/written to."""
         while True:
-            events = self.selector.select()
-            for key, _ in events:
-                callback = key.data
-                callback(key.fileobj)
+            self._consume()
+            self._produce()
 
-    def _register_sockets(self,
-                          reader_socket: Socket,
-                          writer_socket: Socket):
-        """Register the sockets with the selector.
-
-        :param reader_socket: The socket that will receive inputs
-        :type reader_socket: :mod:`sockets`.`Socket`
-        :param writer_socket: The socket that will write outputs
-        :type writer_socket: :mod:`sockets`.`Socket`
-        """
-        reader_socket.setblocking(False)
-        writer_socket.setblocking(False)
-        self.selector.register(reader_socket,
-                               EVENT_READ,
-                               self._read_data)
-        self.selector.register(writer_socket,
-                               EVENT_WRITE,
-                               self._write_data)
-
-    def _read_data(self, socket_: Socket):
-        """Read data from the socket and put it in the `produced` queue if
-           there was some data to be read.
-
-        :param socket_: The socket to read from
-        :type socket_: :mod:`sockets`.`Socket`
-        """
-        data = socket_.receive()
-        if data:
-            self.produced.put_nowait(data)
-
-    def _write_data(self, socket_: Socket):
-        """Write some data in the queue if there was some to be written.
-
-        :param socket_: The socket to write with
-        :type socket_: :mod:`sockets`.`Socket`
-        """
+    def _consume(self):
+        """Send the oldest packet in the consumer queue."""
         try:
             data = self.consumed.get_nowait()
-            socket_.send(data)
+            self.write_socket.send(serialize_packet(data))
         except queue.Empty:
             pass
+
+    def _produce(self):
+        """Receive a packet and put it in the produced queue."""
+        if self.read_socket.poll(10):
+            data = self.read_socket.recv()
+            print(data)
+            self.produced.put_nowait(deserialize_packet(data))
 
 
 class ClientSelectorFactory:
     """Create a `Selector` object that contains the client side sockets."""
     def __init__(self,
                  host: str,
-                 reader_port: int,
-                 writer_port: int):
+                 read_port: int,
+                 write_port: int):
         """Initialize the `ClientSelectorFactory`.
 
         :param host: The host on which to bind (i.e. '127.0.0.1')
         :type host: str
-        :param reader_port: The port on which to bind the reader socket
-                            (i.e. 8000)
-        :type port: int
-        :param writer_port: The port on which to bind the writer socket
-                            (i.e. 8000)
-        .. The *reader_port* and *writer_port* must be different.
+        :param read_port: The port on which to bind the reader socket
+                          (i.e. 8000)
+        :type read_port: int
+        :param write_port: The port on which to bind the writer socket
+                           (i.e. 8000)
+        :type write_port: int
+
+        .. important:: The *reader_port* and *writer_port* must be different.
         """
-        assert reader_port != writer_port
-        self.reader_address = (host, reader_port)
-        self.writer_address = (host, writer_port)
+        assert read_port != write_port
+        self.read_address = 'tcp://{0}:{1}'.format(host, read_port)
+        self.write_address = 'tcp://{0}:{1}'.format(host, write_port)
 
     def create_selector(self,
                         consumed: queue.Queue,
@@ -120,35 +92,38 @@ class ClientSelectorFactory:
         :returns: A selector with the given sockets
         :rtype: `Selector`
         """
-        writer_socket = Socket()
-        writer_socket.connect(*self.writer_address)
+        context = zmq.Context()
+        write_socket = context.socket(zmq.PUSH)
+        write_socket.bind(self.write_address)
 
-        reader_socket = Socket()
-        reader_socket.connect(*self.reader_address)
+        read_socket = context.socket(zmq.PULL)
+        read_socket.connect(self.read_address)
 
-        return Selector(reader_socket, writer_socket, consumed, produced)
+        return Selector(read_socket, write_socket, consumed, produced)
 
 
 class ServerSelectorFactory:
     """Create a `Selector` object that contains the server side sockets."""
     def __init__(self,
                  host: str,
-                 reader_port: int,
-                 writer_port: int):
+                 read_port: int,
+                 write_port: int):
         """Initialize the `ServerSelectorFactory`.
 
         :param host: The host on which to bind (i.e. '127.0.0.1')
         :type host: str
-        :param reader_port: The port on which to bind the reader socket
-                            (i.e. 8000)
-        :type port: int
-        :param writer_port: The port on which to bind the writer socket
-                            (i.e. 8000)
-        .. The *reader_port* and *writer_port* must be different.
+        :param read_port: The port on which to bind the reader socket
+                          (i.e. 8000)
+        :type read_port: int
+        :param write_port: The port on which to bind the writer socket
+                           (i.e. 8000)
+        :type write_port: int
+
+        .. important:: The *reader_port* and *writer_port* must be different.
         """
-        assert reader_port != writer_port
-        self.reader_address = (host, reader_port)
-        self.writer_address = (host, writer_port)
+        assert read_port != write_port
+        self.read_address = 'tcp://{0}:{1}'.format(host, read_port)
+        self.write_address = 'tcp://{0}:{1}'.format(host, write_port)
 
     def create_selector(self,
                         consumed: queue.Queue,
@@ -162,10 +137,11 @@ class ServerSelectorFactory:
         :returns: A selector with the given sockets
         :rtype: `Selector`
         """
-        reader_socket = Socket()
-        reader_socket_, _ = reader_socket.accept(*self.reader_address)
+        context = zmq.Context()
+        read_socket = context.socket(zmq.PULL)
+        read_socket.connect(self.read_address)
 
-        writer_socket = Socket()
-        writer_socket_, _ = writer_socket.accept(*self.writer_address)
+        write_socket = context.socket(zmq.PUSH)
+        write_socket.bind(self.write_address)
 
-        return Selector(reader_socket_, writer_socket_, consumed, produced)
+        return Selector(read_socket, write_socket, consumed, produced)
