@@ -8,6 +8,7 @@ from enum import Enum, unique
 from typing import Any
 
 import pickle
+import zlib
 
 
 @unique
@@ -44,10 +45,11 @@ def serialize_packet(packet: Packet) -> bytes:
 
     :param packet: The packet to serialize
     :type packet: `Packet`
-    :returns: The serialized packet
+    :returns: The serialized and compressed packet
     :rtype: bytes
     """
-    return pickle.dumps(packet, protocol=pickle.HIGHEST_PROTOCOL)
+    pickled_packet = pickle.dumps(packet, protocol=pickle.HIGHEST_PROTOCOL)
+    return zlib.compress(pickled_packet)
 
 
 def deserialize_packet(binary_packet: bytes) -> Packet:
@@ -58,4 +60,5 @@ def deserialize_packet(binary_packet: bytes) -> Packet:
     :returns: The deserialized packet
     :rtype: `Packet`
     """
-    return pickle.loads(binary_packet)
+    decompressed_packet = zlib.decompress(binary_packet)
+    return pickle.loads(decompressed_packet)
