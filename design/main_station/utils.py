@@ -13,7 +13,6 @@ resources_path = "./resources/"
 def get_latest_image(valid_extensions=['jpg', 'jpeg', 'png']):
     """
     Get the latest image file in the given directory
-    # ex of call self.get_latest_image(resources_path)
     """
     # get file paths of all files and dirs in the given dir
     valid_files = [os.path.join(resources_path, filename) for filename in os.listdir(resources_path)]
@@ -23,3 +22,7 @@ def get_latest_image(valid_extensions=['jpg', 'jpeg', 'png']):
     if not valid_files:
         raise ValueError("No valid images in %s" % resources_path)
     return max(valid_files, key=os.path.getmtime)
+
+
+if __name__ == '__main__':
+    print(get_latest_image())
