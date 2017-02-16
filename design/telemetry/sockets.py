@@ -155,7 +155,7 @@ class Socket:
                 length, *chunks = chunks.split(self._delimiter)
                 message_length = int.from_bytes(length, 'big')
                 # If there was other delimiters
-                chunks = self._delimiter.join(chunks)
+                chunks = bytearray(self._delimiter.join(chunks))
                 delimiter_found = True
             chunk = self.socket.recv(CHUNK_SIZE)
             if not chunk:

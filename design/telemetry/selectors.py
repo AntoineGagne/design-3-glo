@@ -120,11 +120,11 @@ class ClientSelectorFactory:
         :returns: A selector with the given sockets
         :rtype: `Selector`
         """
-        reader_socket = Socket()
-        reader_socket.connect(*self.reader_address)
-
         writer_socket = Socket()
         writer_socket.connect(*self.writer_address)
+
+        reader_socket = Socket()
+        reader_socket.connect(*self.reader_address)
 
         return Selector(reader_socket, writer_socket, consumed, produced)
 
