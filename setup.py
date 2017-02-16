@@ -30,6 +30,5 @@ setup(
     setup_requires=['pytest-runner', 'flake8'],
     tests_require=['pytest'],
     test_suite='tests',
-    data_files=[('image_samples', ['data/onboard_camera_samples.tar.gz'])],
-    scripts=['scripts/extract_data_samples.py']
+    scripts=['scripts/extract_data_samples.py', 'scripts/download_datasets.py']
 )
