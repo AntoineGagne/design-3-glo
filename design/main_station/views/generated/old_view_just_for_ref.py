@@ -80,6 +80,27 @@ class Ui_main_window(object):
         self.tab_widget.setMovable(True)
         self.tab_widget.setTabBarAutoHide(False)
         self.tab_widget.setObjectName("tab_widget")
+        # =========================================================================
+        self.world_tab = QtWidgets.QWidget()
+        self.world_tab.setObjectName("world_tab")
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.world_tab)
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+        self.world_view = QtWidgets.QGraphicsView(self.world_tab)
+        self.world_view.setObjectName("world_view")
+        self.gridLayout_2.addWidget(self.world_view, 0, 0, 1, 1)
+        self.tab_widget.addTab(self.world_tab, "")
+        # =========================================================================
+        self.position_tab = QtWidgets.QWidget()
+        self.position_tab.setObjectName("position_tab")
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.position_tab)
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_3.setObjectName("gridLayout_3")
+        self.position_view = QtWidgets.QGraphicsView(self.position_tab)
+        self.position_view.setObjectName("position_view")
+        self.gridLayout_3.addWidget(self.position_view, 0, 0, 1, 1)
+        self.tab_widget.addTab(self.position_tab, "")
+        # =========================================================================
         self.gridLayout_4.addWidget(self.splitter, 0, 0, 1, 1)
         main_window.setCentralWidget(self.central_widget)
         self.main_menu_bar = QtWidgets.QMenuBar(main_window)
@@ -94,7 +115,7 @@ class Ui_main_window(object):
         self.main_menu_bar.addAction(self.main_menu.menuAction())
 
         self.retranslateUi(main_window)
-        self.tab_widget.setCurrentIndex(-1)
+        self.tab_widget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
     def retranslateUi(self, main_window):
@@ -103,6 +124,8 @@ class Ui_main_window(object):
         self.chrono_label.setText(_translate("main_window", "Chronograph"))
         self.start_btn.setText(_translate("main_window", "Start"))
         self.stop_btn.setText(_translate("main_window", "Stop"))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.world_tab), _translate("main_window", "WorldView"))
+        self.tab_widget.setTabText(self.tab_widget.indexOf(self.position_tab), _translate("main_window", "Position du robot"))
         self.main_menu.setTitle(_translate("main_window", "Menu"))
         self.close_menu_item.setText(_translate("main_window", "Fermer"))
 

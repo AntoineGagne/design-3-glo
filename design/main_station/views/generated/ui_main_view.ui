@@ -130,7 +130,7 @@
         <enum>QTabWidget::Rounded</enum>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>-1</number>
        </property>
        <property name="elideMode">
         <enum>Qt::ElideMiddle</enum>
@@ -144,36 +144,6 @@
        <property name="tabBarAutoHide">
         <bool>false</bool>
        </property>
-       <widget class="QWidget" name="test_tab_widget">
-        <attribute name="title">
-         <string>test_Tab</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0">
-          <widget class="QListView" name="list_view_test"/>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="world_tab">
-        <attribute name="title">
-         <string>WorldView</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="0" column="0">
-          <widget class="QGraphicsView" name="world_view"/>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="position_tab">
-        <attribute name="title">
-         <string>Position du robot</string>
-        </attribute>
-        <layout class="QGridLayout" name="gridLayout_3">
-         <item row="0" column="0">
-          <widget class="QGraphicsView" name="position_view"/>
-         </item>
-        </layout>
-       </widget>
       </widget>
      </widget>
     </item>

@@ -1,4 +1,4 @@
-class TimeModel:
+class MainModel:
     def __init__(self):
         self._timer = 0
 

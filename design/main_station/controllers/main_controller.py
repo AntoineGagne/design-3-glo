@@ -4,14 +4,14 @@ and passes on data to the model
 """
 
 
-class TimeController:
+class MainController:
 
     def __init__(self, model):
-        self.time_model = model
+        self.model = model
 
     def update_lcd_display(self, value):
         """
             update model data and announce changes
         """
-        self.time_model.timer = value
-        self.time_model.announce_update()
+        self.model.timer = value
+        self.model.announce_update()
