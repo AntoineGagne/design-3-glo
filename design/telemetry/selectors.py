@@ -18,7 +18,8 @@ class Selector:
                  read_socket: zmq.Socket,
                  write_socket: zmq.Socket,
                  consumed: queue.Queue,
-                 produced: queue.Queue):
+                 produced: queue.Queue,
+                 **kwargs):
         """Initialize the `Selector`.
 
         :param read_socket: The socket that will receive inputs
@@ -29,9 +30,18 @@ class Selector:
         :type consumed: :mod:queue.Queue
         :param produced: The received packets
         :type produced: :mod:queue.Queue
+        :param kwargs: See below
+
+        :Keyword Arguments:
+            * *serialize* (function): The function used to serialize
+                                      messages
+            * *deserialize* (function): The function used to deserialize
+                                        messages
         """
         self.read_socket = read_socket
         self.write_socket = write_socket
+        self._serialize = kwargs.get('serialize', serialize_packet)
+        self._deserialize = kwargs.get('deserialize', deserialize_packet)
         self.consumed = consumed
         self.produced = produced
 
@@ -45,7 +55,7 @@ class Selector:
         """Send the oldest packet in the consumer queue."""
         try:
             data = self.consumed.get_nowait()
-            self.write_socket.send(serialize_packet(data))
+            self.write_socket.send(self._serialize(data))
         except queue.Empty:
             pass
 
@@ -53,8 +63,7 @@ class Selector:
         """Receive a packet and put it in the produced queue."""
         if self.read_socket.poll(10):
             data = self.read_socket.recv()
-            print(data)
-            self.produced.put_nowait(deserialize_packet(data))
+            self.produced.put_nowait(self._deserialize(data))
 
 
 class ClientSelectorFactory:
@@ -73,6 +82,7 @@ class ClientSelectorFactory:
         :param write_port: The port on which to bind the writer socket
                            (i.e. 8000)
         :type write_port: int
+        :raises AssertionError: If *read_port* and *write_port* are equal
 
         .. important:: The *reader_port* and *writer_port* must be different.
         """
@@ -118,6 +128,7 @@ class ServerSelectorFactory:
         :param write_port: The port on which to bind the writer socket
                            (i.e. 8000)
         :type write_port: int
+        :raises AssertionError: If *read_port* and *write_port* are equal
 
         .. important:: The *reader_port* and *writer_port* must be different.
         """
