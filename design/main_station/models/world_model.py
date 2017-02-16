@@ -10,6 +10,7 @@ class WorldModel:
         self._robot_coords = []
         self._drawing_zone_coords = []
         self._game_image = ""
+        self._timer = 0
 
         # these will be the registered functions for view updating
         self._update_funcs = []
@@ -53,6 +54,14 @@ class WorldModel:
     @game_image.setter
     def game_image(self, image_path):
         self._game_image = image_path
+
+    @property
+    def timer(self):
+        return self._timer
+
+    @timer.setter
+    def timer(self, value):
+        self._timer = value
 
     # subscribe a view method for updating
     def subscribe_update_func(self, func):

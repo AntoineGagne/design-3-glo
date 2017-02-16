@@ -23,6 +23,7 @@ class MainView(QMainWindow):
 
         # the methods are called by the model when it executes announce_update
         self.world_model.subscribe_update_func(self.update_world)
+        self.world_model.subscribe_update_func(self.update_lcd)
 
     def build_ui(self):
         self.ui = Ui_main_window()
@@ -30,6 +31,9 @@ class MainView(QMainWindow):
 
         # setting up slot/signal connections
         self.setup_connections()
+
+    def update_lcd(self):
+        self.ui.chrono_lcd.display(self.world_model.timer)
 
     def setup_connections(self):
         """
@@ -42,7 +46,7 @@ class MainView(QMainWindow):
         """
         Is called by the world model
         """
-        self.actual_scene.clear()
+        # self.actual_scene.clear()
         self.update_world_image()   # called first because it's the background
         self.draw_path()    # drawing the path on top of it
 

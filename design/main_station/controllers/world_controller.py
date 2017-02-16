@@ -17,12 +17,6 @@ class WorldController:
     def __init__(self, model):
         self.world_model = model
 
-    # called from view class
-    def change_running(self, checked):
-        # put control logic here
-        self.model.running = checked
-        self.model.announce_update()
-
     def update_world_image(self):
         """
             update model data and announce changes
@@ -32,4 +26,8 @@ class WorldController:
 
     def update_path(self, path):
         self.world_model.path_coords = path
+        self.world_model.announce_update()
+
+    def update_lcd_display(self, value):
+        self.world_model.timer = value
         self.world_model.announce_update()

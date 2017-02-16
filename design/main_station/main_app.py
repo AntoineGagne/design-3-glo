@@ -6,6 +6,7 @@
      Generally this is very minimal
 """
 import sys
+import time
 from PyQt5.QtWidgets import QApplication
 from design.main_station.models.world_model import WorldModel
 from design.main_station.controllers.world_controller import WorldController
@@ -24,17 +25,18 @@ class BaseStation(QApplication):
 
         self.main_view.show()
 
+    def run(self):
+        t = threading.Thread(target=self.printer)
+        t.start()
 
-def run_ui():
-    app = BaseStation(sys.argv)    # A new instance of QApplication
-    sys.exit(app.exec_())           # and execute the app (exec_() must be called from the main thread)
+    def printer(self):
+        for i in range(20):
+            self.world_controller.update_lcd_display(i)
+            time.sleep(1)
 
-
-def printer():
-    while True:
-        print("LOL")
 
 if __name__ == '__main__':
-    t = threading.Thread(target=printer)
-    t.start()
-    run_ui()
+    app = BaseStation(sys.argv)  # A new instance of QApplication
+    app.run()
+    sys.exit(app.exec_())  # and execute the app (exec_() must be called from the main thread)
+
