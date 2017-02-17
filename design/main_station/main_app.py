@@ -8,12 +8,11 @@
 import sys
 import time
 from PyQt5.QtWidgets import QApplication
-from design.main_station.models.world_model import WorldModel
-from design.main_station.controllers.world_controller import WorldController
 from design.main_station.views.main_view import MainView
 from design.main_station.controllers.main_controller import MainController
 from design.main_station.models.main_model import MainModel
 import threading
+
 
 class BaseStation(QApplication):
     def __init__(self, sys_argv):
