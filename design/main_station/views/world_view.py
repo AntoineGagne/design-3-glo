@@ -26,12 +26,12 @@ class WorldView(QtWidgets.QWidget):
         self.world_view.setRenderHint(QtGui.QPainter.Antialiasing)
 
         self.setup_painting()
-        self.draw_path()
-        self.draw_drawing_square_coords()
 
         # the methods are called by the model when it executes announce_update
         self.model.subscribe_update_func(self.update_world_image)
         self.model.subscribe_update_func(self.draw_path)
+        self.model.subscribe_update_func(self.draw_drawing_square_coords)
+        self.model.subscribe_update_func(self.draw_robot_coords)
 
     def setup_painting(self):
         # # The QBrush class defines the fill pattern of shapes drawn by QPainter
@@ -42,6 +42,7 @@ class WorldView(QtWidgets.QWidget):
         self.path_lines_pen = QtGui.QPen(QColor('#f44280'), 5, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
         self.path_points_pen = QtGui.QPen(QColor('#95ff95'), 10)
         self.drawing_zone_pen = QtGui.QPen(QColor('#11ed23'), 10)
+        self.robot_pen = QtGui.QPen(QColor('#4171f4'), 10)
         self.radius = 10
 
     def update_world_image(self):
@@ -74,3 +75,13 @@ class WorldView(QtWidgets.QWidget):
                 path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius, self.radius)
 
             self.world_scene.addPath(path_to_paint, self.drawing_zone_pen)
+
+    def draw_robot_coords(self):
+        path = self.model.robot_coords
+        path_to_paint = QtGui.QPainterPath()
+        if path:
+            path_to_paint.moveTo(path[0][0], path[0][1])
+            for i in range(len(path)):
+                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius, self.radius)
+
+            self.world_scene.addPath(path_to_paint, self.robot_pen)
