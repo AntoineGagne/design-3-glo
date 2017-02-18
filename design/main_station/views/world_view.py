@@ -10,25 +10,49 @@ class WorldView(QtWidgets.QWidget):
         super().__init__()
         self.controller = controller
         self.model = model
+        self.scene_img = None
+        self.path_lines_pen = None
+        self.path_points_pen = None
+        self.drawing_zone_pen = None
+        self.robot_pen = None
+        self.obstacles_pen = None
+        self.radius = None
 
         self.gridLayout = QtWidgets.QGridLayout(self)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
 
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.pushBtn_resetZoom = QtWidgets.QPushButton()
+        self.horizontalLayout.addWidget(self.pushBtn_resetZoom)
+        self.pushBtn_zoomIn = QtWidgets.QPushButton()
+        self.horizontalLayout.addWidget(self.pushBtn_zoomIn)
+        self.pushBtn_zoomOut = QtWidgets.QPushButton()
+        self.horizontalLayout.addWidget(self.pushBtn_zoomOut)
+        self.pushBtn_updateImg = QtWidgets.QPushButton()
+        self.horizontalLayout.addWidget(self.pushBtn_updateImg)
+        self.gridLayout.addLayout(self.horizontalLayout, 0, 0)
+        self.pushBtn_resetZoom.setText("Reset Zoom")
+        self.pushBtn_zoomIn.setText("Zoom In")
+        self.pushBtn_zoomOut.setText("Zoom Out")
+        self.pushBtn_updateImg.setText("Update Image")
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem)
         self.world_view = QtWidgets.QGraphicsView(self)
         self.world_view.setResizeAnchor(0)  # stuff always on top left corner
         self.world_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)    # and coordinates will start at top left corner
         self.world_view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse) # for mouse zooming
         self.world_scene = QtWidgets.QGraphicsScene()
         self.world_view.setScene(self.world_scene)
-        self.gridLayout.addWidget(self.world_view, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.world_view, 1, 0)
         self.world_view.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.world_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.world_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self._zoom = 0
         self.setup_painting()
-        # scaling the whole view but keeping same coordinates
-        # self.world_view.scale(0.7, 0.7)
 
         self.make_subscriptions()
+        self.setup_connections()
 
     @property
     def zoom(self):
@@ -46,6 +70,12 @@ class WorldView(QtWidgets.QWidget):
         self.model.subscribe_update_func(self.draw_robot_coords)
         self.model.subscribe_update_func(self.draw_obstacles_coords)
 
+    def setup_connections(self):
+        self.pushBtn_updateImg.clicked.connect(self.make_image_update)
+        self.pushBtn_resetZoom.clicked.connect(self.reset_zoom)
+        self.pushBtn_zoomIn.clicked.connect(self.zoom_in)
+        self.pushBtn_zoomOut.clicked.connect(self.zoom_out)
+
     def setup_painting(self):
         # # The QBrush class defines the fill pattern of shapes drawn by QPainter
         # self.path_brush = QtGui.QBrush(QColor('#95ee95'))
@@ -60,11 +90,13 @@ class WorldView(QtWidgets.QWidget):
         self.radius = 10
 
     def fit_to_image(self):
-        if self.scene_img:
+        self.world_view.resetTransform()
+        if not self.scene_img.isNull():
             viewrect = self.world_view.viewport().rect()
             factor = min(viewrect.width()/self.scene_img.width(),
                          viewrect.height()/self.scene_img.height())
             self.world_view.scale(factor, factor)
+            self.zoom = 0
 
     def update_world_image(self):
         self.scene_img = QtGui.QPixmap(self.model.game_image)
@@ -73,6 +105,26 @@ class WorldView(QtWidgets.QWidget):
     @pyqtSlot()
     def make_image_update(self):
         self.controller.update_world_image()
+
+    @pyqtSlot()
+    def reset_zoom(self):
+        if self.scene_img is not None:
+            self.fit_to_image()
+
+    @pyqtSlot()
+    def zoom_in(self):
+        factor = 1.25
+        self.zoom += 1
+        self.update_zoom(factor)
+
+    @pyqtSlot()
+    def zoom_out(self):
+        factor = 0.8
+        self.zoom -= 1
+        self.update_zoom(factor)
+
+    def update_zoom(self, factor):
+        self.world_view.scale(factor, factor)
 
     def draw_path(self):
         path = self.model.path_coords

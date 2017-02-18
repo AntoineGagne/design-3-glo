@@ -37,7 +37,7 @@ class BaseStation(QApplication):
 
     def run_view(self):
         self.main_view.show()
-        self.world_controller.update_world_image()
+        # self.world_controller.update_world_image()
 
     def printer(self):
         for i in range(120):
