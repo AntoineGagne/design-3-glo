@@ -13,25 +13,20 @@ class WorldView(QtWidgets.QWidget):
 
         self.gridLayout = QtWidgets.QGridLayout(self)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.world_view = QtWidgets.QGraphicsView(self)
 
+        self.world_view = QtWidgets.QGraphicsView(self)
         self.world_view.setResizeAnchor(0)  # stuff always on top left corner
         self.world_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)    # and coordinates will start at top left corner
-
         self.world_view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse) # for mouse zooming
-        self._zoom = 0
-
-        self.world_view.setObjectName("world_view")
         self.world_scene = QtWidgets.QGraphicsScene()
         self.world_view.setScene(self.world_scene)
-
         self.gridLayout.addWidget(self.world_view, 0, 0, 1, 1)
-
         self.world_view.setRenderHint(QtGui.QPainter.Antialiasing)
 
+        self._zoom = 0
         self.setup_painting()
         # scaling the whole view but keeping same coordinates
-        self.world_view.scale(0.7, 0.7)
+        # self.world_view.scale(0.7, 0.7)
 
         self.make_subscriptions()
 
@@ -64,9 +59,20 @@ class WorldView(QtWidgets.QWidget):
         self.obstacles_pen = QtGui.QPen(QColor('#d33a74'), 10)
         self.radius = 10
 
+    def fit_to_image(self):
+        if self.scene_img:
+            viewrect = self.world_view.viewport().rect()
+            factor = min(viewrect.width()/self.scene_img.width(),
+                         viewrect.height()/self.scene_img.height())
+            self.world_view.scale(factor, factor)
+
     def update_world_image(self):
-        scene_img = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap(self.model.game_image))
-        self.world_scene.addItem(scene_img)
+        self.scene_img = QtGui.QPixmap(self.model.game_image)
+        self.world_scene.addPixmap(self.scene_img)
+
+    @pyqtSlot()
+    def make_image_update(self):
+        self.controller.update_world_image()
 
     def draw_path(self):
         path = self.model.path_coords
@@ -114,3 +120,5 @@ class WorldView(QtWidgets.QWidget):
                 path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius, self.radius)
 
             self.world_scene.addPath(path_to_paint, self.obstacles_pen)
+
+    # def zoom(self):
