@@ -1,24 +1,59 @@
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 import PyQt5.QtGui as QtGui
+from PyQt5.QtGui import QColor
 
 
 class WorldView(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, model, controller):
         super().__init__()
+        self.controller = controller
+        self.model = model
+
         self.setObjectName("world_tab")
         self.gridLayout = QtWidgets.QGridLayout(self)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.world_view = QtWidgets.QGraphicsView(self)
+
         self.world_view.setResizeAnchor(0)  # stuff always on top left corner
+        self.world_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)    # and coordinates will start at top left corner
+
         self.world_view.setObjectName("world_view")
         self.world_scene = QtWidgets.QGraphicsScene()
         self.world_view.setScene(self.world_scene)
         self.gridLayout.addWidget(self.world_view, 0, 0, 1, 1)
 
+        self.world_view.setRenderHint(QtGui.QPainter.Antialiasing)
+
+        self.setup_painter()
+        self.draw_path(self.model.drawing_zone_coords)
+
+
+
+    def setup_painter(self):
+        # # The QBrush class defines the fill pattern of shapes drawn by QPainter
+        # self.path_brush = QtGui.QBrush(QColor('#95ee95'))
+
+        # The QPen class defines how a QPainter should draw lines and outlines of shapes
+        # Note : the first arg of QPen could be as easily a QColor or a QBrush
+        self.path_pen = QtGui.QPen(QColor('#000000'), 10, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        self.points_pen = QtGui.QPen(QColor('#95ff95'), 10)
+
     def update_world_image(self):
         scene_img = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap(self.world_model.game_image))
-        self.actual_scene.addItem(scene_img)
+        self.world_scene.addItem(scene_img)
 
-    def draw_path(self):
-        ellipse = QtWidgets.QGraphicsEllipseItem(200, 200, 100, 100)
-        self.actual_scene.addItem(ellipse)
+    def draw_path(self, path):
+        radius = 10
+        path_to_paint = QtGui.QPainterPath()
+        points_to_paint = QtGui.QPainterPath()
+        path_to_paint.moveTo(path[0][0], path[0][1])
+        for i in range(len(path)):
+            if i == 0:
+                path_to_paint.moveTo(path[0][0], path[0][1])
+                i += 1
+            points_to_paint.addEllipse(path[i][0] - radius/2, path[i][1] - radius/2, radius, radius)
+            path_to_paint.lineTo(path[i][0], path[i][1])
+        self.world_scene.addPath(path_to_paint, self.path_pen)
+        self.world_scene.addPath(points_to_paint, self.points_pen)
+
