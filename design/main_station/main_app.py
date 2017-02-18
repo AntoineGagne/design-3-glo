@@ -30,6 +30,8 @@ class BaseStation(QApplication):
         self.world_controller = WorldController(self.world_model)
         self.main_view.add_tab(WorldView(self.world_model, self.world_controller), "World Tab")
 
+        self.world_controller.update_world_image()
+
     def run(self):
         t = threading.Thread(target=self.printer)
         t.start()

@@ -27,3 +27,15 @@ class WorldController:
     def update_path(self, path):
         self.world_model.path_coords = path
         self.world_model.announce_update()
+
+    def update_drawing_zone(self, coords):
+        self.world_model.drawing_zone_coords = coords
+        self.world_model.announce_update()
+
+    def update_robot_pos(self, coords):
+        self.world_model.robot_coords = coords
+        self.world_model.announce_update()
+
+    def update_obstacles_coords(self, coords):
+        self.world_model.obstacles_coords = coords
+        self.world_model.announce_update()

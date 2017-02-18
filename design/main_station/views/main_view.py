@@ -6,7 +6,6 @@
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QMainWindow
 from design.main_station.views.generated.ui_main_view import Ui_main_window
-from design.main_station.views.world_view import WorldView
 
 
 class MainView(QMainWindow):
