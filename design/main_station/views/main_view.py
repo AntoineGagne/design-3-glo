@@ -15,9 +15,6 @@ class MainView(QMainWindow):
         self.controller = controller
         self.model = model
 
-        # initializing widgets
-        self.world_tab_view = WorldView()
-
         # then build the UI
         self.build_ui()
 
@@ -31,7 +28,8 @@ class MainView(QMainWindow):
         self.ui = Ui_main_window()
         self.ui.setupUi(self)
 
-        self.ui.tab_widget.addTab(self.world_tab_view, "World Vision")
+    def add_tab(self, tab_widget, tab_title):
+        self.ui.tab_widget.addTab(tab_widget, tab_title)
 
     def update_lcd(self):
         self.ui.chrono_lcd.display(self.model.timer)
