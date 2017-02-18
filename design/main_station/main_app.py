@@ -24,17 +24,20 @@ class BaseStation(QApplication):
         self.main_model = MainModel()
         self.main_controller = MainController(self.main_model)
         self.main_view = MainView(self.main_model, self.main_controller)
-        self.main_view.show()
 
         self.world_model = WorldModel()
         self.world_controller = WorldController(self.world_model)
         self.main_view.add_tab(WorldView(self.world_model, self.world_controller), "World Tab")
 
-        self.world_controller.update_world_image()
+        self.run_view()
 
     def run(self):
         t = threading.Thread(target=self.printer)
         t.start()
+
+    def run_view(self):
+        self.main_view.show()
+        self.world_controller.update_world_image()
 
     def printer(self):
         for i in range(120):
