@@ -8,9 +8,9 @@ import threading
 
 class MainController:
 
-    def __init__(self, model, chronograph):
+    def __init__(self, model):
         self.model = model
-        self.chronograph = chronograph
+        # self.chronograph = chronograph
         self._first_start = True
 
         # TODO check if its an appropriate place to start a thread...
