@@ -7,22 +7,20 @@ References
 
 import os
 
-resources_path = "./resources/"
 
-
-def get_latest_image(valid_extensions=['jpg', 'jpeg', 'png']):
+def get_latest_created_image(directory="./resources/", valid_extensions=['jpg', 'jpeg', 'png']):
     """
     Get the latest image file in the given directory
     """
     # get file paths of all files and dirs in the given dir
-    valid_files = [os.path.join(resources_path, filename) for filename in os.listdir(resources_path)]
+    valid_files = [os.path.join(directory, filename) for filename in os.listdir(directory)]
     # filter out directories, no-extension, and wrong extension files
     valid_files = [file for file in valid_files if '.' in
                    file and file.rsplit('.', 1)[-1] in valid_extensions and os.path.isfile(file)]
     if not valid_files:
-        raise ValueError("No valid images in %s" % resources_path)
-    return max(valid_files, key=os.path.getmtime)
+        raise ValueError("No valid images in %s" % directory)
+    return max(valid_files, key=os.path.getctime)
 
 
 if __name__ == '__main__':
-    print(get_latest_image())
+    print(get_latest_created_image())

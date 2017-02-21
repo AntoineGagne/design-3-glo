@@ -21,7 +21,7 @@ class WorldController:
         """
             update model data and announce changes
         """
-        self.world_model.game_image = utils.get_latest_image()
+        self.world_model.game_image = utils.get_latest_created_image()
         self.world_model.announce_update()
 
     def update_path(self, path):

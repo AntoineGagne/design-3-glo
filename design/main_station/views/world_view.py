@@ -1,11 +1,11 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QGraphicsView
+from PyQt5.QtWidgets import QGraphicsView, QWidget
 from PyQt5.QtCore import Qt, pyqtSlot
 import PyQt5.QtGui as QtGui
 from PyQt5.QtGui import QColor
 
 
-class WorldView(QtWidgets.QWidget):
+class WorldView(QWidget):
     def __init__(self, model, controller):
         super().__init__()
         self.controller = controller
@@ -172,5 +172,3 @@ class WorldView(QtWidgets.QWidget):
                 path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius, self.radius)
 
             self.world_scene.addPath(path_to_paint, self.obstacles_pen)
-
-    # def zoom(self):

@@ -7,7 +7,6 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QMainWindow
 from design.main_station.views.generated.ui_main_view import Ui_main_window
 
-
 class MainView(QMainWindow):
     def __init__(self, model, controller):
         super().__init__()
@@ -29,6 +28,9 @@ class MainView(QMainWindow):
 
     def add_tab(self, tab_widget, tab_title):
         self.ui.tab_widget.addTab(tab_widget, tab_title)
+
+    def add_painting(self, paint_widget):
+        self.ui.painting_layout.addWidget(paint_widget)
 
     def update_lcd(self):
         self.ui.chrono_lcd.display(self.model.timer)
