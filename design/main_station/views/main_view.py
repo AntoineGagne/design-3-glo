@@ -7,6 +7,7 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QMainWindow
 from design.main_station.views.generated.ui_main_view import Ui_main_window
 
+
 class MainView(QMainWindow):
     def __init__(self, model, controller):
         super().__init__()
@@ -33,28 +34,22 @@ class MainView(QMainWindow):
         self.ui.painting_layout.addWidget(paint_widget)
 
     def update_lcd(self):
-        self.ui.chrono_lcd.display(self.model.timer)
+        self.ui.chrono_lcd.display(self.model.chronograph.chrono_time)
 
     def setup_connections(self):
         self.ui.start_btn.clicked.connect(self.on_start)
+        self.ui.pause_btn.clicked.connect(self.on_pause)
         self.ui.stop_btn.clicked.connect(self.on_stop)
-
-    def update_world(self):
-        """
-        Is called by the world model
-        """
-        # self.actual_scene.clear()
-        self.update_world_image()   # called first because it's the background
-        self.draw_path()    # drawing the path on top of it
 
     @pyqtSlot()
     def on_start(self):
-        """
-        Simply calls a similar method
-        in the controller.
-        """
-        print("ON START SLOT")
+        self.controller.activate_chronograph()
 
     @pyqtSlot()
     def on_stop(self):
-        print("ON STOP SLOT")
+        self.controller.stop_chronograph()
+
+    @pyqtSlot()
+    def on_pause(self):
+        self.controller.pause_chronograph()
+

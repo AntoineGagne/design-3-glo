@@ -3,7 +3,7 @@ Sources:
 http://stackoverflow.com/questions/37399515/how-to-make-a-widgets-height-a-fixed-proportion-to-its-width
 """
 
-from PyQt5.QtWidgets import QWidget, QLabel, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QLabel, QGraphicsView
 from PyQt5.QtGui import QPixmap
 import math
 from design.main_station import utils
@@ -21,6 +21,9 @@ class PaintingView(QWidget):
         self._label = QLabel('pixmap', self)
         self._label.setPixmap(painting)
         self.setMinimumSize(pixmapSize)
+
+        self._painting_graphics = QGraphicsView()
+
 
     def hasHeightForWidth(self):
         return True

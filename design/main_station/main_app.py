@@ -1,5 +1,5 @@
 """
-    This is the main base station class
+    This is the main app class
      responsible for instantiating each of the views,
      controllers, and the model (and passing the
      references between them).
@@ -19,7 +19,7 @@ from design.main_station.views.painting_view import PaintingView
 import threading
 
 
-class BaseStation(QApplication):
+class MainApp(QApplication):
     def __init__(self, sys_argv):
         super().__init__(sys_argv)
 
@@ -36,23 +36,12 @@ class BaseStation(QApplication):
 
         self.run_view()
 
-    def run(self):
-        t = threading.Thread(target=self.printer)
-        t.start()
-
     def run_view(self):
         self.main_view.show()
-        # self.world_controller.update_world_image()
-
-    def printer(self):
-        for i in range(120):
-            self.main_controller.update_lcd_display(i)
-            time.sleep(1)
 
 
 if __name__ == '__main__':
-    app = BaseStation(sys.argv)  # A new instance of QApplication
-    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
-    app.run()
+    app = MainApp(sys.argv)  # A new instance of QApplication
+    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())  # setting up stylesheet
     sys.exit(app.exec_())  # and execute the app (exec_() must be called from the main thread)
 

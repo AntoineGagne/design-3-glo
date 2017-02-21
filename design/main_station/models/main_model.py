@@ -1,17 +1,25 @@
+from design.chronograph.chronograph import Chronograph
+
+
 class MainModel:
     def __init__(self):
-        self._timer = 0
+        self._chronograph = Chronograph()
+        self._chronograph_activated = False
 
         # these will be the registered functions for view updating
         self._update_funcs = []
 
     @property
-    def timer(self):
-        return self._timer
+    def chronograph(self):
+        return self._chronograph
 
-    @timer.setter
-    def timer(self, value):
-        self._timer = value
+    @property
+    def chronograph_activated(self):
+        return self._chronograph_activated
+
+    @chronograph_activated.setter
+    def chronograph_activated(self, boolean):
+        self._chronograph_activated = boolean
 
     # subscribe a view method for updating
     def subscribe_update_func(self, func):
