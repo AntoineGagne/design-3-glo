@@ -26,13 +26,13 @@ class TaskHandler:
         :param produced: The tasks to be handled by the AI
         :type produced: :mod:`queue.Queue`
         """
-        self.consumed = consumed
-        self.produced = produced
+        self._consumed = consumed
+        self._produced = produced
 
-        self.selector = selector
-        self.selector_thread = threading.Thread(target=self.selector.run,
-                                                daemon=True)
-        self.selector_thread.start()
+        self._selector = selector
+        self._selector_thread = threading.Thread(target=self._selector.run,
+                                                 daemon=True)
+        self._selector_thread.start()
 
     def put_task(self, packet):
         """Add a task to be sent.
@@ -41,7 +41,7 @@ class TaskHandler:
         :type packet: :mod:`design.telemetry.packets.Packet`
         """
         try:
-            self.consumed.put_nowait(packet)
+            self._consumed.put_nowait(packet)
         except queue.Full:
             pass
 
@@ -53,7 +53,7 @@ class TaskHandler:
         """
         data = None
         try:
-            data = self.produced.get_nowait()
+            data = self._produced.get_nowait()
         except queue.Empty:
             pass
 
