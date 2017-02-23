@@ -1,4 +1,4 @@
-"""Contains all the classes and functions related to the tasks handling of the
+"""Contains all the classes and functions related to the commands handling of the
    telemetry package.
 """
 
