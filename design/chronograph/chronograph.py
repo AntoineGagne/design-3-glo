@@ -29,7 +29,7 @@ class Chronograph:
         self.chrono_time += 1
 
     def time_auto_increment(self):
-        self.chrono_time = time.time() - self.start_time
+        self.chrono_time = int(time.time() - self.start_time)
         return self.chrono_time
 
     def time_pause(self):

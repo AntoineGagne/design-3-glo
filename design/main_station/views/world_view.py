@@ -65,10 +65,11 @@ class WorldView(QWidget):
     def make_subscriptions(self):
         # the methods are called by the model when it executes announce_update (in order)
         self.model.subscribe_update_func(self.update_world_image)
-        self.model.subscribe_update_func(self.draw_drawing_square_coords)
-        self.model.subscribe_update_func(self.draw_path)
         self.model.subscribe_update_func(self.draw_robot_coords)
         self.model.subscribe_update_func(self.draw_obstacles_coords)
+        self.model.subscribe_update_func(self.draw_drawing_square_coords)
+        self.model.subscribe_update_func(self.draw_path)
+
 
     def setup_connections(self):
         self.pushBtn_updateImg.clicked.connect(self.make_image_update)
@@ -159,7 +160,7 @@ class WorldView(QWidget):
         if path:
             path_to_paint.moveTo(path[0][0], path[0][1])
             for i in range(len(path)):
-                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius, self.radius)
+                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius + 10, self.radius+ 10)
 
             self.world_scene.addPath(path_to_paint, self.robot_pen)
 

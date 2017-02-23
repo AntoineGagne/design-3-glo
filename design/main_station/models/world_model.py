@@ -5,10 +5,10 @@
 
 class WorldModel:
     def __init__(self):
-        self._obstacles_coords = []
-        self._path_coords = [(0, 342), (13, 19), (21, 32), (44, 56), (93, 83), (0, 342)]   # dummy test
-        self._robot_coords = [(223, 423), (13, 674), (21, 123)]
-        self._drawing_zone_coords = [(0, 0), (0, 200), (200, 0), (200, 200)]   # dummy test
+        self._obstacles_coords = [(1153, 877), (991, 396)]
+        self._path_coords = [(96, 226), (400, 556), (490, 915), (1017, 616), (1453, 303), (1455, 834)]   # dummy test
+        self._robot_coords = [(405, 570)]
+        self._drawing_zone_coords = [(216, 363), (216, 771), (621, 771), (621, 363)]   # dummy test
         self._game_image = ""
 
         # these will be the registered functions for view updating
