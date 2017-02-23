@@ -48,7 +48,8 @@ class TaskHandler:
     def fetch_task(self):
         """Fetch a task from the received ones.
 
-        :returns: A packet that was received from the network
+        :returns: A packet that was received from the network. If there is no
+                  data in the queue, returns `None`.
         :rtype: :mod:`design.telemetry.packets.Packet`
         """
         data = None
