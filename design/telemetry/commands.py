@@ -9,8 +9,8 @@ import threading
 from .selectors import Selector
 
 
-class TaskHandler:
-    """Handle accesses to the tasks queues."""
+class CommandHandler:
+    """Handle accesses to the commands queues."""
 
     def __init__(self,
                  selector: Selector,
@@ -21,9 +21,9 @@ class TaskHandler:
         :param selector: The selector that will be used to fetch/send the
                          packets to the other connected host
         :type selector: :mod:`design.telemetry.selectors.Selector`
-        :param consumed: The tasks to be sent over the network
+        :param consumed: The commands to be sent over the network
         :type consumed: :mod:`queue.Queue`
-        :param produced: The tasks to be handled by the AI
+        :param produced: The commands to be handled by the AI
         :type produced: :mod:`queue.Queue`
         """
         self._consumed = consumed
@@ -34,8 +34,8 @@ class TaskHandler:
                                                  daemon=True)
         self._selector_thread.start()
 
-    def put_task(self, packet):
-        """Add a task to be sent.
+    def put_command(self, packet):
+        """Add a command to be sent.
 
         :param packet: The packet to be sent
         :type packet: :mod:`design.telemetry.packets.Packet`
@@ -45,17 +45,17 @@ class TaskHandler:
         except queue.Full:
             pass
 
-    def fetch_task(self):
-        """Fetch a task from the received ones.
+    def fetch_command(self):
+        """Fetch a command from the received ones.
 
         :returns: A packet that was received from the network. If there is no
                   data in the queue, returns `None`.
         :rtype: :mod:`design.telemetry.packets.Packet`
         """
-        data = None
+        command = None
         try:
-            data = self._produced.get_nowait()
+            command = self._produced.get_nowait()
         except queue.Empty:
             pass
 
-        return data
+        return command
