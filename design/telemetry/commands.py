@@ -16,15 +16,15 @@ class CommandHandler:
                  selector: Selector,
                  consumed: queue.Queue,
                  produced: queue.Queue):
-        """Initialize the `TaskHandler`.
+        """Initialize the :class:`design.telemetry.commands.CommandHandler`.
 
         :param selector: The selector that will be used to fetch/send the
                          packets to the other connected host
-        :type selector: :mod:`design.telemetry.selectors.Selector`
+        :type selector: :class:`design.telemetry.selectors.Selector`
         :param consumed: The commands to be sent over the network
-        :type consumed: :mod:`queue.Queue`
+        :type consumed: :class:`queue.Queue`
         :param produced: The commands to be handled by the AI
-        :type produced: :mod:`queue.Queue`
+        :type produced: :class:`queue.Queue`
         """
         self._consumed = consumed
         self._produced = produced
@@ -38,7 +38,7 @@ class CommandHandler:
         """Add a command to be sent.
 
         :param packet: The packet to be sent
-        :type packet: :mod:`design.telemetry.packets.Packet`
+        :type packet: :class:`design.telemetry.packets.Packet`
         """
         try:
             self._consumed.put_nowait(packet)
@@ -49,8 +49,8 @@ class CommandHandler:
         """Fetch a command from the received ones.
 
         :returns: A packet that was received from the network. If there is no
-                  data in the queue, returns `None`.
-        :rtype: :mod:`design.telemetry.packets.Packet`
+                  data in the queue, returns ``None``.
+        :rtype: :class:`design.telemetry.packets.Packet`
         """
         command = None
         try:
