@@ -4,6 +4,8 @@ import cv2
 
 from tests.utils import list_files
 import design.vision.contours as contours
+import pytest
+
 
 SAMPLE_IMAGES = list_files('samples')
 CONTOURS_NUMBER_BY_ONBOARD_IMAGES_PATTERNS = {
@@ -19,6 +21,7 @@ CONTOURS_NUMBER_BY_ONBOARD_IMAGES_PATTERNS = {
 }
 
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_that_given_an_image_with_green_square_when_find_green_square_coordinates_then_coordinates_are_found():
     for pattern in CONTOURS_NUMBER_BY_ONBOARD_IMAGES_PATTERNS.keys():
         for image in filter(pattern.search, SAMPLE_IMAGES):
