@@ -4,8 +4,12 @@ import itertools
 import operator
 
 # These were taken from the image samples
-LOWER_GREEN = (35.1, 108, 110.25)
-UPPER_GREEN = (55.55, 255, 154)
+PAINTING_FRAME_LOWER_GREEN = (35.1, 108, 69.75)
+PAINTING_FRAME_UPPER_GREEN = (65.45, 255, 154)
+
+# These were taken from the image samples
+LOWER_WHITE = (0, 0, 107.5)
+UPPER_WHITE = (170.5, 100, 200)
 
 # The dimension of the warped images (chosen arbitrarily)
 WARPED_IMAGE_DIMENSIONS = (300, 300)

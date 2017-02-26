@@ -1,4 +1,6 @@
 pytest
-numpy
+scipy
+sympy
 opencv
+numpy
 coverage

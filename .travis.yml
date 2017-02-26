@@ -19,6 +19,7 @@ install:
     - conda install -c conda-forge flake8=3.2.1
 
 script:
+    - make clean
     - make check
     - make test
     - make coverage
