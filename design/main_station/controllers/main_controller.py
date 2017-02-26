@@ -2,10 +2,6 @@
 The controller class does the real logic,
 and passes on data to the model
 """
-import time
-import threading
-
-
 class MainController:
 
     def __init__(self, model):

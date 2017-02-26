@@ -24,7 +24,7 @@ class MainView(QMainWindow):
         self.setup_connections()
 
         # the methods are called by the model when it executes announce_update
-        # self.model.subscribe_update_func(self.update_lcd)
+        self.model.subscribe_update_func(self.start_timer)
 
     def add_tab(self, tab_widget, tab_title):
         self.ui.tab_widget.addTab(tab_widget, tab_title)
@@ -60,3 +60,6 @@ class MainView(QMainWindow):
         self.controller.deactivate_timer()
         self.timer.stop()
 
+    def start_timer(self):
+        if not self.timer.isActive() and self.model.timer_is_on:
+            self.timer.start(1000)  # tick once every 1000 milisecond (1 sec)
