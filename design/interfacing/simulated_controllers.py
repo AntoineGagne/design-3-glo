@@ -5,32 +5,72 @@ Contains classes and functions in order to simulate interaction with hardware co
 
 import logging
 
-logging.basicConfig(filename='../../../simulation.log', level=logging.DEBUG)
+INTERFACING_LOGGER = logging.getLogger("interfacing_logger")
+INTERFACING_LOGGER.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler('interfacing.log', 'w')
+file_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(message)s')
+file_handler.setFormatter(formatter)
+INTERFACING_LOGGER.addHandler(file_handler)
 
 
 class SimulatedAntennaController():
     """Simulates interaction with antenna"""
 
+    st_last_signal_line_read = -1
+
     def get_signal_strength(self):
         """Simulates getting signal strength from antenna detection circuitry"""
-        logging.info("ANTENNA: Get_signal_strength() call recieved.")
 
-    def get_info_from_signal(self):
+        with open("mockSignalStrength.txt", "r") as mock:
+            SimulatedAntennaController.st_last_signal_line_read += 1
+            signal_value = mock.readlines()[SimulatedAntennaController.st_last_signal_line_read]
+
+        return int(signal_value)
+
+    def get_information_from_signal(self):
         """Simulates getting information from the decoded signal recieved"""
-        logging.info("ANTENNA: get_info_from_signal() call recieved.")
+        INTERFACING_LOGGER.debug("ANTENNA: get_info_from_signal() call recieved.")
+
+        with open("mockSignalInfo.txt", "r") as mock:
+            information = mock.readlines()
+
+        return tuple(information)
+
+    def start_sampling(self):
+        """Starts sampling signal strength"""
+        INTERFACING_LOGGER.debug("ANTENNA: Starting to sample.")
+
+    def stop_sampling(self):
+        """Stops sampling signal strength"""
+        INTERFACING_LOGGER.debug("ANTENNA: Stopping sampling.")
 
 
 class SimulatedWheelsController():
     """Simulates interaction with wheels"""
 
+    def __init__(self):
+        self.last_vector_given = None
+        self.last_degrees_of_rotation_given = None
+
     def move(self, vector):
         """Simulates moving the robot according to a (dx, dy) vector"""
-        logging.info(
+
+        self.last_vector_given = vector
+        INTERFACING_LOGGER.debug(
             "WHEELS: Recieved vector [dx = %s, dy = %s]", vector[0], vector[1])
+
+    def rotate(self, amount):
+        """ Simulates rotating the robot according to its central axis from axis
+        x amount of tenth-of-degrees """
+
+        self.last_degrees_of_rotation_given = amount
+        INTERFACING_LOGGER.debug(
+            "WHEELS: Rotating %s degrees from current axis.", amount)
 
     def stop(self):
         """Simulates recieving a stop command"""
-        logging.info("WHEELS: Recieved stop() command!")
+        INTERFACING_LOGGER.debug("WHEELS: Recieved stop() command!")
 
 
 class SimulatedLightsController():
@@ -38,11 +78,11 @@ class SimulatedLightsController():
 
     def light_green_led(self, duration):
         """Simulates lighting the green LED for a duration in milliseconds"""
-        logging.info("LIGHTS: Lighting green LED for %s ms", duration)
+        INTERFACING_LOGGER.debug("LIGHTS: Lighting green LED for %s ms", duration)
 
     def light_red_led(self, duration):
         """Simulates lighting the red LED for a duration in milliseconds"""
-        logging.info("LIGHTS: Lighting red LED for %s ms", duration)
+        INTERFACING_LOGGER.debug("LIGHTS: Lighting red LED for %s ms", duration)
 
 
 class SimulatedLcdScreenController():
@@ -50,7 +90,7 @@ class SimulatedLcdScreenController():
 
     def show(self, data):
         """Simulates showing data passed as parameter on the LCD screen"""
-        logging.info("LCD: Showing %s", data)
+        INTERFACING_LOGGER.debug("LCD: Showing %s", data)
 
 
 class SimulatedPenController():
@@ -58,8 +98,8 @@ class SimulatedPenController():
 
     def lower_pen(self):
         """Simulates lowering the pen"""
-        logging.info("PEN: Lowering pen.")
+        INTERFACING_LOGGER.debug("PEN: Lowering pen.")
 
     def raise_pen(self):
         """Simulates raising the pen"""
-        logging.info("PEN: Raising pen.")
+        INTERFACING_LOGGER.debug("PEN: Raising pen.")

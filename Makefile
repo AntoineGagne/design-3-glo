@@ -18,6 +18,10 @@ build:
 check:
 	@flake8 --show-source --statistics design tests
 
+coverage:
+	@coverage run --source design -m py.test
+	@coverage report
+
 test: extract_tar_archives
 	@./setup.py test
 
