@@ -2,8 +2,9 @@
 The controller class does the real logic,
 and passes on data to the model
 """
-class MainController:
 
+
+class MainController:
     def __init__(self, model):
         self.model = model
 
@@ -22,4 +23,3 @@ class MainController:
     def update_time(self):
         self.model.time += 1
         self.model.announce_update()
-
