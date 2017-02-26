@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_main_window(object):
     def setupUi(self, main_window):
         main_window.setObjectName("main_window")
@@ -58,7 +59,7 @@ class Ui_main_window(object):
         self.chrono_label.setMaximumSize(QtCore.QSize(100, 30))
         self.chrono_label.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
         self.chrono_label.setTextFormat(QtCore.Qt.AutoText)
-        self.chrono_label.setAlignment(QtCore.Qt.AlignBottom|QtCore.Qt.AlignHCenter)
+        self.chrono_label.setAlignment(QtCore.Qt.AlignBottom | QtCore.Qt.AlignHCenter)
         self.chrono_label.setIndent(0)
         self.chrono_label.setObjectName("chrono_label")
         self.verticalLayout.addWidget(self.chrono_label)
@@ -113,4 +114,3 @@ class Ui_main_window(object):
         self.stop_btn.setText(_translate("main_window", "Stop"))
         self.chrono_label.setText(_translate("main_window", "Chronograph"))
         self.close_menu_item.setText(_translate("main_window", "Fermer"))
-

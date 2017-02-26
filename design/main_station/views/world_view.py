@@ -39,8 +39,8 @@ class WorldView(QWidget):
         self.horizontalLayout.addItem(spacerItem)
         self.world_view = QtWidgets.QGraphicsView(self)
         self.world_view.setResizeAnchor(0)  # stuff always on top left corner
-        self.world_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)    # and coordinates will start at top left corner
-        self.world_view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse) # for mouse zooming
+        self.world_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)  # and coordinates will start at top left corner
+        self.world_view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)  # for mouse zooming
         self.world_scene = QtWidgets.QGraphicsScene()
         self.world_view.setScene(self.world_scene)
         self.gridLayout.addWidget(self.world_view, 1, 0)
@@ -63,13 +63,11 @@ class WorldView(QWidget):
         self._zoom = zoom
 
     def make_subscriptions(self):
-        # the methods are called by the model when it executes announce_update (in order)
         self.model.subscribe_update_func(self.update_world_image)
         self.model.subscribe_update_func(self.draw_robot_coords)
         self.model.subscribe_update_func(self.draw_obstacles_coords)
         self.model.subscribe_update_func(self.draw_drawing_square_coords)
         self.model.subscribe_update_func(self.draw_path)
-
 
     def setup_connections(self):
         self.pushBtn_updateImg.clicked.connect(self.make_image_update)
@@ -78,11 +76,6 @@ class WorldView(QWidget):
         self.pushBtn_zoomOut.clicked.connect(self.zoom_out)
 
     def setup_painting(self):
-        # # The QBrush class defines the fill pattern of shapes drawn by QPainter
-        # self.path_brush = QtGui.QBrush(QColor('#95ee95'))
-
-        # The QPen class defines how a QPainter should draw lines and outlines of shapes
-        # Note : the first arg of QPen could be as easily a QColor or a QBrush
         self.path_lines_pen = QtGui.QPen(QColor('#f44280'), 5, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
         self.path_points_pen = QtGui.QPen(QColor('#95ff95'), 10)
         self.drawing_zone_pen = QtGui.QPen(QColor('#11ed23'), 10)
@@ -94,8 +87,8 @@ class WorldView(QWidget):
         self.world_view.resetTransform()
         if not self.scene_img.isNull():
             viewrect = self.world_view.viewport().rect()
-            factor = min(viewrect.width()/self.scene_img.width(),
-                         viewrect.height()/self.scene_img.height())
+            factor = min(viewrect.width() / self.scene_img.width(),
+                         viewrect.height() / self.scene_img.height())
             self.world_view.scale(factor, factor)
             self.zoom = 0
 
@@ -150,7 +143,8 @@ class WorldView(QWidget):
         if path:
             path_to_paint.moveTo(path[0][0], path[0][1])
             for i in range(len(path)):
-                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius, self.radius)
+                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius,
+                                         self.radius)
 
             self.world_scene.addPath(path_to_paint, self.drawing_zone_pen)
 
@@ -160,7 +154,8 @@ class WorldView(QWidget):
         if path:
             path_to_paint.moveTo(path[0][0], path[0][1])
             for i in range(len(path)):
-                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius + 10, self.radius+ 10)
+                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius + 10,
+                                         self.radius + 10)
 
             self.world_scene.addPath(path_to_paint, self.robot_pen)
 
@@ -170,6 +165,7 @@ class WorldView(QWidget):
         if path:
             path_to_paint.moveTo(path[0][0], path[0][1])
             for i in range(len(path)):
-                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius, self.radius)
+                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius,
+                                         self.radius)
 
             self.world_scene.addPath(path_to_paint, self.obstacles_pen)

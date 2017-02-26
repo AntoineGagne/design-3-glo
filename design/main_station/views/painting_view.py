@@ -6,13 +6,13 @@ http://stackoverflow.com/questions/37399515/how-to-make-a-widgets-height-a-fixed
 from PyQt5.QtWidgets import QWidget, QLabel, QGraphicsView
 from PyQt5.QtGui import QPixmap
 import math
-from design.main_station import utils
 
 
 class PaintingView(QWidget):
     """
     Reimplementation to keep aspect ratio of widget
     """
+
     def __init__(self):
         super().__init__()
         painting = QPixmap('./resources/donald-trump.png')
@@ -23,7 +23,6 @@ class PaintingView(QWidget):
         self.setMinimumSize(pixmapSize)
 
         self._painting_graphics = QGraphicsView()
-
 
     def hasHeightForWidth(self):
         return True

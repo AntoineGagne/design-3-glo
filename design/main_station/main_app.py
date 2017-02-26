@@ -42,4 +42,3 @@ if __name__ == '__main__':
     app = MainApp(sys.argv)  # A new instance of QApplication
     app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())  # setting up stylesheet
     sys.exit(app.exec_())  # and execute the app (exec_() must be called from the main thread)
-
