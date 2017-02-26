@@ -24,7 +24,7 @@ class MainView(QMainWindow):
         self.setup_connections()
 
         # the methods are called by the model when it executes announce_update
-        self.model.subscribe_update_func(self.start_timer)
+        self.model.subscribe_update_function(self.start_timer)
 
     def add_tab(self, tab_widget, tab_title):
         self.ui.tab_widget.addTab(tab_widget, tab_title)

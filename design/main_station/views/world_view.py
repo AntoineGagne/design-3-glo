@@ -18,32 +18,32 @@ class WorldView(QWidget):
         self.obstacles_pen = None
         self.radius = None
 
-        self.gridLayout = QtWidgets.QGridLayout(self)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.grid_layout = QtWidgets.QGridLayout(self)
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.pushBtn_resetZoom = QtWidgets.QPushButton()
-        self.horizontalLayout.addWidget(self.pushBtn_resetZoom)
-        self.pushBtn_zoomIn = QtWidgets.QPushButton()
-        self.horizontalLayout.addWidget(self.pushBtn_zoomIn)
-        self.pushBtn_zoomOut = QtWidgets.QPushButton()
-        self.horizontalLayout.addWidget(self.pushBtn_zoomOut)
-        self.pushBtn_updateImg = QtWidgets.QPushButton()
-        self.horizontalLayout.addWidget(self.pushBtn_updateImg)
-        self.gridLayout.addLayout(self.horizontalLayout, 0, 0)
-        self.pushBtn_resetZoom.setText("Reset Zoom")
-        self.pushBtn_zoomIn.setText("Zoom In")
-        self.pushBtn_zoomOut.setText("Zoom Out")
-        self.pushBtn_updateImg.setText("Update Image")
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem)
+        self.horizontal_layout = QtWidgets.QHBoxLayout()
+        self.button_reset_zoom = QtWidgets.QPushButton()
+        self.horizontal_layout.addWidget(self.button_reset_zoom)
+        self.button_zoom_in = QtWidgets.QPushButton()
+        self.horizontal_layout.addWidget(self.button_zoom_in)
+        self.button_zoom_out = QtWidgets.QPushButton()
+        self.horizontal_layout.addWidget(self.button_zoom_out)
+        self.button_update_image = QtWidgets.QPushButton()
+        self.horizontal_layout.addWidget(self.button_update_image)
+        self.grid_layout.addLayout(self.horizontal_layout, 0, 0)
+        self.button_reset_zoom.setText("Reset Zoom")
+        self.button_zoom_in.setText("Zoom In")
+        self.button_zoom_out.setText("Zoom Out")
+        self.button_update_image.setText("Update Image")
+        spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontal_layout.addItem(spacer_item)
         self.world_view = QtWidgets.QGraphicsView(self)
         self.world_view.setResizeAnchor(0)  # stuff always on top left corner
         self.world_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)  # and coordinates will start at top left corner
         self.world_view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)  # for mouse zooming
         self.world_scene = QtWidgets.QGraphicsScene()
         self.world_view.setScene(self.world_scene)
-        self.gridLayout.addWidget(self.world_view, 1, 0)
+        self.grid_layout.addWidget(self.world_view, 1, 0)
         self.world_view.setRenderHint(QtGui.QPainter.Antialiasing)
         self.world_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.world_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -63,17 +63,17 @@ class WorldView(QWidget):
         self._zoom = zoom
 
     def make_subscriptions(self):
-        self.model.subscribe_update_func(self.update_world_image)
-        self.model.subscribe_update_func(self.draw_robot_coords)
-        self.model.subscribe_update_func(self.draw_obstacles_coords)
-        self.model.subscribe_update_func(self.draw_drawing_square_coords)
-        self.model.subscribe_update_func(self.draw_path)
+        self.model.subscribe_update_function(self.update_world_image)
+        self.model.subscribe_update_function(self.draw_robot_coords)
+        self.model.subscribe_update_function(self.draw_obstacles_coords)
+        self.model.subscribe_update_function(self.draw_drawing_square_coords)
+        self.model.subscribe_update_function(self.draw_path)
 
     def setup_connections(self):
-        self.pushBtn_updateImg.clicked.connect(self.make_image_update)
-        self.pushBtn_resetZoom.clicked.connect(self.reset_zoom)
-        self.pushBtn_zoomIn.clicked.connect(self.zoom_in)
-        self.pushBtn_zoomOut.clicked.connect(self.zoom_out)
+        self.button_update_image.clicked.connect(self.make_image_update)
+        self.button_reset_zoom.clicked.connect(self.reset_zoom)
+        self.button_zoom_in.clicked.connect(self.zoom_in)
+        self.button_zoom_out.clicked.connect(self.zoom_out)
 
     def setup_painting(self):
         self.path_lines_pen = QtGui.QPen(QColor('#f44280'), 5, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
@@ -86,9 +86,9 @@ class WorldView(QWidget):
     def fit_to_image(self):
         self.world_view.resetTransform()
         if not self.scene_img.isNull():
-            viewrect = self.world_view.viewport().rect()
-            factor = min(viewrect.width() / self.scene_img.width(),
-                         viewrect.height() / self.scene_img.height())
+            view_rectangle = self.world_view.viewport().rect()
+            factor = min(view_rectangle.width() / self.scene_img.width(),
+                         view_rectangle.height() / self.scene_img.height())
             self.world_view.scale(factor, factor)
             self.zoom = 0
 
@@ -121,7 +121,7 @@ class WorldView(QWidget):
         self.world_view.scale(factor, factor)
 
     def draw_path(self):
-        path = self.model.path_coords
+        path = self.model.path_coordinates
         path_to_paint = QtGui.QPainterPath()
         points_to_paint = QtGui.QPainterPath()
         if path:
@@ -138,7 +138,7 @@ class WorldView(QWidget):
             self.world_scene.addPath(points_to_paint, self.path_points_pen)
 
     def draw_drawing_square_coords(self):
-        path = self.model.drawing_zone_coords
+        path = self.model.drawing_zone_coordinates
         path_to_paint = QtGui.QPainterPath()
         if path:
             path_to_paint.moveTo(path[0][0], path[0][1])
@@ -149,7 +149,7 @@ class WorldView(QWidget):
             self.world_scene.addPath(path_to_paint, self.drawing_zone_pen)
 
     def draw_robot_coords(self):
-        path = self.model.robot_coords
+        path = self.model.robot_coordinates
         path_to_paint = QtGui.QPainterPath()
         if path:
             path_to_paint.moveTo(path[0][0], path[0][1])
@@ -160,7 +160,7 @@ class WorldView(QWidget):
             self.world_scene.addPath(path_to_paint, self.robot_pen)
 
     def draw_obstacles_coords(self):
-        path = self.model.obstacles_coords
+        path = self.model.obstacles_coordinates
         path_to_paint = QtGui.QPainterPath()
         if path:
             path_to_paint.moveTo(path[0][0], path[0][1])

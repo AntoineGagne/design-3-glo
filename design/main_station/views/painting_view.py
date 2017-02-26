@@ -16,11 +16,11 @@ class PaintingView(QWidget):
     def __init__(self):
         super().__init__()
         painting = QPixmap('./resources/donald-trump.png')
-        pixmapSize = painting.size()
-        self._heightForWidthFactor = 1.0 * pixmapSize.height() / pixmapSize.width()
+        pixmap_size = painting.size()
+        self._height_for_width_factor = 1.0 * pixmap_size.height() / pixmap_size.width()
         self._label = QLabel('pixmap', self)
         self._label.setPixmap(painting)
-        self.setMinimumSize(pixmapSize)
+        self.setMinimumSize(pixmap_size)
 
         self._painting_graphics = QGraphicsView()
 
@@ -29,7 +29,7 @@ class PaintingView(QWidget):
 
     def heightForWidth(self, width):
         # we had to reimplement it to keep aspect ratio
-        return math.ceil(width * self._heightForWidthFactor)
+        return math.ceil(width * self._height_for_width_factor)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
