@@ -6,7 +6,6 @@
      Generally this is very minimal
 """
 import sys
-import qdarkstyle
 from PyQt5.QtWidgets import QApplication
 from design.main_station.views.main_view import MainView
 from design.main_station.controllers.main_controller import MainController
@@ -40,5 +39,7 @@ class MainApp(QApplication):
 
 if __name__ == '__main__':
     app = MainApp(sys.argv)  # A new instance of QApplication
-    app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())  # setting up stylesheet
+    stylesheet = "views/style/qdarkstyle/style.qss"
+    with open(stylesheet, "r") as fh:
+        app.setStyleSheet(fh.read())
     sys.exit(app.exec_())  # and execute the app (exec_() must be called from the main thread)
