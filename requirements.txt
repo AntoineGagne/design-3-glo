@@ -1,4 +1,7 @@
 pytest
-numpy
+scipy
+sympy
 opencv
 pyzmq
+numpy
+coverage

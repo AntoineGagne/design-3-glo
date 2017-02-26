@@ -18,9 +18,18 @@ build:
 check:
 	@flake8 --show-source --statistics design tests
 
-test:
+coverage:
+	@coverage run --source design -m py.test
+	@coverage report
+
+test: extract_tar_archives
 	@./setup.py test
 
 clean:
+	@rm -rf dist/
+	@rm -rf build/
+	@rm -rf design.egg-info/
 	@find . -name '*.pyc' -exec rm {} \;
+	@find . -name '__pycache__' -exec rm -rf {} \;
 	@rm -rf samples/
+	@rm -rf data/
