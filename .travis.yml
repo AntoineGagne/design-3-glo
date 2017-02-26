@@ -19,9 +19,9 @@ install:
     - conda install -c conda-forge flake8=3.2.1
 
 script:
+    - make clean
     - make check
-    - make extract_tar_archives
-    - ./setup.py test
+    - make test
 
 notifications:
   slack:
