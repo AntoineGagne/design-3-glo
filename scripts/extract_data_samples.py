@@ -22,11 +22,11 @@ def find_files(directory_path: str):
     """
     return (join(directory_path, listed_file)
             for listed_file in listdir(directory_path)
-            if isfile(join(directory_path, listed_file))
-            and listed_file.endswith('tar.gz'))
+            if isfile(join(directory_path, listed_file)) and
+            listed_file.endswith('tar.gz'))
 
 
-def extract_data_files(data_files):
+def extract_data_files(data_files, directory_path):
     """Extract the data files in the given directory.
 
     :param data_files: The data files to extract
@@ -36,7 +36,7 @@ def extract_data_files(data_files):
     threads = []
     for data_file in data_files:
         thread = Thread(target=extract_data_file,
-                        args=(data_file,),
+                        args=(data_file, directory_path),
                         daemon=True)
         threads.append(thread)
         thread.start()
@@ -45,13 +45,15 @@ def extract_data_files(data_files):
         thread.join()
 
 
-def extract_data_file(data_file):
+def extract_data_file(data_file: str, directory_path: str):
     """Extract the given data file in the given directory.
 
     :param data_file: The data file to extract
+    :type data_file: str
+    :param directory_path: The path in which to extract the archive
     """
     archive = tarfile.open(data_file, 'r:gz')
-    archive.extractall()
+    archive.extractall(directory_path)
     archive.close()
 
 
@@ -74,4 +76,4 @@ if __name__ == '__main__':
                                   SAMPLES_DIRECTORY_NAME)
     create_directory(SAMPLES_DIRECTORY_PATH)
     FILES = find_files(join(PROJECT_PATH, DATA_FILES_DIRECTORY))
-    extract_data_files(FILES)
+    extract_data_files(FILES, SAMPLES_DIRECTORY_PATH)
