@@ -6,7 +6,6 @@
      Generally this is very minimal
 """
 import sys
-import time
 import qdarkstyle
 from PyQt5.QtWidgets import QApplication
 from design.main_station.views.main_view import MainView
@@ -16,7 +15,6 @@ from design.main_station.models.world_model import WorldModel
 from design.main_station.controllers.world_controller import WorldController
 from design.main_station.views.world_view import WorldView
 from design.main_station.views.painting_view import PaintingView
-import threading
 
 
 class MainApp(QApplication):
