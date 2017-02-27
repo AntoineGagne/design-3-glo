@@ -1,5 +1,6 @@
 import os
 import math
+import sys
 
 
 def compare_objects(object_1, object_2):
@@ -14,24 +15,27 @@ def compare_objects(object_1, object_2):
             object_1.__dict__ == object_2.__dict__)
 
 
-def list_files(folder):
+def list_files(folder, predicate=lambda _: True):
     """List all the files recursively within a given folder.
 
     :param folder: The folder to list
     :type folder: str
+    :param predicate: A predicate to filter files
+    :type predicate: function
     :returns: A generator of the listed files
     .. Taken from:
        http://stackoverflow.com/questions/12420779/simplest-way-to-get-the-equivalent-of-find-in-python
     """
     for root, folders, files in os.walk(folder):
         for filename in files:
-            yield os.path.join(root, filename)
+            if predicate(filename):
+                yield os.path.join(root, filename)
 
 
 class ImageAssertionHelper:
     """Custom assert helper for images' tests."""
 
-    def __init__(self, maximum_error_percentage: float=0.05):
+    def __init__(self, maximum_error_percentage: float = 0.05):
         """Initialize the assert helper.
 
         :param maximum_error_percentage: The maximum percentage of errors that
@@ -57,6 +61,38 @@ class ImageAssertionHelper:
         except AssertionError:
             self._failures.append(dict(kwargs))
 
+    def assert_close(self, actual, expected, **kwargs):
+        """Assert that the two values are close. Otherwise, put them in the
+           list of failures.
+
+        :param actual: The actual value
+        :param expected: The expected value
+        :param kwargs: The parameters to log in the console
+        """
+        self._assertion_number += 1
+        try:
+            assert calculate_norm(actual, expected) < 25
+        except AssertionError:
+            self._failures.append(dict(kwargs))
+
+    def assert_all_close(self, actual, expected, **kwargs):
+        """Assert that all the corresponding coordinates are close. Otherwise,
+           put them in the list of failures.
+
+        :param actual: The actual coordinates list
+        :param expected: The expected coordinates list
+        :param kwargs: The parameters to log in the console
+        """
+        self._assertion_number += 1
+        corresponding_points = match_coordinates(actual, expected)
+
+        try:
+            for actual_coordinate, expected_coordinate in corresponding_points.items():
+                norm = calculate_norm(actual_coordinate, expected_coordinate)
+                assert norm <= 25
+        except AssertionError:
+            self._failures.append(dict(kwargs))
+
     def assert_below_threshold(self):
         """Assert that the percentage of failed images is below the expected
            value.
@@ -72,7 +108,7 @@ class ImageAssertionHelper:
     def _pretty_print_failures(self):
         """Return a pretty printed version of the failures.
 
-        :return: Pretty printed version of the failures
+        :returns: Pretty printed version of the failures
         :rtype: str
         """
         failure_strings = [_pad_with_delimiter('Failed Pictures')]
@@ -86,7 +122,7 @@ class ImageAssertionHelper:
     def _pretty_print_test_information(self):
         """Return a pretty printed version of the test's information.
 
-        :return: Pretty printed version of the test's information
+        :returns: Pretty printed version of the test's information
         :rtype: str
         """
         percentage_failed = len(self._failures) / self._assertion_number
@@ -106,7 +142,7 @@ def _pad_with_delimiter(title, maximum_length=80, delimiter='='):
     :param title: The title to enclose with delimiters
     :param maximum_length: The maximum length of the string
     :param delimiter: The delimiter to use to enclose the title
-    :return: The enclosed title
+    :returns: The enclosed title
     :rtype: str
     """
     delimiter_length = math.floor((maximum_length - (len(title) + 2)) / 2)
@@ -115,3 +151,44 @@ def _pad_with_delimiter(title, maximum_length=80, delimiter='='):
                     half_delimiter_block,
                     ' {0} '.format(title.title()),
                     half_delimiter_block))
+
+
+def calculate_norm(point1, point2):
+    """Calculate the distance between two points
+
+    :param point1: first point
+    :param point2: second point
+    :type point1: tuple or list
+    :type point2: tuple or list
+    :returns: norm between the two points
+    :rtype: float
+    """
+    norm = math.sqrt((point2[0] - point1[0]) ** 2 + (point2[1] - point1[1]) ** 2)
+    return norm
+
+
+def match_coordinates(coordinates1, coordinates2):
+    """Match coordinates of two lists with equivalent number of coordinates.
+
+    :param coordinates1: coordinates from first container
+    :param coordinates2: coordinates from second container
+    :type coordinates1: list or tuple
+    :type coordinates2: list or tuple
+    :returns:
+
+    .. note:: If there's more or less coordinates in one of the lists, only the
+              closest coordinates will be returned with minimal number of
+              coordinates.
+    """
+    corresponding_points = {}
+    already_matched_points = []
+    for i in range(len(coordinates1)):
+        minimal_norm = sys.maxsize
+        for j in range(len(coordinates2)):
+            if coordinates2[j] not in already_matched_points:
+                norm = calculate_norm(coordinates1[i], coordinates2[j])
+                if norm < minimal_norm:
+                    minimal_norm = norm
+                    corresponding_points[tuple(coordinates1[i])] = tuple(coordinates2[j])
+        already_matched_points.append(tuple(corresponding_points[tuple(coordinates1[i])]))
+    return corresponding_points

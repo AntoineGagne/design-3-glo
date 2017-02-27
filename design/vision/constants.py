@@ -27,3 +27,31 @@ PAINTING_DIMENSION_RATIO = tuple(itertools.starmap(operator.truediv,
 DRAWING_DIMENSION_RATIO = tuple(itertools.starmap(operator.truediv,
                                                   zip(REAL_PAINTING_DIMENSION,
                                                       WARPED_IMAGE_DIMENSIONS)))
+
+ROBOT_HEIGHT = 30  # TODO get real value
+OBSTACLE_HEIGHT = 41  # in cm
+LOWER_TRIANGLE_BOX_SIZE = 28
+HIGHER_TRIANGLE_BOX_SIZE = 80
+WORLD_INTRINSIC_MATRIX = []
+ONBOARD_INTRINSIC_MATRIX = []
+OPTIMIZED_CAMERA_VALUES = [[],
+                           [50, 47, 175, 368, 20],
+                           [50, 47, 175, 368, 20],
+                           [50, 47, 175, 368, 20],
+                           [50, 47, 175, 368, 20],
+                           [50, 47, 175, 368, 20],
+                           [50, 47, 175, 368, 20]]
+
+# drawing zone borders : green range
+MIN_GREEN = [45, 110, 120]
+MAX_GREEN = [80, 255, 255]
+
+MIN_MAGENTA = [160, 100, 100]
+MAX_MAGENTA = [170, 255, 255]
+
+DRAWING_ZONE_MIN_AREA = 100000
+
+OBSTACLE_MIN_RADIUS = 20
+OBSTACLE_MAX_RADIUS = 60
+
+MIN_ROBOT_CIRCLE_RADIUS = 5

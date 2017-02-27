@@ -1,7 +1,8 @@
 pytest
 scipy
 sympy
-opencv
 pyzmq
+opencv
 numpy
+pyqt
 coverage
