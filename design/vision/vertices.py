@@ -3,16 +3,16 @@
 import cv2
 import numpy as np
 
-from .constants import (LOWER_WHITE,
-                        UPPER_WHITE)
-from .contours import (PaintingBorderFinder,
-                       filter_contours_with_predicates,
-                       find_best_match_contour,
-                       find_contour_with_lowest_point_distance_to_image_center,
-                       is_xy_centroid_within_range,
-                       is_area_size_within_range)
-from .transformations import PerspectiveWarper, Figure
-from .utils import identity, StdErrOutputDisplayManager
+from design.vision.constants import (LOWER_WHITE,
+                                     UPPER_WHITE)
+from design.vision.contours import (PaintingBorderFinder,
+                                    filter_contours_with_predicates,
+                                    find_best_match_contour,
+                                    find_contour_with_lowest_point_distance_to_image_center,
+                                    is_xy_centroid_within_range,
+                                    is_area_size_within_range)
+from design.vision.transformations import PerspectiveWarper, Figure
+from design.vision.utils import identity, StdErrOutputDisplayManager
 
 
 def find_geometric_figure_vertices(image, *vertices_finders):

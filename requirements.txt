@@ -6,3 +6,4 @@ opencv
 numpy
 pyqt
 coverage
+pyqt
