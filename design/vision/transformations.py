@@ -6,8 +6,9 @@ import cv2
 import numpy as np
 
 from design.vision.contours import compute_coordinates_center
-from .constants import WARPED_IMAGE_DIMENSIONS, WARPED_IMAGE_CORNERS
-from .utils import order_points
+from design.vision.constants import (WARPED_IMAGE_DIMENSIONS,
+                                     WARPED_IMAGE_CORNERS)
+from design.vision.utils import order_points
 
 
 class PerspectiveWarper:

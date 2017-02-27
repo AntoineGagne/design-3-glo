@@ -8,9 +8,9 @@ from math import inf
 from operator import truediv
 from typing import Tuple, List, Callable, Any
 
-from .constants import (PAINTING_FRAME_LOWER_GREEN,
-                        PAINTING_FRAME_UPPER_GREEN,
-                        WARPED_IMAGE_DIMENSIONS)
+from design.vision.constants import (PAINTING_FRAME_LOWER_GREEN,
+                                     PAINTING_FRAME_UPPER_GREEN,
+                                     WARPED_IMAGE_DIMENSIONS)
 
 
 class PaintingBorderFinder:
