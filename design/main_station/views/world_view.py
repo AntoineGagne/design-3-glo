@@ -64,9 +64,9 @@ class WorldView(QWidget):
 
     def make_subscriptions(self):
         self.model.subscribe_update_function(self.update_world_image)
-        self.model.subscribe_update_function(self.draw_robot_coords)
-        self.model.subscribe_update_function(self.draw_obstacles_coords)
-        self.model.subscribe_update_function(self.draw_drawing_square_coords)
+        self.model.subscribe_update_function(self.draw_robot_coordinates)
+        self.model.subscribe_update_function(self.draw_obstacles_coordinates)
+        self.model.subscribe_update_function(self.draw_drawing_square_coordinates)
         self.model.subscribe_update_function(self.draw_path)
 
     def setup_connections(self):
@@ -137,7 +137,7 @@ class WorldView(QWidget):
             self.world_scene.addPath(path_to_paint, self.path_lines_pen)
             self.world_scene.addPath(points_to_paint, self.path_points_pen)
 
-    def draw_drawing_square_coords(self):
+    def draw_drawing_square_coordinates(self):
         path = self.model.drawing_zone_coordinates
         path_to_paint = QtGui.QPainterPath()
         if path:
@@ -148,7 +148,7 @@ class WorldView(QWidget):
 
             self.world_scene.addPath(path_to_paint, self.drawing_zone_pen)
 
-    def draw_robot_coords(self):
+    def draw_robot_coordinates(self):
         path = self.model.robot_coordinates
         path_to_paint = QtGui.QPainterPath()
         if path:
@@ -159,7 +159,7 @@ class WorldView(QWidget):
 
             self.world_scene.addPath(path_to_paint, self.robot_pen)
 
-    def draw_obstacles_coords(self):
+    def draw_obstacles_coordinates(self):
         path = self.model.obstacles_coordinates
         path_to_paint = QtGui.QPainterPath()
         if path:
