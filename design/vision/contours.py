@@ -53,6 +53,7 @@ class PaintingFrameFinder:
         """
         mask = self._find_painting_frame_mask(image)
         _, contours, hierarchy = cv2.findContours(mask,
+
                                                   cv2.RETR_TREE,
                                                   cv2.CHAIN_APPROX_SIMPLE)
         contours, hierarchy = filter_contours_with_predicates(

@@ -103,6 +103,7 @@ class ImageAssertionHelper:
         percentage_failed = len(self._failures) / self._assertion_number
         print(self._pretty_print_failures(), file=sys.stderr)
         print(self._pretty_print_test_information(), file=sys.stderr)
+
         assert percentage_failed <= self._maximum_error_percentage
 
     def _pretty_print_failures(self):
