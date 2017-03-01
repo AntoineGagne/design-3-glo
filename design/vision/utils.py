@@ -2,12 +2,8 @@
 
 from itertools import chain
 from operator import itemgetter
-from typing import TypeVar
 
 import os
-
-
-T = TypeVar('T')
 
 
 def order_points(points):
@@ -26,15 +22,6 @@ def order_points(points):
     top_points = sorted(points[:2], key=itemgetter(0))
     bottom_points = sorted(points[2:], key=itemgetter(0), reverse=True)
     return list(chain(top_points, bottom_points))
-
-
-def identity(a: T) -> T:
-    """Identity function. Returns the argument unchanged.
-
-    :param a: Anything
-    :type a: Any
-    """
-    return a
 
 
 class StdErrOutputDisplayManager:

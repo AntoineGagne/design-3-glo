@@ -1,2 +1,3 @@
-mounted_camera 0B3t1hFS_2t57eHR5bEpDdUFRdWM
-world_camera 0B3t1hFS_2t57Z0FWTnJ3SWw0N0E
+mounted_camera 0B3t1hFS_2t57QTdrQncxTlUxWHM
+world_camera_samples 0B9qVdRIN5_PmSXhCRXU5c080anM
+mounted_camera_2 0B3t1hFS_2t57cWtRak1SZF9IM1U
