@@ -4,6 +4,5 @@ sympy
 pyzmq
 opencv
 numpy
-pyqt
 coverage
 pyqt

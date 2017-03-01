@@ -5,14 +5,15 @@ from functools import partial, reduce
 import cv2
 import numpy as np
 
-from design.vision.contours import compute_coordinates_center
-from design.vision.constants import (WARPED_IMAGE_DIMENSIONS,
-                                     WARPED_IMAGE_CORNERS)
-from design.vision.utils import order_points
+from .contours import compute_coordinates_center
+from .constants import (WARPED_IMAGE_DIMENSIONS,
+                        WARPED_IMAGE_CORNERS)
+from .utils import order_points
 
 
 class PerspectiveWarper:
     """An object to warp an image perspective."""
+
     def __init__(self,
                  destination_points=WARPED_IMAGE_CORNERS,
                  image_dimensions=WARPED_IMAGE_DIMENSIONS):
@@ -50,7 +51,7 @@ class Figure:
         """Initialize the figure.
 
         :param coordinates: The figure's coordinates
-        :type coordinates: :mod:numpy.ndarray
+        :type coordinates: :class:`numpy.ndarray`
         """
         self._homogeneous_coordinates = convert_to_homogeneous_coordinates(coordinates)
         self._coordinates = coordinates
@@ -60,19 +61,21 @@ class Figure:
         """Getter for the coordinates.
 
         :returns: The transformed coordinates
-        :rtype: :mod:numpy.ndarray
+        :rtype: :class:`numpy.ndarray`
         """
-        return convert_to_cartesian_coordinates(self._homogeneous_coordinates)
+        return self._coordinates
 
     @coordinates.setter
     def coordinates(self, coordinates: np.ndarray):
         """Setter for the coordinates.
 
         :param coordinates: The figure's coordinates
-        :type coordinates: :mod:numpy.ndarray
+        :type coordinates: :class:`numpy.ndarray`
         """
         self._coordinates = coordinates
-        self._homogeneous_coordinates = convert_to_homogeneous_coordinates(coordinates)
+        self._homogeneous_coordinates = convert_to_homogeneous_coordinates(
+            coordinates
+        )
 
     def apply_transformations(self, *transformations) -> 'Figure':
         """Apply the given transformations to the figure.
@@ -80,7 +83,7 @@ class Figure:
         :param transformations: The transformations to be applied in order
         :type transformations: tuple<Any>
         :returns: The transformed figure
-        :rtype: Figure
+        :rtype: :class:design.vision.transformations.Figure
         """
         return Figure(
             convert_to_cartesian_coordinates(
@@ -114,9 +117,9 @@ class ScaleTransformation:
         """Apply the transformation to the given coordinates.
 
         :param homogeneous_coordinates: The coordinates to scale
-        :type homogeneous_coordinates: :mod:numpy.ndarray
+        :type homogeneous_coordinates: :class:`numpy.ndarray`
         :returns: The scaled coordinates
-        :rtype: :mod:numpy.ndarray
+        :rtype: :class:`numpy.ndarray`
         """
         return self._scale(homogeneous_coordinates)
 
@@ -124,9 +127,9 @@ class ScaleTransformation:
         """Scale the coordinates by the specified xy factor.
 
         :param homogeneous_coordinates: The coordinates to scale
-        :type homogeneous_coordinates: :mod:numpy.ndarray
+        :type homogeneous_coordinates: :class:`numpy.ndarray`
         :returns: The transformed coordinates
-        :rtype: :mod:numpy.ndarray
+        :rtype: :class:`numpy.ndarray`
         """
         previous_homogeneous_coordinates = homogeneous_coordinates.copy()
         scaling_matrix = np.array([[self.x, 0, 0],
@@ -147,9 +150,9 @@ def _find_xy_center_deviation(homogeneous_coordinates: np.ndarray,
        ones.
 
     :param previous_homogeneous_coordinates: The previous coordinates
-    :type previous_homogeneous_coordinates: :mod:numpy.ndarray
+    :type previous_homogeneous_coordinates: :class:`numpy.ndarray`
     :returns: The xy values of the deviation
-    :rtype: :mod:numpy.ndarray
+    :rtype: :class:`numpy.ndarray`
     """
     center = compute_coordinates_center(
         convert_to_cartesian_coordinates(homogeneous_coordinates),
@@ -180,9 +183,9 @@ class TranslateTransformation:
         """Apply the translation to the given coordinates.
 
         :param homogeneous_coordinates: The coordinates to translate
-        :type homogeneous_coordinates: :mod:numpy.ndarray
+        :type homogeneous_coordinates: :class:`numpy.ndarray`
         :returns: The translated coordinates
-        :rtype: :mod:numpy.ndarray
+        :rtype: :class:`numpy.ndarray`
         """
         return self._translate(homogeneous_coordinates)
 
@@ -190,9 +193,9 @@ class TranslateTransformation:
         """Translate the coordinates by the given xy values.
 
         :param homogeneous_coordinates: The coordinates to translate
-        :type homogeneous_coordinates: :mod:numpy.ndarray
+        :type homogeneous_coordinates: :class:`numpy.ndarray`
         :returns: The translated coordinates
-        :rtype: :mod:numpy.ndarray
+        :rtype: :class:`numpy.ndarray`
         """
         translation_matrix = np.array([[1, 0, self.x],
                                        [0, 1, self.y],
@@ -219,9 +222,9 @@ class RotateTransformation:
         """Apply the rotation to the given coordinates.
 
         :param homogeneous_coordinates: The coordinates to rotate
-        :type homogeneous_coordinates: :mod:numpy.ndarray
+        :type homogeneous_coordinates: :class:`numpy.ndarray`
         :returns: The rotated coordinates
-        :rtype: :mod:numpy.ndarray
+        :rtype: :class:`numpy.ndarray`
         """
         return self._rotate(homogeneous_coordinates)
 
@@ -229,9 +232,9 @@ class RotateTransformation:
         """Rotate the figure by the specified angle.
 
         :param homogeneous_coordinates: The coordinates to rotate
-        :type homogeneous_coordinates: :mod:numpy.ndarray
+        :type homogeneous_coordinates: :class:`numpy.ndarray`
         :returns: The rotated coordinates
-        :rtype: :mod:numpy.ndarray
+        :rtype: :class:`numpy.ndarray`
         """
         rotation_matrix = np.array([[np.cos(self.angle), -np.sin(self.angle), 0],
                                     [np.sin(self.angle), np.cos(self.angle), 0],
@@ -256,11 +259,11 @@ def _apply_transformation_matrix_on_point(transformation_matrix: np.ndarray,
     """Apply a transformation matrix on a point vector.
 
     :param transformation_matrix: The transformation matrix to apply
-    :type transformation_matrix: :mod:numpy.ndarray
+    :type transformation_matrix: :class:`numpy.ndarray`
     :param point: The point on which to apply the transformation
-    :type point: :mod:numpy.ndarray
+    :type point: :class:`numpy.ndarray`
     :returns: The transformed point
-    :rtype: :mod:numpy.ndarray
+    :rtype: :class:`numpy.ndarray`
     """
     return transformation_matrix @ point
 
@@ -269,9 +272,9 @@ def convert_to_homogeneous_coordinates(coordinates: np.ndarray) -> np.ndarray:
     """Convert the given coordinates to homogeneous coordinates.
 
     :param coordinates: The coordinates to convert
-    :type coordinates: :mod:numpy.ndarray
+    :type coordinates: :class:`numpy.ndarray`
     :returns: The homogeneous coordinates
-    :rtype: :mod:numpy.ndarray
+    :rtype: :class:`numpy.ndarray`
     """
     return np.append(coordinates,
                      np.ones((coordinates.shape[0], 1, 1)),
@@ -282,8 +285,8 @@ def convert_to_cartesian_coordinates(coordinates: np.ndarray) -> np.ndarray:
     """Convert the given coordinates to cartesian coordinates.
 
     :param coordinates: The coordinates to convert
-    :type coordinates: :mod:numpy.ndarray
+    :type coordinates: :class:`numpy.ndarray`
     :returns: The cartesian coordinates
-    :rtype: :mod:numpy.ndarray
+    :rtype: :class:`numpy.ndarray`
     """
     return np.delete(coordinates, 2, axis=2).astype(np.int32)

@@ -41,8 +41,7 @@ def test_that_given_images_with_obstacles_when_find_obstacles_positions_then_all
 
         # no need to compare coordinates if not all coordinates are found
         image_assertion_helper.assert_equal(
-            len(found_obstacles_coordinates),
-            len(obstacles_coordinates),
+            len(found_obstacles_coordinates) == len(obstacles_coordinates),
             image_path=image_path,
             found_coordinates_number=len(found_obstacles_coordinates),
             expected_coordinates_number=len(obstacles_coordinates)

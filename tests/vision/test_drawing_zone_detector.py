@@ -42,8 +42,7 @@ def test_that_given_images_with_drawing_zone_when_find_drawing_zone_then_drawing
 
         # no need to compare coordinates if not all coordinates are found
         image_assertion_helper.assert_equal(
-            len(found_drawing_zone_coordinates),
-            len(drawing_zone_coordinates),
+            len(found_drawing_zone_coordinates) == len(drawing_zone_coordinates),
             image_path=image_path,
             found_coordinates_number=len(found_drawing_zone_coordinates),
             expected_coordinates_number=len(drawing_zone_coordinates)

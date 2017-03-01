@@ -1,5 +1,5 @@
-import os
 import math
+import os
 import sys
 
 
@@ -35,7 +35,7 @@ def list_files(folder, predicate=lambda _: True):
 class ImageAssertionHelper:
     """Custom assert helper for images' tests."""
 
-    def __init__(self, maximum_error_percentage: float = 0.05):
+    def __init__(self, maximum_error_percentage: float=0.05):
         """Initialize the assert helper.
 
         :param maximum_error_percentage: The maximum percentage of errors that
@@ -47,17 +47,17 @@ class ImageAssertionHelper:
         self._failures = []
         self._assertion_number = 0
 
-    def assert_equal(self, actual, expected, **kwargs):
+    def assert_equal(self, assertion_value, **kwargs):
         """Assert that the two values are equals. Otherwise, put them in the
            list of failures.
 
-        :param actual: The actual value
-        :param expected: The expected value
+        :param assertion_value: The assertion value
+        :type assertion_value: bool
         :param kwargs: The parameters to log in the console
         """
         self._assertion_number += 1
         try:
-            assert actual == expected
+            assert assertion_value
         except AssertionError:
             self._failures.append(dict(kwargs))
 
@@ -101,8 +101,9 @@ class ImageAssertionHelper:
                                 than the expected value
         """
         percentage_failed = len(self._failures) / self._assertion_number
-        print(self._pretty_print_failures())
-        print(self._pretty_print_test_information())
+        print(self._pretty_print_failures(), file=sys.stderr)
+        print(self._pretty_print_test_information(), file=sys.stderr)
+
         assert percentage_failed <= self._maximum_error_percentage
 
     def _pretty_print_failures(self):
