@@ -31,5 +31,8 @@ if __name__ == '__main__':
         setup_requires=['pytest-runner', 'flake8'],
         tests_require=['pytest'],
         test_suite='tests',
-        scripts=['scripts/extract_data_samples.py', 'scripts/download_datasets.py']
+        scripts=['scripts/extract_data_samples.py',
+                 'scripts/download_datasets.py',
+                 'scripts/world_image_items_identifier_ui.py',
+                 'scripts/calibrate.py']
     )
