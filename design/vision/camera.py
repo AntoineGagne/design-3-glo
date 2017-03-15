@@ -1,7 +1,10 @@
-import os
 import cv2
-import design.vision.constants as constants
+
+import os
 import time
+from typing import Any, List
+
+import design.vision.constants as constants
 
 
 class Camera:
@@ -63,6 +66,114 @@ class Camera:
         self.camera.set(cv2.CAP_PROP_EXPOSURE, exposure)
         self.camera.set(cv2.CAP_PROP_AUTOFOCUS, 0)
         self.camera.set(cv2.CAP_PROP_GAIN, gain)
+
+
+class CameraInMemory:
+    """A camera that do not save the images in the file system but returns the
+       pictures as objects instead.
+    """
+
+    def __init__(self, port: int, settings: CameraSettings):
+        """Initialize the :class:`design.vision.camera.CameraInMemory`.
+
+        :param port: The port of the camera on the machine
+        :type port: int
+        :param settings: The settings of the camera (i.e. contrast, brightness,
+                         etc.)
+        :type settings: :class:`design.vision.camera.CameraSettings`
+        """
+        self.camera = None
+        self.port = port
+        self.settings = settings
+
+    def __enter__(self):
+        """Enter the context manager and open the camera."""
+        self.open()
+
+    def open(self):
+        """Open the camera with the given settings."""
+        self.camera = cv2.VideoCapture(self.port)
+        self.camera.set(cv2.CAP_PROP_AUTOFOCUS, False)
+        self.update_camera_settings()
+
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        """Exit the context manager and close the camera.
+
+        :param exception_type: The exception's type
+        :param exception_value: The exception's value
+        :param exception_traceback: The exception's traceback
+
+        .. note:: Those exception parameters are all *None* if no exceptions
+                  were raised. Also, since the exceptions are not handled, they
+                  will propagate to the outer scope.
+        """
+        self.close()
+
+    def close(self):
+        """Close the camera."""
+        self.camera.release()
+
+    def take_pictures(self, pictures_number: int) -> List[Any]:
+        """Take the given number of pictures with the camera.
+
+        :param pictures_number: The number of pictures to take
+        :type pictures_number: int
+        :returns: The pictures that were successfully taken
+        """
+        pictures = []
+        if self.camera and self.camera.isOpened():
+            for _ in range(pictures_number):
+                picture_taken, picture = self.camera.read()
+                if picture_taken:
+                    pictures.append(picture)
+
+        return pictures
+
+    def set_camera_settings(self, settings: CameraSettings):
+        """Set the camera's settings.
+
+        :param settings: The camera's settings
+        :type settings: :class:`design.vision.camera.CameraSettings`
+        """
+        self.settings = settings
+        self.update_camera_settings()
+
+    def update_camera_settings(self):
+        """Update the camera's settings."""
+        if self.camera:
+            self.camera.set(cv2.CAP_PROP_BRIGHTNESS, self.settings.brightness)
+            self.camera.set(cv2.CAP_PROP_CONTRAST, self.settings.contrast)
+            self.camera.set(cv2.CAP_PROP_EXPOSURE, self.settings.exposure)
+            self.camera.set(cv2.CAP_PROP_GAIN, self.settings.gain)
+            self.camera.set(cv2.CAP_PROP_SATURATION, self.settings.saturation)
+            self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.settings.width)
+            self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, self.settings.height)
+
+
+class CameraSettings:
+    """A camera's settings."""
+
+    def __init__(self, **kwargs):
+        """Initialize a :class:`design.vision.camera.CameraSettings`.
+
+        :param kwargs: See below
+
+        :Keyword Arguments:
+            * *brightness* (``int``) -- The brightness value of the camera
+            * *contrast* (``int``) -- The contrast value of the camera
+            * *exposure* (``int``) -- The exposure value of the camera
+            * *gain* (``int``) -- The gain value of the camera
+            * *saturation* (``int``) -- The saturation value of the camera
+            * *width* (``int``) -- The width of the images taken
+            * *height* (``int``) -- The height of the images taken
+        """
+        self.brightness = kwargs.get('brightness', 90)
+        self.contrast = kwargs.get('contrast', 40)
+        self.exposure = kwargs.get('exposure', 0)
+        self.gain = kwargs.get('gain', 0)
+        self.saturation = kwargs.get('saturation', 30)
+        self.width = kwargs.get('width', 640)
+        self.height = kwargs.get('height', 480)
 
 
 def get_frames(camera, camera_number, number_of_frames=1):
