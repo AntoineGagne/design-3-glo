@@ -1,8 +1,5 @@
 """Constants used by the modules in the `vision` module."""
 
-import itertools
-import operator
-
 # These were taken from the image samples
 PAINTING_FRAME_LOWER_GREEN = (35.1, 108, 51.75)
 PAINTING_FRAME_UPPER_GREEN = (65.45, 255, 154)

@@ -73,7 +73,7 @@ class CameraInMemory:
        pictures as objects instead.
     """
 
-    def __init__(self, port: int, settings: CameraSettings):
+    def __init__(self, port: int, settings: 'CameraSettings'):
         """Initialize the :class:`design.vision.camera.CameraInMemory`.
 
         :param port: The port of the camera on the machine
@@ -129,7 +129,7 @@ class CameraInMemory:
 
         return pictures
 
-    def set_camera_settings(self, settings: CameraSettings):
+    def set_camera_settings(self, settings: 'CameraSettings'):
         """Set the camera's settings.
 
         :param settings: The camera's settings
