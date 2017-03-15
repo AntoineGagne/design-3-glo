@@ -2,7 +2,7 @@ import cv2
 
 import os
 import time
-from typing import Any, List
+from typing import Any, Sequence
 
 import design.vision.constants as constants
 
@@ -86,9 +86,14 @@ class CameraInMemory:
         self.port = port
         self.settings = settings
 
-    def __enter__(self):
-        """Enter the context manager and open the camera."""
+    def __enter__(self) -> 'CameraInMemory':
+        """Enter the context manager and open the camera.
+
+        :returns: The context manager
+        :rtype: :class:`design.vision.camera.CameraInMemory`
+        """
         self.open()
+        return self
 
     def open(self):
         """Open the camera with the given settings."""
@@ -113,21 +118,18 @@ class CameraInMemory:
         """Close the camera."""
         self.camera.release()
 
-    def take_pictures(self, pictures_number: int) -> List[Any]:
+    def take_pictures(self, pictures_number: int) -> Sequence[Any]:
         """Take the given number of pictures with the camera.
 
         :param pictures_number: The number of pictures to take
         :type pictures_number: int
         :returns: The pictures that were successfully taken
         """
-        pictures = []
         if self.camera and self.camera.isOpened():
             for _ in range(pictures_number):
                 picture_taken, picture = self.camera.read()
                 if picture_taken:
-                    pictures.append(picture)
-
-        return pictures
+                    yield picture
 
     def set_camera_settings(self, settings: 'CameraSettings'):
         """Set the camera's settings.
