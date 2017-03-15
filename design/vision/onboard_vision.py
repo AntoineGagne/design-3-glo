@@ -27,7 +27,8 @@ class OnboardVision:
 
     def capture(self):
         """Capture an image with the camera."""
-        self.last_capture = self.camera.take_pictures(1)
+        with self.camera:
+            self.last_capture = self.camera.take_pictures(1)
 
     def get_captured_vertices(self,
                               zoom: float,
