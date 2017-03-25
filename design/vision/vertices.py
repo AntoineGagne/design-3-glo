@@ -42,6 +42,7 @@ class VerticesFinder:
 
         :param image: The image in which we want to find the geometric figure
         :returns: The vertices of the geometric figure
+
         :raises :class:`design.vision.exceptions.VerticesNotFound`: If the vertices could not be found.
         """
         with StdErrOutputDisplayManager():

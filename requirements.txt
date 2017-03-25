@@ -6,3 +6,4 @@ opencv
 numpy
 coverage
 pyqt
+Sphinx

@@ -11,7 +11,8 @@ def order_points(points):
        Top-left, top-right, bottom-right, bottom-left
 
     :param points: The points to order
-    :return: The points in the previously specified order
+    :returns: The points in the previously specified order
+
     .. doctest::
         >>> points = [[[5, 5]], [[0, 5]], [[5, 0]], [[0, 0]]]
         >>> order_points(points)

@@ -83,7 +83,7 @@ class Figure:
         :param transformations: The transformations to be applied in order
         :type transformations: tuple<Any>
         :returns: The transformed figure
-        :rtype: :class:design.vision.transformations.Figure
+        :rtype: :class:`design.vision.transformations.Figure`
         """
         return Figure(
             convert_to_cartesian_coordinates(
