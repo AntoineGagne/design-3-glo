@@ -2,7 +2,7 @@
 
 # These were taken from the image samples
 PAINTING_FRAME_LOWER_GREEN = (35.1, 108, 51.75)
-PAINTING_FRAME_UPPER_GREEN = (65.45, 255, 154)
+PAINTING_FRAME_UPPER_GREEN = (68.2, 255, 214.5)
 
 # The dimension of the warped images (chosen arbitrarily)
 WARPED_IMAGE_DIMENSIONS = (300, 300)

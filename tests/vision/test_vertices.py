@@ -143,4 +143,6 @@ def __find_vertices_wrapper(vertices_finder, image):
         vertices = vertices_finder.find_vertices(image)
     except exceptions.VerticesNotFound:
         pass
+    except exceptions.PaintingFrameNotFound:
+        pass
     return vertices
