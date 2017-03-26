@@ -34,5 +34,6 @@ if __name__ == '__main__':
         scripts=['scripts/extract_data_samples.py',
                  'scripts/download_datasets.py',
                  'scripts/world_image_items_identifier_ui.py',
-                 'scripts/calibrate.py']
+                 'scripts/calibrate.py',
+                 'scripts/vertices_identifier.py']
     )

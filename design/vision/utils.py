@@ -11,7 +11,8 @@ def order_points(points):
        Top-left, top-right, bottom-right, bottom-left
 
     :param points: The points to order
-    :return: The points in the previously specified order
+    :returns: The points in the previously specified order
+
     .. doctest::
         >>> points = [[[5, 5]], [[0, 5]], [[5, 0]], [[0, 0]]]
         >>> order_points(points)
@@ -30,11 +31,10 @@ class StdErrOutputDisplayManager:
     def __init__(self):
         """Initialize the manager."""
         self.null_file_descriptor = os.open(os.devnull, os.O_RDWR)
-        self.saved_file_descriptors = os.dup(1), os.dup(2)
+        self.saved_file_descriptor = os.dup(2)
 
     def __enter__(self):
         """Enter the context manager."""
-        os.dup2(self.null_file_descriptor, 1)
         os.dup2(self.null_file_descriptor, 2)
 
     def __exit__(self, exception_type, exception_value, exception_traceback):
@@ -48,5 +48,4 @@ class StdErrOutputDisplayManager:
                   were raised. Also, since the exceptions are not handled, they
                   will propagate to the outer scope.
         """
-        os.dup2(self.saved_file_descriptors[0], 1)
-        os.dup2(self.saved_file_descriptors[1], 2)
+        os.dup2(self.saved_file_descriptor, 2)

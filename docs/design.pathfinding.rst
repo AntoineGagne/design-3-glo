@@ -1,0 +1,54 @@
+design.pathfinding package
+==========================
+
+Submodules
+----------
+
+design.pathfinding.antenna_information module
+---------------------------------------------
+
+.. automodule:: design.pathfinding.antenna_information
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+design.pathfinding.constants module
+-----------------------------------
+
+.. automodule:: design.pathfinding.constants
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+design.pathfinding.game_map module
+----------------------------------
+
+.. automodule:: design.pathfinding.game_map
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+design.pathfinding.mutable_position module
+------------------------------------------
+
+.. automodule:: design.pathfinding.mutable_position
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+design.pathfinding.pathfinder module
+------------------------------------
+
+.. automodule:: design.pathfinding.pathfinder
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: design.pathfinding
+    :members:
+    :undoc-members:
+    :show-inheritance:

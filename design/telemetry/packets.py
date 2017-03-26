@@ -30,7 +30,7 @@ class Packet:
         """Initializes a packet.
 
         :param packet_type: The type of the packet (i.e. **position**)
-        :type packet_type: `PacketType`
+        :type packet_type: :class:`design.telemetry.packets.PacketType`
         :param packet_data: The data associated with the packet.
                             It depends on the type of the packet
         :type packet_data: `Any`
@@ -44,7 +44,7 @@ def serialize_packet(packet: Packet) -> bytes:
     """Serialize the packet into the `pickle` binary format.
 
     :param packet: The packet to serialize
-    :type packet: `Packet`
+    :type packet: :class:`design.telemetry.packets.Packet`
     :returns: The serialized and compressed packet
     :rtype: bytes
     """
@@ -58,7 +58,7 @@ def deserialize_packet(binary_packet: bytes) -> Packet:
     :param binary_packet: The serialized packet in a `pickle` binary format
     :type binary_packet: bytes
     :returns: The deserialized packet
-    :rtype: `Packet`
+    :rtype: :class:`design.telemetry.packets.Packet`
     """
     decompressed_packet = zlib.decompress(binary_packet)
     return pickle.loads(decompressed_packet)

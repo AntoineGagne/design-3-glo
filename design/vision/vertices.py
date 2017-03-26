@@ -2,11 +2,14 @@
 
 import cv2
 
+from functools import partial
+
 from .contours import (PaintingFrameFinder,
                        filter_contours_with_predicates,
                        find_contour_with_lowest_point_distance_to_image_center,
                        is_xy_centroid_within_range,
-                       is_area_size_within_range)
+                       is_area_size_within_range,
+                       is_approximated_vertices_number_within_range)
 from .exceptions import VerticesNotFound
 from .transformations import PerspectiveWarper, Figure
 from .utils import StdErrOutputDisplayManager
@@ -42,6 +45,7 @@ class VerticesFinder:
 
         :param image: The image in which we want to find the geometric figure
         :returns: The vertices of the geometric figure
+
         :raises :class:`design.vision.exceptions.VerticesNotFound`: If the vertices could not be found.
         """
         with StdErrOutputDisplayManager():
@@ -80,8 +84,9 @@ class VerticesFinder:
         contours, hierarchies = filter_contours_with_predicates(
             contours,
             hierarchies,
-            is_area_size_within_range,
-            is_xy_centroid_within_range
+            partial(is_area_size_within_range, minimum_size=3000),
+            is_xy_centroid_within_range,
+            is_approximated_vertices_number_within_range
         )
 
         contour = find_contour_with_lowest_point_distance_to_image_center(contours)

@@ -24,13 +24,13 @@ class Selector:
         """Initialize the `Selector`.
 
         :param read_socket: The socket that will receive inputs
-        :type read_socket: :mod:`zmq`.`Socket`
+        :type read_socket: :class:`zmq.Socket`
         :param write_socket: The socket that will write outputs
-        :type write_socket: :mod:`zmq`.`Socket`
+        :type write_socket: :class:`zmq.Socket`
         :param consumed: The packets to be sent
-        :type consumed: :mod:queue.Queue
+        :type consumed: :class:`queue.Queue`
         :param produced: The received packets
-        :type produced: :mod:queue.Queue
+        :type produced: :class:`queue.Queue`
         :param kwargs: See below
 
         :Keyword Arguments:
@@ -97,11 +97,11 @@ class ClientSelectorFactory:
         """Create the `Selector` object.
 
         :param consumed: The queue of elements that needs to be sent
-        :type consumed: :mod:`queue`.`Queue`
+        :type consumed: :class:`queue.Queue`
         :param produced: The queue of elements that were read
-        :type produced: :mod:`queue`.`Queue`
+        :type produced: :class:`queue.Queue`
         :returns: A selector with the given sockets
-        :rtype: `Selector`
+        :rtype: :class:`design.telemetry.selectors.Selector`
         """
         context = zmq.Context()
         write_socket = context.socket(zmq.PUSH)
@@ -143,11 +143,11 @@ class ServerSelectorFactory:
         """Create the `Selector` object.
 
         :param consumed: The queue of elements that needs to be sent
-        :type consumed: :mod:`queue`.`Queue`
+        :type consumed: :class:`queue.Queue`
         :param produced: The queue of elements that were read
-        :type produced: :mod:`queue`.`Queue`
+        :type produced: :class:`queue.Queue`
         :returns: A selector with the given sockets
-        :rtype: `Selector`
+        :rtype: :class:`design.telemetry.selectors.Selector`
         """
         context = zmq.Context()
         read_socket = context.socket(zmq.PULL)
