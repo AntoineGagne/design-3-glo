@@ -165,6 +165,35 @@ def is_xy_centroid_within_range(contour, *args, **kwargs) -> bool:
             lower_bound < centroid_y < upper_bound)
 
 
+def is_approximated_vertices_number_within_range(contour, *args, **kwargs) -> bool:
+    """Check if the contour has a number of approximated vertices within a certain range.
+
+    :param contour: The contour to check
+    :param kwargs: See below
+    :returns: A boolean indicating if the approximated vertices number is
+              within range
+    :rtype: bool
+
+    :Keyword Arguments:
+        * *minimum_vertices_number* (``int``) --- The minimum number of
+                                                  vertices
+        * *maximum_vertices_number* (``int``) --- The maximum number of
+                                                  vertices
+        * *approximation_factor* (``float``) --- The factor to use for
+                                                 :func:`cv2.approxPolyDP`
+    """
+    minimum_vertices_number = kwargs.get('minimum_vertices_number', 1)
+    maximum_vertices_number = kwargs.get('maximum_vertices_number', 20)
+    approximation_factor = kwargs.get('approximation_factor', 0.009)
+    vertices = []
+    try:
+        epsilon = approximation_factor * cv2.arcLength(contour, True)
+        vertices = cv2.approxPolyDP(contour, epsilon, True)
+    except cv2.error:
+        pass
+    return minimum_vertices_number <= len(vertices) <= maximum_vertices_number
+
+
 def find_contour_with_lowest_point_distance_to_image_center(contours, image_dimension=WARPED_IMAGE_DIMENSIONS):
     """Find the contour with the lowest average distance to the image center.
 

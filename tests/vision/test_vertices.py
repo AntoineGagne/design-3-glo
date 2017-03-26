@@ -120,7 +120,7 @@ CONTOURS_NUMBER_BY_ONBOARD_IMAGES_NAME_PATTERNS = {
 
 
 def test_that_given_images_with_geometric_figure_when_find_geometric_figure_vertices_then_vertices_are_found():
-    image_assertion_helper = ImageAssertionHelper(0.13)
+    image_assertion_helper = ImageAssertionHelper(0.11)
     assert_equal = image_assertion_helper.assert_equal
     vertices_finder = vertices.VerticesFinder(vertices.HighFrequencyFilter(),
                                               0.008)
