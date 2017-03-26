@@ -1,7 +1,4 @@
-""" Author: TREMBLAY, Alexandre
-Last modified: Febuary 7th, 2017
-
-This module contains a class relative to mutable positions, i.e
+""" This module contains a class relative to mutable positions, i.e
 the robot's position """
 
 

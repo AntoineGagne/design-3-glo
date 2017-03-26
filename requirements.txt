@@ -6,4 +6,6 @@ opencv
 numpy
 coverage
 pyqt
+pyserial
 Sphinx
+

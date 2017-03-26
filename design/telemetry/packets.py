@@ -16,11 +16,13 @@ class PacketType(Enum):
     """All the possible types of a packet sent/received by the telemetry
        package.
     """
-    position = 1
-    path = 2
-    figure_image = 3
-    figure_vertices = 4
-    game_map = 5
+    POSITION = 1
+    PATH = 2
+    FIGURE_IMAGE = 3
+    FIGURE_VERTICES = 4
+    GAME_MAP = 5
+    COMMAND = 6
+    NOTIFICATION = 7
 
 
 class Packet:

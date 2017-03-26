@@ -1,19 +1,15 @@
-"""Author: TREMBLAY, Alexandre
-Last modified: Febuary 4th, 2017
-
-This module allows mocking of pathfinder object"""
+""" This module allows mocking of pathfinder object """
 
 import math
-import datetime
-import queue
+from collections import deque
 from enum import Enum
 from design.pathfinding.constants import TRANSLATION_THRESHOLD
-from design.pathfinding.constants import ROTATION_SPEED
-from design.pathfinding.constants import TRANSLATION_SPEED
-from design.pathfinding.constants import ROTATION_THRESHOLD
 from design.pathfinding.game_map import GameMap
-from design.pathfinding.mutable_position import MutablePosition
-from design.pathfinding.constants import PointOfInterest
+from design.pathfinding.figures_information import FiguresInformation
+from design.pathfinding.robot_supposed_status import RobotSupposedStatus
+from design.pathfinding.graph import Graph
+from design.pathfinding.priority_queue import PriorityQueue
+from design.pathfinding.exceptions import CheckpointNotAccessibleError
 
 
 class PathStatus(Enum):
@@ -29,120 +25,53 @@ class Pathfinder():
         """ TEST CASE """
 
         self.game_map = GameMap()
-        self.nodes_queue_to_checkpoint = queue.Queue()  # in cm
-        self.next_node = (0, 0)  # in cm
-        self.supposed_robot_position = MutablePosition(0, 0)
-        self.time_since_moving = -1
-        self.last_node_crossed = (20, 20)
-        self.target_heading = 90
-        self.current_heading = 90
+        self.figures = FiguresInformation()
+        self.robot_status = None
+        self.graph = None
+
+        self.nodes_queue_to_checkpoint = deque()  # in cm
 
     def set_game_map(self, game_map_data):
         """ Sets game map elements like corners, objectives and
         obstacles """
 
-        robot_information, game_map_information = game_map_data.split('$')
+        robot_information = game_map_data.get("robot")
+        self.robot_status = RobotSupposedStatus(robot_information[0], robot_information[1])
 
-        self.supposed_robot_position.x = int(
-            robot_information.split('/')[1].split(',')[0][1:])
-        self.supposed_robot_position.y = int(
-            robot_information.split('/')[1].split(',')[1][:-1])
-        self.current_heading = int(robot_information.split('/')[3])
+        self.graph = Graph(game_map_data.get("obstacles"))
+        self.graph.generate_nodes_of_graph()
+        # self.graph.generate_graph()
 
-        self.game_map.parse(game_map_information)
+        table_corners_positions = game_map_data.get("table_corners")
+        self.figures.compute_positions(table_corners_positions[0], table_corners_positions[1],
+                                       table_corners_positions[2], table_corners_positions[3])
 
-        # Add checkpoint to antenna pos
-        self.generate_path_to_checkpoint(self.get_point_of_interest(
-            PointOfInterest.ANTENNA_START_SEARCH_POINT))
+        self.game_map.set_drawing_zone_borders(game_map_data.get("drawing_zone"))
+        self.game_map.set_antenna_search_points(table_corners_positions[3])
 
     def verify_if_deviating(self, current_robot_position):
         """ Returns true if deviating outside defined THRESHOLD,
         otherwise returns false """
-        print("Verifying if deviating from {0}".format(
-            self.supposed_robot_position))
-        return not self.verify_if_close_to_point(current_robot_position,
-                                                 self.supposed_robot_position.to_tuple())
 
-    def get_current_robot_supposed_position(self):
-        """ Returns supposed robot position """
-        return self.supposed_robot_position.to_tuple()
+        distance = math.hypot(self.robot_status.get_position()[0] - current_robot_position[0],
+                              self.robot_status.get_position()[1] - current_robot_position[1])
 
-    def get_current_vector(self):
-        """ Returns (dx, dy) vector in the robot's referential
-        to go through the wheels """
-
-        return (self.next_node[0] - self.last_node_crossed[0],
-                self.next_node[1] - self.last_node_crossed[1])
-
-    def update_supposed_robot_position(self):
-        """ Updates supposed robot position according to current time and speed
-        of the robot """
-
-        orientation = math.atan(self.get_current_vector()[1] /
-                                self.get_current_vector()[0])
-
-        if self.get_current_vector()[0] <= 0:
-            orientation = orientation + math.pi
-
-        print("Computed orientation: {0} deg".format(
-            math.degrees(orientation)))
-
-        delta_x = math.cos(orientation) * TRANSLATION_SPEED * \
-            (datetime.datetime.now() - self.time_since_moving).total_seconds()
-
-        delta_y = math.sin(orientation) * TRANSLATION_SPEED * \
-            (datetime.datetime.now() - self.time_since_moving).total_seconds()
-
-        current_x, current_y = self.last_node_crossed
-
-        self.supposed_robot_position.x = current_x + delta_x
-        self.supposed_robot_position.y = current_y + delta_y
-
-        print("Update supposed position: dx={0}, dy={1} from ({2},{3})".format(
-            delta_x, delta_y, current_x, current_y))
-        print("Supposed robot position is now ({0},{1})".format(
-            self.supposed_robot_position.x, self.supposed_robot_position.y))
-
-    def generate_new_vector(self, current_robot_position):
-        """ Computes new path to next objective according
-        to which step you are in """
-
-        self.last_node_crossed = tuple(current_robot_position)
-        self.time_since_moving = datetime.datetime.now()
-        return (self.next_node[0] - self.last_node_crossed[0],
-                self.next_node[1] - self.last_node_crossed[1])
-
-    def verify_if_close_to_point(self, position, target_position):
-        """ Returns true if passed pos is within THRESHOLD of next node """
-
-        distance = math.hypot(target_position[
-            0] - position[0], target_position[1] - position[1])
-
-        return distance <= TRANSLATION_THRESHOLD
+        return not distance <= TRANSLATION_THRESHOLD
 
     def get_vector_to_next_node(self, current_robot_position=None):
         """ If close enough to next node (within THRESHOLD), switch to new one """
 
-        robot_position = (0, 0)
-
         if current_robot_position:
-            robot_position = current_robot_position
-        else:
-            robot_position = self.supposed_robot_position.to_tuple()
+            self.robot_status.set_position(current_robot_position)
 
-        if self.verify_if_close_to_point(robot_position, self.next_node):
-            # If we are close enough to the node we were moving towards,
-            # set last crossed node to robot's position and set next node
-            # to the next one we have in our nodes queue towards the checkpoint
-            if not self.nodes_queue_to_checkpoint.empty():
-                self.next_node = self.nodes_queue_to_checkpoint.get()
-                self.last_node_crossed = tuple(robot_position)
-                self.time_since_moving = datetime.datetime.now()
-                return (PathStatus.MOVING_TOWARDS_CHECKPOINT,
-                        self.generate_new_vector(robot_position))
+        if self.robot_status.position_has_reached_target_position_within_threshold():
+            if self.nodes_queue_to_checkpoint:
+                new_vector = self.robot_status.generate_new_translation_vector_towards_new_target(
+                    self.nodes_queue_to_checkpoint.popleft())
+                return (PathStatus.MOVING_TOWARDS_CHECKPOINT, new_vector)
             else:
-                self.last_node_crossed = tuple(robot_position)
-                self.time_since_moving = datetime.datetime.now()
+                self.robot_status.generate_new_translation_vector_towards_new_target(
+                    self.robot_status.get_position())
                 return (PathStatus.CHECKPOINT_REACHED, None)
         else:
             return (PathStatus.MOVING_TOWARDS_CHECKPOINT, None)
@@ -154,35 +83,64 @@ class Pathfinder():
 
     def generate_path_to_checkpoint(self, checkpoint_position):
         """ Generates shortest path to checkpoint and updates the node queue
-        accordingly. """
-        self.nodes_queue_to_checkpoint.queue.clear()
-        self.nodes_queue_to_checkpoint.put(checkpoint_position)
-        self.next_node = self.nodes_queue_to_checkpoint.get()
+        accordingly.
+        :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
+        if checkpoint_position in self.graph.list_of_inaccessible_nodes:
+            raise CheckpointNotAccessibleError("Le point d'arrivé est non accessible par le robot")
 
-    def set_target_heading(self, heading):
-        """ Sets target heading for next rotation command """
-        self.target_heading = heading
+        self.nodes_queue_to_checkpoint.clear()
+        self.nodes_queue_to_checkpoint.append(checkpoint_position)
 
-    def update_heading(self, delta_time):
-        """ Updates heading """
+        self.robot_status.generate_new_translation_vector_towards_new_target(
+            self.nodes_queue_to_checkpoint.popleft())
 
-        print("Before updating heading: current = {0} dg, target = {1} dg".format(
-            self.current_heading, self.target_heading))
-        print("dt = {0}".format(delta_time))
+    def generate_path_to_checkpoint_with_a_star(self, checkpoint_position):
+        """ Generates shortest path to checkpoint and updates the node queue
+        accordingly.
+        :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
 
-        angular_speed = ROTATION_SPEED
-        if self.target_heading - self.current_heading < 0:
-            angular_speed = -angular_speed
+        print("Generating path with A star. Checkpoint position = {0}".format(checkpoint_position))
 
-        self.current_heading = self.current_heading + \
-            (angular_speed * delta_time)
+        if checkpoint_position in self.graph.list_of_inaccessible_nodes:
+            print("Checkpoint not accessible")
+            raise CheckpointNotAccessibleError("Le point d'arrivé est non accessible par le robot")
+        else:
+            self.nodes_queue_to_checkpoint.clear()
+            start_node = self.robot_status.get_position()
+            self.graph.add_start_end_node(start_node, checkpoint_position)
+            priority_queue = PriorityQueue()
+            priority_queue.put(start_node, 0)
+            came_from = {}
+            cost_so_far = {}
+            came_from[start_node] = None
+            cost_so_far[start_node] = 0
 
-        print("Update heading: current = {0} dg, target = {1} dg".format(
-            self.current_heading, self.target_heading))
+            while not priority_queue.empty():
+                current = priority_queue.get()
+                if current == checkpoint_position:
+                    break
+                for next_node in self.graph.graph_dict.get(current):
+                    new_cost = cost_so_far[current] + self.graph.estimate_distance(current, next_node)
+                    if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
+                        cost_so_far[next_node] = new_cost
+                        priority = new_cost + self.graph.estimate_distance(next_node, checkpoint_position)
+                        priority_queue.put(next_node, priority)
+                        came_from[next_node] = current
 
-    def current_heading_within_target_heading_threshold(self):
-        """ Returns true if within threshold, false otherwise """
-        return (self.current_heading <=
-                self.target_heading + (ROTATION_THRESHOLD / 2)) and (
-                    self.current_heading >=
-                    self.target_heading - (ROTATION_THRESHOLD / 2))
+            print("After empty prio queue")
+
+            current = checkpoint_position
+            self.nodes_queue_to_checkpoint.append(current)
+            while current != start_node:
+                print("Length of nodes queue = {0}".format(len(self.nodes_queue_to_checkpoint)))
+                current = came_from.get(current)
+                self.nodes_queue_to_checkpoint.append(current)
+
+            print("After modif")
+
+            self.nodes_queue_to_checkpoint.reverse()
+
+            self.robot_status.generate_new_translation_vector_towards_new_target(
+                self.nodes_queue_to_checkpoint.popleft())
+
+            print("Path built.")

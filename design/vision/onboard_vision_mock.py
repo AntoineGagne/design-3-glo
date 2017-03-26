@@ -11,12 +11,12 @@ class OnboardVisionMock():
     def __init__(self):
         self.last_capture = None
 
-    def capture(self, which_one):
+    def capture(self):
         """ Takes a picture in front of the camera, and picks the one with the relative
         position indicated in the argument """
         self.last_capture = "MOCK.POLYGON"
 
-    def get_captured_vertices(self, figure_information):
+    def get_captured_vertices(self, zoom, orientation):
         """ Returns mocked polygon's vertices in a list
         Turning the polygon's vertices according to parameter is not supported yet!"""
 

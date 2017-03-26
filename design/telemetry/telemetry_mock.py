@@ -5,6 +5,7 @@ Mocks telemetry for initial decisionmaking testing """
 
 import logging
 import datetime
+from design.telemetry.packets import (Packet, PacketType)
 
 
 class TelemetryMock():
@@ -27,26 +28,33 @@ class TelemetryMock():
         file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
 
-    def bind(self, port_number):
-        """Mocks binding to port"""
-        self.logger.debug("BIND: Binding to port %s", port_number)
+    def put_command(self, packet):
+        """ Mocks sending telemetry to base station
+        :param packet: Telemetry packet to send to the base station """
+        self.logger.info("%s", packet.packet_data)
 
-    def send(self, data):
-        """Mocks sending telemetry to base station"""
-
-        if isinstance(data, str):
-            self.logger.info("%s", data)
-        else:
-            self.logger.info("%s", data.to_string())
-
-    def poll(self):
-        """ Polls mocked telemetry """
+    def fetch_command(self):
+        """ Polls mocked telemetry
+        :returns: Telemetry packet
+        :rtype: `design.telemetry.packets.Packet` """
 
         current_time = "{:%H:%M:%S}".format(datetime.datetime.now())
         if current_time in self.timestamped_telemetry:
-            print("CONSUMMATING TELEMTRY!")
             polled_telemetry = self.timestamped_telemetry[current_time]
             del self.timestamped_telemetry[current_time]
-            return polled_telemetry.split('|')
+
+            if PacketType[polled_telemetry.split('|')[0]] == PacketType.GAME_MAP:
+                packet_data = {}
+                packet_data["obstacles"] = [((47, 158), "N")]
+                packet_data["robot"] = [(20, 20), 60]
+                packet_data["table_corners"] = [(0, 0), (0, 231), (112, 231), (112, 0)]
+                packet_data["drawing_zone"] = [(26, 27), (26, 87), (86, 87), (86, 27)]
+                packet = Packet(PacketType[polled_telemetry.split('|')[0]], packet_data)
+                return packet
+            else:
+                packet = Packet(PacketType[polled_telemetry.split('|')[0]],
+                                polled_telemetry.split('|')[1])
+                packet.timestamp = current_time
+                return packet
         else:
-            return (None, None)
+            return Packet(None, None)
