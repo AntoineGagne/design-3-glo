@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum, unique
 from typing import Any
 
-import pickle
+import dill as pickle
 import zlib
 
 

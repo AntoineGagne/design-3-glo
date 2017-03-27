@@ -8,4 +8,4 @@ coverage
 pyqt
 pyserial
 Sphinx
-
+dill
