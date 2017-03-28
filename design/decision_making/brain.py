@@ -51,6 +51,8 @@ class Brain():
 
                 if self.current_status == Step.STANBY:
                     # Redébuter un cycle en attendant les données de jeu
+                    # Missing reinit of some objects
+                    self.base_station.put_command(ready_packet)
                     main_sequence_has_started = False
 
         self.current_status = Step.STANBY

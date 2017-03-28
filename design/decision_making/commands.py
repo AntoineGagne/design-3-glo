@@ -11,8 +11,9 @@ from design.decision_making.constants import (Step,
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 from design.pathfinding.pathfinder import PathStatus
 from design.pathfinding.constants import (PointOfInterest,
-                                          STANDARD_HEADING)
+                                          STANDARD_HEADING, TRANSLATION_SPEED)
 from design.telemetry.packets import (Packet, PacketType)
+from design.vision.exceptions import PaintingFrameNotFound, VerticesNotFound
 
 
 class Command():
@@ -109,7 +110,7 @@ class PrepareTravelToAntennaAreaCommand(Command):
                           self.pathfinder.robot_status.get_position()))
         self.hardware.wheels.move(new_vector)
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class TravelToPaintingsAreaCommand(Command):
@@ -137,7 +138,7 @@ class TravelToPaintingsAreaCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class PrepareToDrawCommand(Command):
@@ -170,7 +171,7 @@ class PrepareToDrawCommand(Command):
             self.pathfinder.nodes_queue_to_checkpoint.popleft()))
         self.hardware.pen.lower_pen()
 
-        return (next_step(self.current_step), None)
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class PrepareExitOfDrawingAreaCommand(Command):
@@ -196,7 +197,7 @@ class PrepareExitOfDrawingAreaCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class FinishCycleCommand(Command):
@@ -206,7 +207,7 @@ class FinishCycleCommand(Command):
         """ Stops current cycle """
         print("Cycle finished. Currently at position {0}".format(self.pathfinder.robot_status.get_position()))
         self.hardware.lights.turn_on_red_led()
-        return (Step.STANBY, Packet(PacketType.COMMAND, "Stop chronograph"))
+        return (Step.STANBY, Packet(PacketType.COMMAND, "STOP_CHRONOGRAPH"))
 
 
 class PrepareSearchForAntennaPositionCommand(Command):
@@ -227,7 +228,7 @@ class PrepareSearchForAntennaPositionCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class SearchForAntennaPositionCommand(Command):
@@ -286,7 +287,7 @@ class PrepareMovingToAntennaPositionCommand(Command):
                 self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                     self.pathfinder.robot_status.get_position()))
 
-            return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+            return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
         except ValueError:
             return (Step.COMPUTE_PAINTINGS_AREA, Packet(PacketType.NOTIFICATION, "Antenna position has not been found! Aborting search."))
 
@@ -314,7 +315,7 @@ class PrepareMarkingAntennaCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class PrepareTravelToDrawingAreaCommand(Command):
@@ -346,7 +347,7 @@ class PrepareTravelToDrawingAreaCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class RoutineCheckCommand(TranslationCommand):
@@ -486,7 +487,7 @@ class AcquireInformationFromAntennaCommand(Command):
         antenna_data = self.hardware.antenna.get_information_from_signal()
         print("Acquire information from signal, painting nb: {0}".format(antenna_data))
 
-        if self.antenna_information is None:
+        if antenna_data is None:
             return (self.current_step, None)
         else:
             self.antenna_information.painting_number = int(antenna_data.painting_number)
@@ -520,8 +521,9 @@ class FaceRelevantFigureForCaptureCommand(Command):
 class CaptureFigureCommand(Command):
     """ Allows the robot to capture the relevant figure """
 
-    def __init__(self, step, interfacing_controller, pathfinder, onboard_vision):
+    def __init__(self, step, interfacing_controller, pathfinder, antenna_information, onboard_vision):
         super(CaptureFigureCommand, self).__init__(step, interfacing_controller, pathfinder)
+        self.antenna_information = antenna_information
         self.vision = onboard_vision
 
     def execute(self, data):
@@ -529,11 +531,25 @@ class CaptureFigureCommand(Command):
 
         print("capture figure")
 
-        self.vision.capture()
+        capture_can_be_computed = False
+
+        retry_translation_deltas = self.pathfinder.figures.get_figure_list_of_retries_movement_deltas(
+            self.antenna_information.painting_number)
+        for retry_delta_vector in retry_translation_deltas:
+            while not capture_can_be_computed:
+                try:
+                    self.vision.capture()
+                    self.vision.get_captured_vertices(2, 90)
+                    capture_can_be_computed = True
+                except (PaintingFrameNotFound, VerticesNotFound):
+                    capture_can_be_computed = False
+                    self.hardware.wheels.move(retry_delta_vector)
+                    time.sleep(math.hypot(retry_delta_vector[0], retry_delta_vector[1]) / TRANSLATION_SPEED)
+
         self.hardware.lights.light_green_led(1000)
 
         rotation_angle = (self.pathfinder.robot_status.
                           set_target_heading_and_get_angular_difference(STANDARD_HEADING))
         self.hardware.wheels.rotate(rotation_angle)
 
-        return (next_step(self.current_step), None)
+        return (next_step(self.current_step), Packet(PacketType.FIGURE_IMAGE, self.vision.last_capture))

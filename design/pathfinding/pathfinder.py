@@ -36,18 +36,34 @@ class Pathfinder():
         obstacles """
 
         robot_information = game_map_data.get("robot")
-        self.robot_status = RobotSupposedStatus(robot_information[0], robot_information[1])
+        if robot_information:
+            self.robot_status = RobotSupposedStatus(robot_information[0], robot_information[1])
+        else:
+            self.robot_status = RobotSupposedStatus((20, 20), 90)
 
-        self.graph = Graph(game_map_data.get("obstacles"))
+        obstacles = game_map_data.get("obstacles")
+        if obstacles:
+            self.graph = Graph(obstacles)
+        else:
+            self.graph = Graph([])
+
         self.graph.generate_nodes_of_graph()
         self.graph.generate_graph()
 
         table_corners_positions = game_map_data.get("table_corners")
-        self.figures.compute_positions(table_corners_positions[0], table_corners_positions[1],
-                                       table_corners_positions[2], table_corners_positions[3])
+        if table_corners_positions:
+            self.figures.compute_positions(table_corners_positions[0], table_corners_positions[1],
+                                           table_corners_positions[2], table_corners_positions[3])
+        else:
+            self.figures.compute_positions((0, 0), (0, 231), (112, 231), (112, 0))
 
-        self.game_map.set_drawing_zone_borders(game_map_data.get("drawing_zone"))
-        self.game_map.set_antenna_search_points(table_corners_positions[3])
+        drawing_zone_corners = game_map_data.get("drawing_zone")
+        if drawing_zone_corners:
+            self.game_map.set_drawing_zone_borders(game_map_data.get("drawing_zone"))
+            self.game_map.set_antenna_search_points(table_corners_positions[3])
+        else:
+            self.game_map.set_drawing_zone_borders((26, 27), (26, 87), (86, 87), (86, 27))
+            self.game_map.set_antenna_search_points((112, 0))
 
     def verify_if_deviating(self, current_robot_position):
         """ Returns true if deviating outside defined THRESHOLD,
@@ -80,6 +96,18 @@ class Pathfinder():
         """ Returns any data about the specified point of interest within
         the game map """
         return self.game_map.get_point_of_interest(point_of_interest)
+
+    def get_current_path(self):
+        """ Takes the current path contained in nodes queue to checkpoint, copies it and adds
+        origin of movement and current target. Returns a new queue. """
+        path = deque()
+        for node in self.nodes_queue_to_checkpoint:
+            path.append(node)
+
+        path.appendleft(self.robot_status.target_position)
+        path.appendleft(self.robot_status.get_position())
+
+        return path
 
     def generate_path_to_checkpoint_a_to_b(self, checkpoint_position):
         """ Generates shortest path to checkpoint and updates the node queue

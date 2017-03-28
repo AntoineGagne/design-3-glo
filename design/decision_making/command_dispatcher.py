@@ -85,7 +85,7 @@ class CommandDispatcher():
                               (None, Step.CAPTURE_CORRECT_PAINTING):
                               CaptureFigureCommand(
                                   Step.CAPTURE_CORRECT_PAINTING, interfacing_controller,
-                                  pathfinder, onboard_vision)}
+                                  pathfinder, antenna_information, onboard_vision)}
 
     def get_relevant_command(self, packet_type, current_step):
         """ Obtains the relevant command according to the telemetry packet

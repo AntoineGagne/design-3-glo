@@ -6,6 +6,7 @@ OUTER_FRAME_SIZE = 16.4
 INNER_FRAME_SIZE = 14.8
 SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES = 8
 WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES = 8.9
+DELTA_INCREMENT = 3
 
 
 class FiguresInformation():
@@ -13,6 +14,7 @@ class FiguresInformation():
 
     def __init__(self):
         self.figures = {}
+        self.figures_backup_deltas = {}
 
         self.southeast_corner = (0, 0)
         self.southwest_corner = (0, 231)
@@ -56,6 +58,15 @@ class FiguresInformation():
                             self.northwest_corner[1] - (1.5 * OUTER_FRAME_SIZE) - (2 * SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES)),
                            0)
 
+        self.figures_backup_deltas[0] = [(0, -DELTA_INCREMENT), (0, 2 * DELTA_INCREMENT), (0, -DELTA_INCREMENT)]
+        self.figures_backup_deltas[1] = [(0, DELTA_INCREMENT), (0, DELTA_INCREMENT), (0, -(2 * DELTA_INCREMENT))]
+        self.figures_backup_deltas[2] = [(-DELTA_INCREMENT, 0), (-DELTA_INCREMENT, 0), (0, 2 * DELTA_INCREMENT)]
+        self.figures_backup_deltas[3] = [(-DELTA_INCREMENT, 0), (2 * DELTA_INCREMENT, 0), (-DELTA_INCREMENT, 0)]
+        self.figures_backup_deltas[4] = [(-DELTA_INCREMENT, 0), (2 * DELTA_INCREMENT, 0), (-DELTA_INCREMENT, 0)]
+        self.figures_backup_deltas[5] = [(DELTA_INCREMENT, 0), (DELTA_INCREMENT, 0), (-DELTA_INCREMENT, 0)]
+        self.figures_backup_deltas[6] = [(0, DELTA_INCREMENT), (0, DELTA_INCREMENT), (0, -DELTA_INCREMENT)]
+        self.figures_backup_deltas[7] = [(0, -DELTA_INCREMENT), (0, 2 * DELTA_INCREMENT), (0, -DELTA_INCREMENT)]
+
     def compute_positions(self, southeast_corner, southwest_corner,
                           northwest_corner, northeast_corner):
         """ Executes final computation of figure positions """
@@ -76,3 +87,8 @@ class FiguresInformation():
         """ Returns the orientation of which the robot must head towards
         in order to take the picture """
         return self.figures[figure_index][1]
+
+    def get_figure_list_of_retries_movement_deltas(self, figure_index):
+        """ Returns a list of translation vectors in-between which a capture
+        can be attempted again. """
+        return self.figures_backup_deltas[figure_index]
