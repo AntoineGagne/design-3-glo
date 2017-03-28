@@ -54,7 +54,6 @@ def test_generate_connected_nodes_list_for_node():
     graph.generate_graph()
     node = (21.5, 77)
     node2 = (21.5, 123)
-    assert graph.graph_dict.get(node2) == [node]
     assert graph.graph_dict.get(node) == [node2]
 
 
