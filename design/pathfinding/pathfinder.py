@@ -40,7 +40,7 @@ class Pathfinder():
 
         self.graph = Graph(game_map_data.get("obstacles"))
         self.graph.generate_nodes_of_graph()
-        # self.graph.generate_graph()
+        self.graph.generate_graph()
 
         table_corners_positions = game_map_data.get("table_corners")
         self.figures.compute_positions(table_corners_positions[0], table_corners_positions[1],
@@ -81,7 +81,7 @@ class Pathfinder():
         the game map """
         return self.game_map.get_point_of_interest(point_of_interest)
 
-    def generate_path_to_checkpoint(self, checkpoint_position):
+    def generate_path_to_checkpoint_a_to_b(self, checkpoint_position):
         """ Generates shortest path to checkpoint and updates the node queue
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
@@ -94,7 +94,7 @@ class Pathfinder():
         self.robot_status.generate_new_translation_vector_towards_new_target(
             self.nodes_queue_to_checkpoint.popleft())
 
-    def generate_path_to_checkpoint_with_a_star(self, checkpoint_position):
+    def generate_path_to_checkpoint(self, checkpoint_position):
         """ Generates shortest path to checkpoint and updates the node queue
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
@@ -105,9 +105,12 @@ class Pathfinder():
             print("Checkpoint not accessible")
             raise CheckpointNotAccessibleError("Le point d'arrivé est non accessible par le robot")
         else:
+            print("length = {0}".format(len(self.graph.graph_dict)))
             self.nodes_queue_to_checkpoint.clear()
             start_node = self.robot_status.get_position()
+            print("Generating path with A star. start position = {0}".format(start_node))
             self.graph.add_start_end_node(start_node, checkpoint_position)
+            print("length = {0}".format(len(self.graph.graph_dict)))
             priority_queue = PriorityQueue()
             priority_queue.put(start_node, 0)
             came_from = {}
@@ -119,7 +122,12 @@ class Pathfinder():
                 current = priority_queue.get()
                 if current == checkpoint_position:
                     break
-                for next_node in self.graph.graph_dict.get(current):
+                if (self.graph.get_position_minimum_of_graph() > checkpoint_position[1]) and (self.graph.get_position_minimum_of_graph() > current[1]):
+                    came_from[checkpoint_position] = current
+                    break
+                print("node:{0}".format(current))
+                print("list node:{0}".format(self.graph.graph_dict[current]))
+                for next_node in self.graph.graph_dict[current]:
                     new_cost = cost_so_far[current] + self.graph.estimate_distance(current, next_node)
                     if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
                         cost_so_far[next_node] = new_cost
@@ -127,14 +135,18 @@ class Pathfinder():
                         priority_queue.put(next_node, priority)
                         came_from[next_node] = current
 
-            print("After empty prio queue")
+            self.graph.graph_dict[self.graph.graph_dict.get(start_node)[0]].remove(start_node)
+            self.graph.graph_dict[self.graph.graph_dict.get(checkpoint_position)[0]].remove(checkpoint_position)
+            del self.graph.graph_dict[start_node]
+            del self.graph.graph_dict[checkpoint_position]
 
+            print("After empty prio queue")
             current = checkpoint_position
-            self.nodes_queue_to_checkpoint.append(current)
             while current != start_node:
                 print("Length of nodes queue = {0}".format(len(self.nodes_queue_to_checkpoint)))
-                current = came_from.get(current)
+                print("NODE = {0}".format(current))
                 self.nodes_queue_to_checkpoint.append(current)
+                current = came_from.get(current)
 
             print("After modif")
 

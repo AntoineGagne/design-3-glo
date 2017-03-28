@@ -1,4 +1,5 @@
 """ Generate the graph """
+
 from design.pathfinding.constants import ROBOT_SAFETY_MARGIN
 from design.pathfinding.constants import OBSTACLE_RADIUS
 from design.pathfinding.constants import TABLE_X
@@ -16,38 +17,44 @@ class Graph:
 
     def generate_graph(self):
         """ Generate all connections between the nodes"""
-        node_dict_sorted = sorted(self.graph_dict)
-        node_dict_sorted = sorted(node_dict_sorted, key=operator.itemgetter(1))
-        i = 0
-        while i < len(node_dict_sorted):
-            node1 = node_dict_sorted[i]
-            i += 1
-            node2 = node_dict_sorted[i]
-            i += 1
-            node3 = node_dict_sorted[i]
-            i += 1
-            node4 = node_dict_sorted[i]
-            i += 1
-            if (node1[1] < node2[1]) and (node3[1] == node4[1]):
-                self.add_edge_of_graph(node2, node3)
-                self.add_edge_of_graph(node2, node4)
-            if (node1[1] != node2[1]) and (node1[1] != node3[1]):
-                self.add_edge_of_graph(node2, node3)
-            if (node1[1] == node2[1]) and (node3[1] == node4[1]):
-                node1 = node3
-                node2 = node4
+
+        if len(self.obstacles_list) > 1:
+            node_dict_sorted = sorted(self.graph_dict)
+            node_dict_sorted = sorted(node_dict_sorted, key=operator.itemgetter(1))
+            i = 0
+            while i <= (len(node_dict_sorted) - 4):
+                node1 = node_dict_sorted[i]
+                i += 1
+                node2 = node_dict_sorted[i]
+                i += 1
                 node3 = node_dict_sorted[i]
                 i += 1
                 node4 = node_dict_sorted[i]
-                if node3[1] != node4[1]:
-                    self.add_edge_of_graph(node1, node3)
+                i += 1
+                if (node1[1] < node2[1]) and (node3[1] == node4[1]):
                     self.add_edge_of_graph(node2, node3)
-                if node3[1] == node4[1]:
-                    self.add_edge_of_graph(node1, node3)
-                    self.add_edge_of_graph(node2, node3)
-                    self.add_edge_of_graph(node1, node4)
                     self.add_edge_of_graph(node2, node4)
-            i += 2
+                if (node1[1] != node2[1]) and (node1[1] != node3[1]):
+                    self.add_edge_of_graph(node2, node3)
+                if (node1[1] == node2[1]) and (node3[1] == node4[1]) and (i <= (len(node_dict_sorted) - 2)):
+                    i -= 2
+                    node1 = node_dict_sorted[i]
+                    i += 1
+                    node2 = node_dict_sorted[i]
+                    i += 1
+                    node3 = node_dict_sorted[i]
+                    i += 1
+                    node4 = node_dict_sorted[i]
+                    i += 1
+                    if node3[1] != node4[1]:
+                        self.add_edge_of_graph(node1, node3)
+                        self.add_edge_of_graph(node2, node3)
+                    if node3[1] == node4[1]:
+                        self.add_edge_of_graph(node1, node3)
+                        self.add_edge_of_graph(node2, node3)
+                        self.add_edge_of_graph(node1, node4)
+                        self.add_edge_of_graph(node2, node4)
+                i -= 2
 
     def generate_nodes_of_graph(self):
         """ Generating the list of nodes of the graph"""
@@ -143,3 +150,11 @@ class Graph:
         """ Calculate distance estimate """
         return math.sqrt(
             ((next_position[0] - current_position[0]) ** 2) + ((next_position[1] - current_position[1]) ** 2))
+
+    def get_position_minimum_of_graph(self):
+        """ """
+        min = 230
+        for node in self.graph_dict.keys():
+            if node[1] < min:
+                min = node[1]
+        return min
