@@ -4,6 +4,7 @@ A command always return a (next_step, exiting_telemetry_msg) tuple."""
 import datetime
 import time
 import math
+import numpy
 from design.decision_making.constants import (Step,
                                               NUMBER_OF_SECONDS_BETWEEN_ROTATION_CHECKS,
                                               NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS,
@@ -11,7 +12,7 @@ from design.decision_making.constants import (Step,
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 from design.pathfinding.pathfinder import PathStatus
 from design.pathfinding.constants import (PointOfInterest,
-                                          STANDARD_HEADING, TRANSLATION_SPEED)
+                                          STANDARD_HEADING, TRANSLATION_SPEED, DEVIATION_THRESHOLD)
 from design.telemetry.packets import (Packet, PacketType)
 from design.vision.exceptions import PaintingFrameNotFound, VerticesNotFound
 
@@ -102,7 +103,7 @@ class PrepareTravelToAntennaAreaCommand(Command):
 
         print("prepare travel to antenna area")
 
-        self.pathfinder.generate_path_to_checkpoint(self.pathfinder.get_point_of_interest(
+        self.pathfinder.generate_path_to_checkpoint_a_to_b(self.pathfinder.get_point_of_interest(
             PointOfInterest.ANTENNA_START_SEARCH_POINT))
 
         new_vector = (self.pathfinder.robot_status.
@@ -221,7 +222,7 @@ class PrepareSearchForAntennaPositionCommand(Command):
 
         self.hardware.antenna.start_sampling()
 
-        self.pathfinder.generate_path_to_checkpoint(
+        self.pathfinder.generate_path_to_checkpoint_a_to_b(
             self.pathfinder.get_point_of_interest(PointOfInterest.ANTENNA_STOP_SEARCH_POINT))
 
         self.hardware.wheels.move(
@@ -282,7 +283,7 @@ class PrepareMovingToAntennaPositionCommand(Command):
             position_x, position_y = max(self.antenna_information.strength_curve,
                                          key=self.antenna_information.strength_curve.get)
 
-            self.pathfinder.generate_path_to_checkpoint((position_x, position_y))
+            self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
             self.hardware.wheels.move(
                 self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                     self.pathfinder.robot_status.get_position()))
@@ -308,8 +309,8 @@ class PrepareMarkingAntennaCommand(Command):
         self.hardware.pen.lower_pen()
 
         position_x, position_y = self.pathfinder.robot_status.get_position()
-        position_x = position_x - 5
-        self.pathfinder.generate_path_to_checkpoint((position_x, position_y))
+        position_x = position_x - 2
+        self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
 
         self.hardware.wheels.move(
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
@@ -398,14 +399,28 @@ class RoutineCheckThroughTelemetryCommand(TranslationCommand):
 
         self.pathfinder.robot_status.update_position(position_timestamp)
 
-        # Verifying current trajectory if we recieve our position from
-        # telemetry
-        if self.pathfinder.verify_if_deviating(real_position):
-            new_vector = (self.pathfinder.robot_status.
-                          generate_new_translation_vector_towards_current_target(real_position))
-            self.hardware.wheels.move(new_vector)
+        # Build ORIGIN_TO_REAL_TARGET and ORIGIN_TO_REAL_POSITION_VECTOR
+        origin_to_target_vector = self.pathfinder.robot_status.get_translation_vector()
+        origin_to_real_position_vector = (real_position[0] - self.pathfinder.robot_status.origin_of_movement_vector[0],
+                                          real_position[1] - self.pathfinder.robot_status.origin_of_movement_vector[1])
 
-        return (self.update_current_vector_if_necessary_and_determine_next_step(real_position), None)
+        # Calculate if there is a non-negligible angle between the two vectors: if there is, the robot
+        # is deviating
+        dot_product = numpy.dot(origin_to_real_position_vector, origin_to_target_vector)
+        angle = math.acos(dot_product / (
+            math.hypot(origin_to_target_vector[0], origin_to_target_vector[1]) * math.hypot(
+                origin_to_real_position_vector[0], origin_to_real_position_vector[1])))
+
+        return_telemetry = None
+        if angle >= DEVIATION_THRESHOLD:
+            time_elapsed_since_real_position_was_computed = (datetime.datetime.now() - position_timestamp).total_seconds()
+            calculated_current_real_position = (real_position + (
+                (origin_to_real_position_vector[1] / origin_to_real_position_vector[0]) * time_elapsed_since_real_position_was_computed))
+
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(calculated_current_real_position)
+            return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
+
+        return (self.update_current_vector_if_necessary_and_determine_next_step(real_position), return_telemetry)
 
 
 class RoutineCheckWithoutDeviationChecksCommand(TranslationCommand):
