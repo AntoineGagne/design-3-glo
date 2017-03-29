@@ -3,6 +3,7 @@
 from typing import Tuple
 
 import cv2
+import netifaces
 
 import queue
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
@@ -149,9 +150,11 @@ def start_robot(arguments):
 
     :param arguments: The command line arguments
     """
-    command_handler = create_command_handler(arguments.host,
-                                             arguments.ports,
-                                             ServerSelectorFactory)
+    command_handler = create_command_handler(
+        netifaces.ifaddresses('wlp4s0')[2][0]['addr'],
+        arguments.ports,
+        ServerSelectorFactory
+    )
     onboard_vision = create_onboard_vision(arguments.camera_port)
     interfacing_controller = create_interfacing_controller()
     movement_strategy = create_movement_strategy()
