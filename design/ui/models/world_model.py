@@ -12,6 +12,7 @@ class WorldModel:
         self._robot_real_path = None
         self._drawing_zone_coordinates = None
         self._game_image = None
+        self._game_zone_coordinates = None
 
         self._update_functions = []
 
@@ -22,6 +23,14 @@ class WorldModel:
     @robot_real_path.setter
     def robot_real_path(self, path: list):
         self._robot_real_path = path
+
+    @property
+    def game_zone_coordinates(self):
+        return self._game_zone_coordinates
+
+    @game_zone_coordinates.setter
+    def game_zone_coordinates(self, coordinates: list):
+        self._game_zone_coordinates = coordinates
 
     @property
     def obstacles_coordinates(self):

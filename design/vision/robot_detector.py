@@ -144,6 +144,8 @@ class RobotDetector:
         self.__find_circles()
         self.__detect_robot_position()
         self.__detect_robot_orientation()
+        print([self.robot_position, self.robot_orientation])
+        self.display_robot()
         return [self.robot_position, self.robot_orientation]
 
     def display_robot(self):

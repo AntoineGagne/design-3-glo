@@ -189,4 +189,6 @@ class ObstaclesDetector:
 
         for triangle in self.triangular_obstacles_coordinates:
             self.obstacles_information.append([triangle[0], triangle[2]])
+        # print(self.obstacles_information)
+        # self.draw_obstacles()
         return self.obstacles_information

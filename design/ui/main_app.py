@@ -103,10 +103,10 @@ class MainApp(QApplication):
                 for information in obstacles_coordinates:
                     arranged_coordinates.append(information[0])
 
+                self.change_axes(False)
+
                 self.world_controller.update_obstacles_coordinates(arranged_coordinates)
-
                 self.world_controller.update_drawing_zone(game_map_in_pixels["drawing_zone"])
-
                 self.world_controller.update_robot_position([game_map_in_pixels["robot"][0]])
                 self.world_controller.update_world_image(self.main_vision.actual_frame)
                 self.main_model.start_new_cycle = False
@@ -166,6 +166,8 @@ class MainApp(QApplication):
                     game_map_found = True
 
                 print(self.game_map)
+                self.change_axes(True)
+
                 game_map_packet = Packet(packet_type=PacketType.GAME_MAP, packet_data=self.game_map)
                 self.telemetry.put_command(game_map_packet)
 
@@ -178,14 +180,27 @@ class MainApp(QApplication):
                     arranged_coordinates.append(information[0])
 
                 self.world_controller.update_obstacles_coordinates(arranged_coordinates)
-
+                self.world_controller.update_game_zone_coordinates(game_map_in_pixels["table_corners"])
                 self.world_controller.update_drawing_zone(game_map_in_pixels["drawing_zone"])
-
                 self.world_controller.update_robot_position([game_map_in_pixels["robot"][0]])
                 self.world_controller.update_world_image(self.main_vision.actual_frame)
             except GameMapNotFound:
                 print("Game map not found")
                 continue
+
+    def change_axes(self, first_time: bool=True):
+        if first_time:
+            for index, coordinate in enumerate(self.game_map["drawing_zone"]):
+                self.game_map["drawing_zone"][index] = coordinate[::-1]
+
+            for index, coordinate in enumerate(self.game_map["table_corners"]):
+                self.game_map["table_corners"][index] = coordinate[::-1]
+
+        for obstacle in self.game_map["obstacles"]:
+            obstacle[0] = obstacle[0][::-1]
+
+        self.game_map["robot"][0] = self.game_map["robot"][0][::-1]
+        self.game_map["robot"][1] = 90 - self.game_map["robot"][1]
 
     def send_robot_position(self):
         try:

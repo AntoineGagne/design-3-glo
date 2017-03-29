@@ -69,6 +69,7 @@ class WorldView(QWidget):
         self.model.subscribe_update_function(self.draw_drawing_square_coordinates)
         self.model.subscribe_update_function(self.draw_path)
         self.model.subscribe_update_function(self.draw_real_path)
+        self.model.subscribe_update_function(self.draw_game_zone_coordinates)
 
     def setup_connections(self):
         self.button_reset_zoom.clicked.connect(self.reset_zoom)
@@ -81,6 +82,7 @@ class WorldView(QWidget):
         self.real_path_lines_pen = QtGui.QPen(QColor('#f44290'), 5, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
         self.real_path_points_pen = QtGui.QPen(QColor('#85ff95'), 10)
         self.drawing_zone_pen = QtGui.QPen(QColor('#11ed23'), 10)
+        self.game_zone_pen = QtGui.QPen(QColor('#hhff53'), 10)
         self.robot_pen = QtGui.QPen(QColor('#4171f4'), 10)
         self.obstacles_pen = QtGui.QPen(QColor('#d33a74'), 10)
         self.radius = 10
@@ -189,3 +191,14 @@ class WorldView(QWidget):
                                          self.radius)
 
             self.world_scene.addPath(path_to_paint, self.obstacles_pen)
+
+    def draw_game_zone_coordinates(self):
+        path = self.model.game_zone_coordinates
+        path_to_paint = QtGui.QPainterPath()
+        if path:
+            path_to_paint.moveTo(path[0][0], path[0][1])
+            for i in range(len(path)):
+                path_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] - self.radius / 2, self.radius,
+                                         self.radius)
+
+            self.world_scene.addPath(path_to_paint, self.game_zone_pen)

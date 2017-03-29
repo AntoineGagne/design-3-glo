@@ -1,11 +1,8 @@
-"""
-The controller class does the real logic,
-and passes on data to the model
-"""
+from design.ui.models.main_model import MainModel
 
 
 class MainController:
-    def __init__(self, model):
+    def __init__(self, model: MainModel):
         self.model = model
 
     def reset_timer(self):
@@ -25,4 +22,16 @@ class MainController:
 
     def update_time(self):
         self.model.time += 1
+        self.model.announce_update()
+
+    def start_new_cycle(self):
+        self.model.start_new_cycle = True
+        self.model.announce_update()
+
+    def update_console_log(self, new_message: str):
+        self.model.log_messages += "{}\n".format(new_message)
+        self.model.announce_update()
+
+    def find_robot(self):
+        self.model.find_robot_flag = True
         self.model.announce_update()

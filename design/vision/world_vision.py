@@ -132,19 +132,7 @@ class WorldVision:
         drawing_zone_information = filter_information(drawing_zone_information)
         drawing_zone_final_information = get_best_information(drawing_zone_information)
 
-        # once the drawing zone is found, we are able to calculate the table's rotation
-        self.rotation_angle_of_table = calculate_table_rotation(drawing_zone_final_information)
-        temporary_world_drawing_zone = self.converter.get_world_coordinates(0,
-                                                                            drawing_zone_final_information[0][0],
-                                                                            drawing_zone_final_information[0][1])
-        temporary_table_corners = extrapolate_table(temporary_world_drawing_zone, self.rotation_angle_of_table)
-        self.converter.set_origin(temporary_table_corners[0][0], temporary_table_corners[0][1])
-
-        table_corners = []
-        for corner in temporary_table_corners:
-            table_corners.append((corner[0] + self.converter.translation_x, corner[1] + self.converter.translation_y))
-
-        self.game_map["table_corners"] = table_corners
+        self.adjust_converter(drawing_zone_final_information)
 
         self.game_map_in_pixels["drawing_zone"] = drawing_zone_final_information
         drawing_zone_top_left_world_coordinate = \
@@ -162,6 +150,25 @@ class WorldVision:
             drawing_zone_world_coordinates.append((world_position[0], world_position[1]))
 
         return drawing_zone_world_coordinates
+
+    def adjust_converter(self, drawing_zone):
+        # once the drawing zone is found, we are able to calculate the table's rotation
+        self.rotation_angle_of_table = calculate_table_rotation(drawing_zone)
+        temporary_world_drawing_zone = self.converter.get_world_coordinates(0,
+                                                                            drawing_zone[0][0],
+                                                                            drawing_zone[0][1])
+        temporary_table_corners = extrapolate_table(temporary_world_drawing_zone, self.rotation_angle_of_table)
+        self.converter.set_origin(temporary_table_corners[0][0], temporary_table_corners[0][1])
+
+        table_corners = []
+        for corner in temporary_table_corners:
+            table_corners.append((corner[0] + self.converter.translation_x, corner[1] + self.converter.translation_y))
+
+        self.game_map["table_corners"] = table_corners
+        self.game_map_in_pixels["table_corners"] = []
+        for corner in table_corners:
+            self.game_map_in_pixels["table_corners"].append(
+                self.converter.get_pixel_coordinates(corner[0], corner[1], 0))
 
     def get_initial_game_map(self):
         """
