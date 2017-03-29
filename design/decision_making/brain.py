@@ -4,6 +4,7 @@ from design.decision_making.constants import Step
 from design.decision_making.command_dispatcher import CommandDispatcher
 from design.pathfinding.pathfinder import Pathfinder
 from design.pathfinding.antenna_information import AntennaInformation
+from design.pathfinding.servo_wheels_manager import ServoWheelsManager
 from design.telemetry.packets import PacketType, Packet
 
 
@@ -18,7 +19,7 @@ class Brain():
         self.base_station = telemetry
         self.dispatcher = CommandDispatcher(
             movement_strategies, interfacing_controller, Pathfinder(),
-            onboard_vision, AntennaInformation())
+            onboard_vision, AntennaInformation(), ServoWheelsManager())
 
     def main(self):
         """Main loop of the robot. Polls on telemetry and acts according

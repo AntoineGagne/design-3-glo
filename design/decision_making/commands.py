@@ -4,7 +4,6 @@ A command always return a (next_step, exiting_telemetry_msg) tuple."""
 import datetime
 import time
 import math
-import numpy
 from design.decision_making.constants import (Step,
                                               NUMBER_OF_SECONDS_BETWEEN_ROTATION_CHECKS,
                                               NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS,
@@ -12,8 +11,7 @@ from design.decision_making.constants import (Step,
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 from design.pathfinding.pathfinder import PathStatus
 from design.pathfinding.constants import (PointOfInterest,
-                                          STANDARD_HEADING, TRANSLATION_SPEED, DEVIATION_THRESHOLD, ROTATION_SPEED,
-                                          TRANSLATION_THRESHOLD)
+                                          STANDARD_HEADING, TRANSLATION_SPEED)
 from design.telemetry.packets import (Packet, PacketType)
 from design.vision.exceptions import PaintingFrameNotFound, VerticesNotFound
 
@@ -46,7 +44,7 @@ class TranslationCommand(Command):
         :returns: A boolean indicating if said telemetry is recieved and is a position packet
         :rtype: boolean """
         if telemetry_data is None or not isinstance(
-                telemetry_data.packet_type, PacketType.POSITION):
+                telemetry_data, list):
             time.sleep(50)
             return False
         else:
@@ -382,76 +380,89 @@ class RoutineCheckCommand(TranslationCommand):
         return (self.update_current_vector_if_necessary_and_determine_next_step(robot_position_from_telemetry), None)
 
 
-class RoutineCheckThroughTelemetryCommand(TranslationCommand):
-    """ Command that performs a routine check. Checks if robot is not
-        deviating, otherwise corrects trajectory, and switches to new
-        movement vector if the robot is within threshold if it's next
-        node in the graph. Only updates supposed position when it is recieved
-        from telemetry."""
+class RoutineCheckWithVisualServoManagementCommand(TranslationCommand):
+    """ Commands that performs a routine check including telemetry data in order to
+    correct the servowheels' trajectory and heading if necessary. """
 
-    st_last_recieved_position = 0
+    def __init__(self, current_step, interfacing_controller, pathfinder, servo_wheel_manager):
+        super(RoutineCheckWithVisualServoManagementCommand, self).__init__(current_step,
+                                                                           interfacing_controller, pathfinder)
+        self.servo_wheels_manager = servo_wheel_manager
 
     def execute(self, telemetry_data):
         """ Performs the routine check command """
+
         if not self.is_positional_telemetry_recieved(telemetry_data):
             return (self.current_step, None)
 
         real_position, real_orientation, position_timestamp = telemetry_data
 
-        # Build ORIGIN_TO_REAL_TARGET and ORIGIN_TO_REAL_POSITION_VECTOR
-        origin_to_target_vector = self.pathfinder.robot_status.get_translation_vector()
-        origin_to_real_position_vector = (real_position[0] - self.pathfinder.robot_status.origin_of_movement_vector[0],
-                                          real_position[1] - self.pathfinder.robot_status.origin_of_movement_vector[1])
-
-        # Calculate if there is a non-negligible angle between the two vectors: if there is, the robot
-        # is deviating
-        dot_product = numpy.dot(origin_to_real_position_vector, origin_to_target_vector)
-        angle = math.acos(dot_product / (
-            math.hypot(origin_to_target_vector[0], origin_to_target_vector[1]) * math.hypot(
-                origin_to_real_position_vector[0], origin_to_real_position_vector[1])))
-
-        # Calculate the real CURRENT position, as the position recieved from telemetry has a slight delay from
-        # the reality of the robot
-        time_elapsed_since_real_position_was_computed = (datetime.datetime.now() - position_timestamp).total_seconds()
-        calculated_current_real_position = (real_position + (
-            (origin_to_real_position_vector[1] / origin_to_real_position_vector[
-                0]) * time_elapsed_since_real_position_was_computed))
-
-        # If the angle is above our deviation threshold, correct trajectory
         return_telemetry = None
-        if angle >= DEVIATION_THRESHOLD:
-            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(calculated_current_real_position)
-            return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
+        if not self.servo_wheels_manager.heading_correction_in_progress:
+            # Translation checks
 
-        # If we stop before the node, resend a vector
-        if math.hypot(real_position[0] - RoutineCheckThroughTelemetryCommand.st_last_recieved_position[0],
-                      real_position[1] - RoutineCheckThroughTelemetryCommand.st_last_recieved_position[1]) <= TRANSLATION_THRESHOLD:
-            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(real_position)
-            return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
+            print("Translation checks")
+            origin_to_target_vector = self.pathfinder.robot_status.get_translation_vector()
+            origin_to_real_position_vector = (real_position[0] - self.pathfinder.robot_status.origin_of_movement_vector[0],
+                                              real_position[1] - self.pathfinder.robot_status.origin_of_movement_vector[1])
+
+            if self.servo_wheels_manager.is_real_translation_deviating(
+                    real_position, origin_to_real_position_vector, origin_to_target_vector, position_timestamp):
+                print("Translation deviating!")
+                correction_vector = self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
+                    self.servo_wheels_manager.calculated_current_real_position)
+                self.hardware.wheels.move(correction_vector)
+                return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
+
+            if self.servo_wheels_manager.has_the_robot_stopped_before_reaching_a_node(real_position):
+                self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(real_position)
+                return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
 
         path_status, new_vector = self.pathfinder.get_vector_to_next_node(
-            calculated_current_real_position)  # This method only does so if necessary!
+            self.servo_wheels_manager.calculated_current_real_position)
 
-        if new_vector:
-            # If we are at a node, verify heading and correct it if necessary before sending a new translation vector
-            self.pathfinder.robot_status.heading = real_orientation
-            self.pathfinder.robot_status.target_heading = STANDARD_HEADING
-            if not self.pathfinder.robot_status.heading_has_reached_target_heading_threshold:
+        if new_vector is None:
+            print("DIDN'T RECIEVE NEW VECTOR! Continuing current trajectory")
+
+        if path_status == PathStatus.CHECKPOINT_REACHED:
+            print("AT CHECKPOINT!")
+        else:
+            print("MOVING TOWARDS CHECKPOINT...")
+
+        if new_vector and not self.servo_wheels_manager.has_robot_lost_its_heading(real_orientation):
+            print("Heading is OK, carry on with next vector")
+            self.hardware.wheels.move(new_vector)
+        elif (new_vector or path_status == PathStatus.CHECKPOINT_REACHED) and \
+                self.servo_wheels_manager.has_robot_lost_its_heading(real_orientation) and not \
+                self.servo_wheels_manager.heading_correction_in_progress:
+            print("Lost heading!")
+            if not self.servo_wheels_manager.heading_correction_in_progress:
+                print("Initialize heading correction")
+                self.pathfinder.robot_status.heading = real_orientation
                 self.hardware.wheels.rotate(
                     self.pathfinder.robot_status.set_target_heading_and_get_angular_difference(STANDARD_HEADING))
-                time.sleep(math.fabs(
-                    self.pathfinder.robot_status.target_heading - self.pathfinder.robot_status.heading) * ROTATION_SPEED)
-            self.hardware.wheels.move(new_vector)
+                self.servo_wheels_manager.heading_correction_in_progress = True
+                return (self.current_step, None)
+        elif self.servo_wheels_manager.heading_correction_in_progress:
+            print("Carry on heading correction")
+            if not self.servo_wheels_manager.has_robot_lost_its_heading(real_orientation):
+                print("Terminate heading correction!")
+                self.servo_wheels_manager.heading_correction_in_progress = False
+            else:
+                if self.servo_wheels_manager.has_the_robot_stopped_before_completing_its_heading_correction(
+                        real_orientation):
+                    print("Robot rotation has stopped before the time! Sending new rotation command...")
+                    self.pathfinder.robot_status.heading = real_orientation
+                    self.hardware.wheels.rotate(
+                        self.pathfinder.robot_status.set_target_heading_and_get_angular_difference(
+                            STANDARD_HEADING))
+                return (self.current_step, None)
 
         new_step = self.current_step
         if path_status == PathStatus.CHECKPOINT_REACHED:
             new_step = next_step(self.current_step)
 
-        print("Updated step: {0}".format(new_step))
-
-        RoutineCheckThroughTelemetryCommand.st_last_recieved_position = real_position
-        return (new_step,
-                return_telemetry)
+        return (new_step, return_telemetry)
 
 
 class RotatingCheckCommand(Command):
