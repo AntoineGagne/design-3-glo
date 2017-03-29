@@ -1,17 +1,14 @@
 #! /usr/bin/env python
 """A script that starts the robot or the main station."""
+from typing import Tuple
 
 import cv2
 
-import json
 import queue
-import sys
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-from typing import Tuple
 
-import time
+import sys
 
-from design.ui.main_app import MainApp
 from design.decision_making.brain import Brain
 from design.decision_making.movement_strategy import MovementStrategy
 from design.decision_making.constants import TranslationStrategyType
@@ -32,7 +29,7 @@ from design.vision.robot_detector import RobotDetector
 from design.vision.world_vision import WorldVision
 from design.vision.onboard_vision import OnboardVision
 from design.vision.vertices import HighFrequencyFilter, VerticesFinder
-
+from design.ui.main_app import MainApp
 
 CAMERA_SETTINGS_FILE = 'config/camera_optimized_values.json'
 
@@ -61,14 +58,6 @@ def _create_parent_parser():
     """Create a parser that parse arguments common to subparsers."""
     parent_parser = ArgumentParser(add_help=False)
     networking_group = parent_parser.add_argument_group('networking arguments')
-    networking_group.add_argument('-a',
-                                  '--address',
-                                  default='127.0.0.1',
-                                  type=str,
-                                  metavar='HOST_ADDRESS',
-                                  dest='host',
-                                  help='The host address on which to bind the '
-                                       'socket')
     networking_group.add_argument('-p',
                                   '--ports',
                                   nargs=2,
@@ -105,6 +94,14 @@ def _create_main_station_parser(subparser, parent_parser):
                                      default=1,
                                      metavar='TABLE_NUMBER',
                                      help='The table\'s number')
+    main_station_parser.add_argument('-a',
+                                     '--address',
+                                     default='127.0.0.1',
+                                     type=str,
+                                     metavar='HOST_ADDRESS',
+                                     dest='host',
+                                     help='The host address on which to bind '
+                                          'the socket')
     main_station_parser.set_defaults(function=start_main_station)
     return main_station_parser
 
@@ -137,7 +134,7 @@ def start_main_station(arguments):
     obstacles_detector = ObstaclesDetector()
     robot_detector = RobotDetector()
     drawing_zone_detector = DrawingZoneDetector()
-    camera = Camera(1, CameraSettings(width=1600, height=1200), True)
+    camera = Camera(arguments.camera_port, CameraSettings(width=1600, height=1200), True)
     world_vision = WorldVision(arguments.table_number,
                                obstacles_detector,
                                drawing_zone_detector,
@@ -145,22 +142,6 @@ def start_main_station(arguments):
                                camera)
     app = MainApp(sys.argv, command_handler, world_vision)
     sys.exit(app.exec_())
-
-
-
-def _create_main_station_camera(arguments) -> Camera:
-    """Create the main station's camera object.
-
-    :param arguments: The command line arguments
-    :returns: The camera object
-    :rtype: :class:`design.vision.onboard_vision.Camera`
-    """
-    with open(CAMERA_SETTINGS_FILE) as camera_settings_file:
-        camera_settings = json.load(camera_settings_file)
-        camera_settings = camera_settings['world_camera'][arguments.table_number - 1]
-        return Camera(arguments.camera_port,
-                      CameraSettings(**camera_settings),
-                      True)
 
 
 def start_robot(arguments):
@@ -207,7 +188,7 @@ def create_movement_strategy() -> MovementStrategy:
     :rtype: :class:`design.decision_making.movement_strategy.MovementStrategy`
     """
     return MovementStrategy(
-        TranslationStrategyType.VERIFY_CONSTANTLY_THROUGH_CINEMATICS,
+        TranslationStrategyType.VERIFY_ONLY_ON_TELEMETRY_RECEPTION,
         RotationStrategyType.VERIFY_CONSTANTLY_THROUGH_ANGULAR_CINEMATICS
     )
 

@@ -81,6 +81,7 @@ class Camera:
 
     def take_picture(self) -> Iterator[Any]:
         """Take a single picture.
+
         :returns: A single picture
         """
         picture_taken, picture = self.camera.read()

@@ -2,6 +2,7 @@
 The controller class does the real logic,
 and passes on data to the model
 """
+
 from design.ui.models.world_model import WorldModel
 import numpy
 
