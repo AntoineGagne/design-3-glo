@@ -423,38 +423,35 @@ class RoutineCheckThroughTelemetryCommand(TranslationCommand):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(calculated_current_real_position)
             return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
 
-        # Verify if heading is still 90 degrees, otherwise fix (MIGHT CAUSE PROBLEMS DUE TO TIMERS)
-        self.pathfinder.robot_status.heading = real_orientation
-        self.pathfinder.robot_status.target_heading = STANDARD_HEADING
-        if not self.pathfinder.robot_status.heading_has_reached_target_heading_threshold:
-            self.hardware.wheels.rotate(self.pathfinder.robot_status.set_target_heading_and_get_angular_difference(STANDARD_HEADING))
-            time.sleep(math.fabs(self.pathfinder.robot_status.target_heading - self.pathfinder.robot_status.heading) * ROTATION_SPEED)
-
         # If we stop before the node, resend a vector
         if math.hypot(real_position[0] - RoutineCheckThroughTelemetryCommand.st_last_recieved_position[0],
                       real_position[1] - RoutineCheckThroughTelemetryCommand.st_last_recieved_position[1]) <= TRANSLATION_THRESHOLD:
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(real_position)
             return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
 
+        path_status, new_vector = self.pathfinder.get_vector_to_next_node(
+            calculated_current_real_position)  # This method only does so if necessary!
+
+        if new_vector:
+            # If we are at a node, verify heading and correct it if necessary before sending a new translation vector
+            self.pathfinder.robot_status.heading = real_orientation
+            self.pathfinder.robot_status.target_heading = STANDARD_HEADING
+            if not self.pathfinder.robot_status.heading_has_reached_target_heading_threshold:
+                self.hardware.wheels.rotate(
+                    self.pathfinder.robot_status.set_target_heading_and_get_angular_difference(STANDARD_HEADING))
+                time.sleep(math.fabs(
+                    self.pathfinder.robot_status.target_heading - self.pathfinder.robot_status.heading) * ROTATION_SPEED)
+            self.hardware.wheels.move(new_vector)
+
+        new_step = self.current_step
+        if path_status == PathStatus.CHECKPOINT_REACHED:
+            new_step = next_step(self.current_step)
+
+        print("Updated step: {0}".format(new_step))
+
         RoutineCheckThroughTelemetryCommand.st_last_recieved_position = real_position
-        return (self.update_current_vector_if_necessary_and_determine_next_step(calculated_current_real_position),
+        return (new_step,
                 return_telemetry)
-
-
-class RoutineCheckWithoutDeviationChecksCommand(TranslationCommand):
-    """ Command that performs a routine check. Switches to new
-    movement vector if the robot is within threshold if it's next
-    node in the graph. Only updates supposed position when it is recieved
-    from telemetry. """
-
-    def execute(self, telemetry_data):
-        """ Performs de routine check command
-        :param telemetry_data: Position data recieved by telemetry """
-
-        if not self.is_positional_telemetry_recieved(telemetry_data):
-            return (self.current_step, None)
-
-        return (self.update_current_vector_if_necessary_and_determine_next_step(telemetry_data[0]), None)
 
 
 class RotatingCheckCommand(Command):

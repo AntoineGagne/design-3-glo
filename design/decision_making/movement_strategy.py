@@ -5,7 +5,6 @@ for various test and integration cases much more easily """
 from design.decision_making.constants import TranslationStrategyType, RotationStrategyType
 from design.decision_making.commands import (RoutineCheckCommand,
                                              RoutineCheckThroughTelemetryCommand,
-                                             RoutineCheckWithoutDeviationChecksCommand,
                                              RotatingCheckCommand,
                                              RotatingCheckThroughTelemetryCommand)
 
@@ -25,9 +24,6 @@ class MovementStrategy():
         elif self.translation_strategy == TranslationStrategyType.VERIFY_ONLY_ON_TELEMETRY_RECEPTION:
             return RoutineCheckThroughTelemetryCommand(current_step, interfacing_controller,
                                                        pathfinder)
-        elif self.translation_strategy == TranslationStrategyType.NO_DEVIATION_CHECKS:
-            return RoutineCheckWithoutDeviationChecksCommand(current_step, interfacing_controller,
-                                                             pathfinder)
 
     def get_rotation_command(self, current_step, interfacing_controller, pathfinder):
 

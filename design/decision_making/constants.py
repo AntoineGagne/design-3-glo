@@ -13,7 +13,6 @@ class TranslationStrategyType(Enum):
     strategy """
     VERIFY_ONLY_ON_TELEMETRY_RECEPTION = "TELEMETRY"
     VERIFY_CONSTANTLY_THROUGH_CINEMATICS = "CINEMATICS"
-    NO_DEVIATION_CHECKS = "NO_DEVIATION"
 
 
 class RotationStrategyType(Enum):
