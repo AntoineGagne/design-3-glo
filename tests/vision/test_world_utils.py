@@ -54,3 +54,116 @@ def test_that_given_angle_in_radians_when_convert_angle_to_degrees_then_angle_is
     angle_in_radians = (- 3 * math.pi / 4)
     angle_in_degrees = utils.convert_to_degrees(angle_in_radians)
     assert 225.0 == angle_in_degrees
+
+
+def test_that_given_obstacles_information_when_comparing_then_information_is_similar():
+    information1 = [[[879, 428], 'O'], [[1146, 819], 'S'], [[1407, 435], 'N']]
+    information2 = [[[880, 430], 'O'], [[1150, 820], 'S'], [[1410, 432], 'N']]
+    assert utils.are_obstacles_information_similar(information1,
+                                                   information2)
+
+
+def test_that_given_obstacles_information_when_comparing_then_information_is_not_similar():
+    information1 = [[[500, 428], 'O'], [[1146, 819], 'S'], [[1407, 435], 'N']]
+    information2 = [[[880, 430], 'O'], [[1150, 820], 'S'], [[1410, 432], 'N']]
+    information3 = [[[880, 430], 'O'], [[1150, 820], 'N']]
+    assert not utils.are_obstacles_information_similar(information1,
+                                                       information2)
+    assert not utils.are_obstacles_information_similar(information1,
+                                                       information3)
+    assert not utils.are_obstacles_information_similar(information2,
+                                                       information3)
+
+
+def test_that_given_drawing_zone_information_when_comparing_then_information_is_similar():
+    information1 = [(412, 414), (200, 395), (244, 500), (123, 372)]
+    information2 = [(413, 415), (203, 396), (245, 505), (125, 375)]
+    assert utils.are_drawing_zone_information_similar(information1,
+                                                      information2)
+
+
+def test_that_given_drawing_zone_information_when_comparing_then_information_is_not_similar():
+    information1 = [(412, 414), (200, 395), (244, 500), (123, 372)]
+    information2 = [(413, 415), (203, 396), (245, 600), (125, 375)]
+    assert not utils.are_drawing_zone_information_similar(information1,
+                                                          information2)
+
+
+def test_that_given_two_robot_information_when_comparing_then_they_are_similar():
+    information1 = [(123, 123), 123.00]
+    information2 = [(124, 127), 124.00]
+    assert utils.are_robot_information_similar(information1, information2)
+
+
+def test_that_given_two_robot_information_when_comparing_then_they_are_not_similar():
+    information1 = [(150, 123), 123.00]
+    information2 = [(124, 200), 124.00]
+    information3 = [(124, 400), 124.00]
+    information4 = [(124, 400), 150.00]
+    assert not utils.are_robot_information_similar(information1, information2)
+    assert not utils.are_robot_information_similar(information1, information3)
+    assert not utils.are_robot_information_similar(information2, information3)
+    assert not utils.are_robot_information_similar(information4, information3)
+
+
+def test_that_given_list_of_obstacles_information_when_comparing_them_then_best_information_is_given():
+    obstacles_information = [[[[499, 432], 'O'], [[1150, 820], 'S'], [[1407, 435], 'N']],
+                             [[[500, 428], 'O'], [[1146, 819], 'S']],
+                             [[[505, 428], 'O'], [[1143, 819], 'S'], [[1402, 436], 'N']],
+                             [[[501, 428], 'O'], [[1146, 818], 'S'], [[1407, 435], 'N']],
+                             [[[1145, 815], 'S'], [[1405, 433], 'N']],
+                             [[[503, 428], 'O'], [[1147, 818], 'S'], [[1406, 432], 'N']]]
+    new_information = utils.get_best_information(obstacles_information)
+    assert new_information == [[[499, 432], 'O'], [[1150, 820], 'S'], [[1407, 435], 'N']]
+
+
+def test_that_given_list_of_drawing_zone_information_when_comparing_them_then_best_information_is_given():
+    drawing_zone_information = [[(412, 414), (200, 395), (244, 500), (123, 372)],
+                                [(413, 415), (203, 396), (245, 505), (125, 375)],
+                                [(412, 415), (202, 395), (244, 504), (122, 375)]]
+    new_information = utils.get_best_information(drawing_zone_information)
+    assert new_information == [(412, 414), (200, 395), (244, 500), (123, 372)]
+
+
+def test_that_given_list_of_robot_information_when_comparing_them_then_best_information_is_given():
+    robot_information = [[(124, 127), 124.00],
+                         [(124, 125), 125.10],
+                         [(125, 126), 122.00],
+                         [(100, 127), 124.00]]
+    new_information = utils.get_best_information(robot_information)
+    assert new_information == [(124, 127), 124.00]
+
+
+def test_that_given_two_items_information_when_comparing_then_they_are_similar():
+    information1 = [(412, 414), (200, 395), (244, 500), (123, 372)]
+    information2 = [(413, 415), (203, 396), (245, 505), (125, 375)]
+    information3 = [[[879, 428], 'O'], [[1146, 819], 'S'], [[1407, 435], 'N']]
+    information4 = [[[880, 430], 'O'], [[1150, 820], 'S'], [[1410, 432], 'N']]
+    information5 = [(123, 123), 123.00]
+    information6 = [(124, 127), 124.00]
+    assert utils.check_if_both_information_are_similar(information1,
+                                                       information2)
+    assert utils.check_if_both_information_are_similar(information3,
+                                                       information4)
+    assert utils.check_if_both_information_are_similar(information5,
+                                                       information6)
+
+
+def test_that_given_two_items_information_when_comparing_then_they_are_not_similar():
+    information1 = [(412, 414), (200, 395), (244, 500), (123, 372)]
+    information2 = [(413, 415), (203, 396), (245, 600), (125, 375)]
+    information3 = [[[500, 428], 'O'], [[1146, 819], 'S'], [[1407, 435], 'N']]
+    information4 = [[[880, 430], 'O'], [[1150, 820], 'S'], [[1410, 432], 'N']]
+    information5 = [[[880, 430], 'O'], [[1150, 820], 'N']]
+    information6 = [(124, 400), 124.00]
+    information7 = [(124, 400), 150.00]
+    assert not utils.check_if_both_information_are_similar(information1,
+                                                           information2)
+    assert not utils.check_if_both_information_are_similar(information3,
+                                                           information4)
+    assert not utils.check_if_both_information_are_similar(information3,
+                                                           information5)
+    assert not utils.check_if_both_information_are_similar(information4,
+                                                           information5)
+    assert not utils.check_if_both_information_are_similar(information6,
+                                                           information7)

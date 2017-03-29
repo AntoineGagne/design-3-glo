@@ -5,7 +5,7 @@ import numpy as np
 from itertools import chain
 from typing import List
 
-from design.vision.camera import CameraInMemory
+from design.vision.camera import Camera
 from design.vision.constants import PAINTING_DIMENSION_RATIO
 from design.vision.transformations import (RotateTransformation,
                                            ScaleTransformation)
@@ -14,7 +14,7 @@ from design.vision.transformations import (RotateTransformation,
 class OnboardVision:
     """Encapsulate the detection of figure's vertices."""
 
-    def __init__(self, vertices_finder, camera: CameraInMemory):
+    def __init__(self, vertices_finder, camera: Camera):
         """Initialize the :class:`design.vision.onboard_vision.OnboardVision`
 
         :param vertices_finder: The object containing the algorithm to find the
