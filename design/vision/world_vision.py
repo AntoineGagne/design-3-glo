@@ -1,12 +1,10 @@
 from design.vision.drawing_zone_detector import DrawingZoneDetector
 from design.vision.robot_detector import RobotDetector
 from design.vision.obstacles_detector import ObstaclesDetector
-from design.vision.conversion import Converter
+from design.vision.conversion import Converter, calculate_table_rotation, extrapolate_table
 from design.vision.camera import Camera
 from design.vision.constants import NUMBER_OF_CAPTURES_TO_COMPARE, OBSTACLES_HEIGHT, ROBOT_HEIGHT
-from design.vision.world_utils import (get_best_information,
-                                       calculate_angle,
-                                       convert_to_degrees)
+from design.vision.world_utils import get_best_information
 from design.vision.exceptions import GameMapNotFound, RobotNotFound
 
 
@@ -77,7 +75,7 @@ class WorldVision:
             raise RobotNotFound
 
         self.game_map_in_pixels["robot"] = actual_robot_information
-        # [(448, 570), 18.53]
+
         robot_world_information = self.converter.get_world_coordinates(ROBOT_HEIGHT,
                                                                        actual_robot_information[0][0],
                                                                        actual_robot_information[0][1])
@@ -136,12 +134,24 @@ class WorldVision:
 
         # once the drawing zone is found, we are able to calculate the table's rotation
         self.rotation_angle_of_table = calculate_table_rotation(drawing_zone_final_information)
+        temporary_world_drawing_zone = self.converter.get_world_coordinates(0,
+                                                                            drawing_zone_final_information[0][0],
+                                                                            drawing_zone_final_information[0][1])
+        temporary_table_corners = extrapolate_table(temporary_world_drawing_zone, self.rotation_angle_of_table)
+        self.converter.set_origin(temporary_table_corners[0][0], temporary_table_corners[0][1])
+
+        table_corners = []
+        for corner in temporary_table_corners:
+            table_corners.append((corner[0] + self.converter.translation_x, corner[1] + self.converter.translation_y))
+
+        self.game_map["table_corners"] = table_corners
+
         self.game_map_in_pixels["drawing_zone"] = drawing_zone_final_information
         drawing_zone_top_left_world_coordinate = \
             self.converter.get_world_coordinates(0,
                                                  drawing_zone_final_information[0][0],
                                                  drawing_zone_final_information[0][1])
-        self.converter.set_origin(drawing_zone_top_left_world_coordinate, self.rotation_angle_of_table)
+        self.converter.set_origin(drawing_zone_top_left_world_coordinate[0], drawing_zone_top_left_world_coordinate[1])
 
         drawing_zone_world_coordinates = []
         for position in drawing_zone_final_information:
@@ -163,7 +173,6 @@ class WorldVision:
             self.game_map["drawing_zone"] = self.detect_drawing_zone()
             self.game_map["obstacles"] = self.detect_obstacles()
             self.game_map["robot"] = self.detect_robot_at_the_beginning()
-            # self.game_map["table_corners"] =
         except:
             raise GameMapNotFound
 
@@ -190,13 +199,6 @@ class WorldVision:
         :rtype: dict
         """
         return self.game_map_in_pixels
-
-
-def calculate_table_rotation(drawing_zone_final_information):
-    rotation_angle_of_table = round(
-        (180 - convert_to_degrees(calculate_angle(drawing_zone_final_information[0],
-                                                  drawing_zone_final_information[1]))) * -1, 2)
-    return rotation_angle_of_table
 
 
 def filter_information(information):
