@@ -12,7 +12,8 @@ from design.decision_making.constants import (Step,
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 from design.pathfinding.pathfinder import PathStatus
 from design.pathfinding.constants import (PointOfInterest,
-                                          STANDARD_HEADING, TRANSLATION_SPEED, DEVIATION_THRESHOLD)
+                                          STANDARD_HEADING, TRANSLATION_SPEED, DEVIATION_THRESHOLD, ROTATION_SPEED,
+                                          TRANSLATION_THRESHOLD)
 from design.telemetry.packets import (Packet, PacketType)
 from design.vision.exceptions import PaintingFrameNotFound, VerticesNotFound
 
@@ -388,16 +389,14 @@ class RoutineCheckThroughTelemetryCommand(TranslationCommand):
         node in the graph. Only updates supposed position when it is recieved
         from telemetry."""
 
+    st_last_recieved_position = 0
+
     def execute(self, telemetry_data):
         """ Performs the routine check command """
-
         if not self.is_positional_telemetry_recieved(telemetry_data):
             return (self.current_step, None)
 
-        real_position = telemetry_data[0]
-        position_timestamp = telemetry_data[2]
-
-        self.pathfinder.robot_status.update_position(position_timestamp)
+        real_position, real_orientation, position_timestamp = telemetry_data
 
         # Build ORIGIN_TO_REAL_TARGET and ORIGIN_TO_REAL_POSITION_VECTOR
         origin_to_target_vector = self.pathfinder.robot_status.get_translation_vector()
@@ -411,16 +410,35 @@ class RoutineCheckThroughTelemetryCommand(TranslationCommand):
             math.hypot(origin_to_target_vector[0], origin_to_target_vector[1]) * math.hypot(
                 origin_to_real_position_vector[0], origin_to_real_position_vector[1])))
 
+        # Calculate the real CURRENT position, as the position recieved from telemetry has a slight delay from
+        # the reality of the robot
+        time_elapsed_since_real_position_was_computed = (datetime.datetime.now() - position_timestamp).total_seconds()
+        calculated_current_real_position = (real_position + (
+            (origin_to_real_position_vector[1] / origin_to_real_position_vector[
+                0]) * time_elapsed_since_real_position_was_computed))
+
+        # If the angle is above our deviation threshold, correct trajectory
         return_telemetry = None
         if angle >= DEVIATION_THRESHOLD:
-            time_elapsed_since_real_position_was_computed = (datetime.datetime.now() - position_timestamp).total_seconds()
-            calculated_current_real_position = (real_position + (
-                (origin_to_real_position_vector[1] / origin_to_real_position_vector[0]) * time_elapsed_since_real_position_was_computed))
-
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(calculated_current_real_position)
             return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
 
-        return (self.update_current_vector_if_necessary_and_determine_next_step(real_position), return_telemetry)
+        # Verify if heading is still 90 degrees, otherwise fix (MIGHT CAUSE PROBLEMS DUE TO TIMERS)
+        self.pathfinder.robot_status.heading = real_orientation
+        self.pathfinder.robot_status.target_heading = STANDARD_HEADING
+        if not self.pathfinder.robot_status.heading_has_reached_target_heading_threshold:
+            self.hardware.wheels.rotate(self.pathfinder.robot_status.set_target_heading_and_get_angular_difference(STANDARD_HEADING))
+            time.sleep(math.fabs(self.pathfinder.robot_status.target_heading - self.pathfinder.robot_status.heading) * ROTATION_SPEED)
+
+        # If we stop before the node, resend a vector
+        if math.hypot(real_position[0] - RoutineCheckThroughTelemetryCommand.st_last_recieved_position[0],
+                      real_position[1] - RoutineCheckThroughTelemetryCommand.st_last_recieved_position[1]) <= TRANSLATION_THRESHOLD:
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(real_position)
+            return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
+
+        RoutineCheckThroughTelemetryCommand.st_last_recieved_position = real_position
+        return (self.update_current_vector_if_necessary_and_determine_next_step(calculated_current_real_position),
+                return_telemetry)
 
 
 class RoutineCheckWithoutDeviationChecksCommand(TranslationCommand):
