@@ -522,6 +522,8 @@ class AcquireInformationFromAntennaCommand(Command):
 
     def execute(self, data):
         """ Executes acquisition command """
+        self.antenna_information = None
+        self.antenna_information = self.hardware.antenna.get_information_from_signal()
 
         print("prepare acquisition of signal data")
 
@@ -564,7 +566,6 @@ class CaptureFigureCommand(Command):
 
     def __init__(self, step, interfacing_controller, pathfinder, antenna_information, onboard_vision):
         super(CaptureFigureCommand, self).__init__(step, interfacing_controller, pathfinder)
-        self.antenna_information = antenna_information
         self.vision = onboard_vision
 
     def execute(self, data):

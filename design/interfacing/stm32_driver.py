@@ -1,9 +1,8 @@
-import glob
-import sys
 import struct
 import serial
 import math
 from threading import Thread
+from design.interfacing.utils import detect_serial
 
 from design.pathfinding.antenna_information import AntennaInformation
 
@@ -46,7 +45,7 @@ class Stm32Driver:
         self.response_format = "<HHH"
         self.response_size = 6
         self.thread = Thread(target=self.run)
-        self.port.port = self.detect_serial()[0]
+        self.port.port = detect_serial("USB")[0]
         self.port.open()
         self.is_running = True
         self.is_ready = False
@@ -176,35 +175,6 @@ class Stm32Driver:
     def close(self):
         self.is_running = False
         self.thread.join()
-
-    @staticmethod
-    def detect_serial():
-        """ Lists serial port names
-        :raises EnvironmentError
-            On unsopported or unknown platforms
-        :returns:
-            A list of the serial ports available on the system
-        """
-
-        if sys.platform.startswith('win'):
-            ports = ['COM%s' % (i + 1) for i in range(256)]
-        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-            # this excludes your current terminal "/dev/tty"
-            ports = glob.glob('/dev/tty[A-Za-z]*')
-        elif sys.platform.startswith('darwin'):
-            ports = glob.glob('/dev/tty.*')
-        else:
-            raise EnvironmentError('Unsupported platform')
-
-        result = []
-        for port in ports:
-            try:
-                s = serial.Serial(port)
-                s.close()
-                result.append(port)
-            except (OSError, serial.SerialException):
-                pass
-        return result
 
     @staticmethod
     def validate_checksum(data_list):
