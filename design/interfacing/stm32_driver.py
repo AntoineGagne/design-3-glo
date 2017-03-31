@@ -28,9 +28,9 @@ class Constants:
     EMPTY_PARAM = 0x0000
     ENABLED = 0xFFFF
     DISABLED = 0x0000
-    MASK_FIGURE = 0x70
-    MASK_ORIENTATION = 0x0C
-    MASK_ZOOM = 0x02
+    MASK_FIGURE = 0x0E
+    MASK_ORIENTATION = 0x30
+    MASK_ZOOM = 0x40
 
 
 class Stm32Driver:
@@ -74,6 +74,7 @@ class Stm32Driver:
         assert -32768 <= dx <= 32767, "The horizontal distance should be a 16 bits signed int."
         assert isinstance(dy, int)
         assert -32768 <= dy <= 32767, "The vertical distance should be a 16 bits signed int."
+        print("DRIVER - SENDING TRANSLATE COMMAND")
         self.send_command(Commands.TRANSLATE, dx + 32768, dy + 32768)
 
     def rotate_robot(self, theta):
@@ -84,6 +85,7 @@ class Stm32Driver:
         assert isinstance(theta, (int, float))
         assert -2 * math.pi <= theta <= 2 * math.pi, "The rotation angle should be in the range [-2Pi, 2Pi]."
         converted = int((theta + 2 * math.pi) * 100)
+        print("DRIVER - SENDING ROTATE COMMAND")
         self.send_command(Commands.ROTATE, converted)
 
     def stop_robot(self):

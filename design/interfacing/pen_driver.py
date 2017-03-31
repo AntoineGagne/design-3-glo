@@ -6,12 +6,12 @@ from design.interfacing.utils import detect_serial
 
 class PenDriver:
 
-    def __init__(self, channel=0, low_position=5000, high_position=4000, speed=0, acceleration=0):
+    def __init__(self, channel=0, low_position=4600, high_position=4000, speed=0, acceleration=0):
         self.pen_channel = channel
         self.low_position = low_position
         self.high_position = high_position
         self._is_low = False
-        port = detect_serial("ACM")[0]
+        port = detect_serial("ACM")[1]
         print("Pololu on port: " + port)
         self.usb = serial.Serial(port)
         self.PololuCmd = chr(0xaa) + chr(0xc)

@@ -76,7 +76,7 @@ class WheelsController():
         self.last_vector_given = vector
         print("WHEELS - Recieved vector = {0}".format(vector))
         dx, dy = vector
-        self.stm32_driver.translate_robot(round(dx * 10), round(dy * 10))
+        self.stm32_driver.translate_robot(int(dx * 10), int(dy * 10))
 
     def rotate(self, amount):
         """ Rotate a certain amount of degrees
@@ -120,8 +120,8 @@ class PenController():
 
     def lower_pen(self):
         """Simulates lowering the pen"""
-        pass
+        self.pen_prehensor_driver.lower_pen()
 
     def raise_pen(self):
         """Simulates raising the pen"""
-        pass
+        self.pen_prehensor_driver.raise_pen()

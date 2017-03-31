@@ -56,8 +56,15 @@ class RobotSupposedStatus():
 
         self.origin_of_movement_vector = tuple(current_robot_position)
         self.time_since_moving = datetime.datetime.now()
-        return (self.target_position[0] - self.origin_of_movement_vector[0],
-                self.target_position[1] - self.origin_of_movement_vector[1])
+
+        vector = (self.target_position[0] - self.origin_of_movement_vector[0],
+                  self.target_position[1] - self.origin_of_movement_vector[1])
+
+        print("Generate new vector towards current target: current_robot_pos = {0}".format(current_robot_position))
+        print("Generate new vector towards current target: target_position = {0}".format(self.target_position))
+        print("Generate new translation vector towards current target: vector = {0}".format(vector))
+
+        return vector
 
     def update_position(self, timestamp_as_final_time=None):
         """ Updates the current position of the robot through cinematics equations.
@@ -91,6 +98,8 @@ class RobotSupposedStatus():
 
         self.position.x = current_x + delta_x
         self.position.y = current_y + delta_y
+
+        # print("Pathfinder has been updated. Current position = {0}".format(self.get_position()))
 
     def position_has_reached_target_position_within_threshold(self):
         """ Returns true if the current position has reached the target position,

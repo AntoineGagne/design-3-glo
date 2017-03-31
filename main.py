@@ -14,11 +14,12 @@ from design.decision_making.brain import Brain
 from design.decision_making.movement_strategy import MovementStrategy
 from design.decision_making.constants import TranslationStrategyType
 from design.decision_making.constants import RotationStrategyType
-from design.interfacing.hardware_controllers import (WheelsController,
-                                                     AntennaController,
+from design.interfacing.hardware_controllers import (AntennaController,
                                                      LightsController,
                                                      PenController)
 from design.interfacing.interfacing_controller import InterfacingController
+from design.interfacing.pen_driver import PenDriver
+from design.interfacing.simulated_controllers import SimulatedWheelsController
 from design.interfacing.stm32_driver import Stm32Driver
 from design.telemetry.commands import CommandHandler
 from design.telemetry.selectors import (ClientSelectorFactory,
@@ -175,9 +176,9 @@ def create_interfacing_controller() -> InterfacingController:
     :rtype: :class:`design.interfacing.interfacing_controller.InterfacingController`
     """
     microcontroller_driver = Stm32Driver()
-    prehensor_driver = None
+    prehensor_driver = PenDriver()
     return InterfacingController(
-        WheelsController(microcontroller_driver),
+        SimulatedWheelsController(),
         AntennaController(microcontroller_driver),
         PenController(prehensor_driver),
         LightsController(microcontroller_driver)
@@ -191,7 +192,7 @@ def create_movement_strategy() -> MovementStrategy:
     :rtype: :class:`design.decision_making.movement_strategy.MovementStrategy`
     """
     return MovementStrategy(
-        TranslationStrategyType.VERIFY_ONLY_ON_TELEMETRY_RECEPTION,
+        TranslationStrategyType.VERIFY_CONSTANTLY_THROUGH_CINEMATICS,
         RotationStrategyType.VERIFY_CONSTANTLY_THROUGH_ANGULAR_CINEMATICS
     )
 

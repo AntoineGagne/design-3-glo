@@ -3,10 +3,10 @@
 from enum import Enum
 
 
-TRANSLATION_THRESHOLD = 0.50  # cm
+TRANSLATION_THRESHOLD = 0.5  # cm
 ROTATION_THRESHOLD = 0.25  # degree(s)
-TRANSLATION_SPEED = 4  # cm/s
-ROTATION_SPEED = 5  # degree(s) per second
+TRANSLATION_SPEED = 5  # cm/s
+ROTATION_SPEED = 3  # degree(s) per second
 STANDARD_HEADING = 90  # degrees
 TABLE_X = 111
 TABLE_Y = 230

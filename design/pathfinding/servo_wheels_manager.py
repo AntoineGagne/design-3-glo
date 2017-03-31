@@ -44,9 +44,11 @@ class ServoWheelsManager():
         :param position: Robot position
         :param target_node: Position of the current target"""
 
+        print("Verifying if robot has stopped its translation...")
         if math.hypot(position[0] - self.last_recorded_position[0],
                       position[1] - self.last_recorded_position[1]) <= 1:
             self.last_recorded_position = position
+            print("Robot has stopped moving!")
             return True
         else:
             self.last_recorded_position = position

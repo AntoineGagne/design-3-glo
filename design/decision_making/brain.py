@@ -41,11 +41,19 @@ class Brain():
 
             if main_sequence_has_started:
 
-                command = self.dispatcher.get_relevant_command(telemetry_recieved.packet_type,
+                telemetry_type = None
+                telemetry_data = None
+                if telemetry_recieved:
+                    telemetry_type = telemetry_recieved.packet_type
+                    telemetry_data = telemetry_recieved.packet_data
+
+                command = self.dispatcher.get_relevant_command(telemetry_type,
                                                                self.current_status)
 
-                next_status, exit_telemetry = command.execute(telemetry_recieved.packet_data)
+                next_status, exit_telemetry = command.execute(telemetry_data)
                 self.current_status = next_status
+
+                # print("Current status: {0}".format(self.current_status))
 
                 if exit_telemetry:
                     self.base_station.put_command(exit_telemetry)
