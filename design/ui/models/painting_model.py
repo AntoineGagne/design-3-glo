@@ -1,9 +1,8 @@
-class MainModel:
+class PaintingModel:
     def __init__(self):
-        self.time = 0
-        self.timer_is_on = False
+        self.painting_image = None
+        self.painting_vertices = None
 
-        # these will be the registered functions for view updating
         self._update_functions = []
 
     # subscribe a view method for updating

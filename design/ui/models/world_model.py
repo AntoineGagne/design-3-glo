@@ -1,18 +1,36 @@
 """
     This class is a model for visualizing the game
 """
+import numpy
 
 
 class WorldModel:
     def __init__(self):
-        self._obstacles_coordinates = [(1153, 877), (991, 396)]
-        self._path_coordinates = [(96, 226), (400, 556), (490, 915), (1017, 616), (1453, 303), (1455, 834)]   # dummy test
-        self._robot_coordinates = [(405, 570)]
-        self._drawing_zone_coordinates = [(216, 363), (216, 771), (621, 771), (621, 363)]   # dummy test
-        self._game_image = ""
+        self._obstacles_coordinates = None
+        self._path_coordinates = None
+        self._robot_coordinates = None
+        self._robot_real_path = None
+        self._drawing_zone_coordinates = None
+        self._game_image = None
+        self._game_zone_coordinates = None
 
-        # these will be the registered functions for view updating
         self._update_functions = []
+
+    @property
+    def robot_real_path(self):
+        return self._robot_real_path
+
+    @robot_real_path.setter
+    def robot_real_path(self, path: list):
+        self._robot_real_path = path
+
+    @property
+    def game_zone_coordinates(self):
+        return self._game_zone_coordinates
+
+    @game_zone_coordinates.setter
+    def game_zone_coordinates(self, coordinates: list):
+        self._game_zone_coordinates = coordinates
 
     @property
     def obstacles_coordinates(self):
@@ -51,8 +69,8 @@ class WorldModel:
         return self._game_image
 
     @game_image.setter
-    def game_image(self, image_path):
-        self._game_image = image_path
+    def game_image(self, image: numpy.ndarray):
+        self._game_image = image
 
     # subscribe a view method for updating
     def subscribe_update_function(self, function):

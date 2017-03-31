@@ -60,6 +60,14 @@ design.vision.obstacles_detector module
     :undoc-members:
     :show-inheritance:
 
+design.vision.onboard_vision module
+-----------------------------------
+
+.. automodule:: design.vision.onboard_vision
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 design.vision.onboard_vision_mock module
 ----------------------------------------
 

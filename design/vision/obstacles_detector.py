@@ -1,12 +1,14 @@
 import cv2
 import numpy as np
+import math
 
 import design.vision.constants as constants
 from design.vision.world_utils import (calculate_angle,
                                        define_cardinal_point,
                                        eliminate_close_points,
                                        triangle_shortest_edge,
-                                       calculate_centroid)
+                                       calculate_centroid,
+                                       eliminate_close_points_in_list)
 
 
 class ObstaclesDetector:
@@ -23,10 +25,14 @@ class ObstaclesDetector:
         self.triangular_obstacles_coordinates = []
         self.obstacles_information = []
 
-    def refresh_frame(self, path):
-        self.actual_frame = cv2.imread(path)
+    def refresh_frame(self, image):
+        self.actual_frame = image
         self.obstacles_information = []
         self.triangular_obstacles_coordinates = []
+
+    def show_frame(self):
+        cv2.imshow("this frame", self.actual_frame)
+        cv2.waitKey(0)
 
     def __detect_obstacles_top_circles(self):
         """
@@ -38,14 +44,15 @@ class ObstaclesDetector:
         image_with_circles = self.actual_frame.copy()
 
         # circles detection
-        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.2, 100, minRadius=10)
+        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1.2, 200,
+                                   minRadius=constants.OBSTACLES_WHITE_CIRCLE_MIN_RADIUS)
 
         if circles is not None:
             circles = np.round(circles[0, :]).astype("int")
             for (x, y, radius) in circles:
                 if constants.OBSTACLE_MIN_RADIUS < radius < constants.OBSTACLE_MAX_RADIUS:
-                    # draw the circles to make mask afterwards (+1 for smaller circles)
-                    cv2.circle(image_with_circles, (x, y), radius + 1, (255, 255, 0), -1)
+                    # draw the circles to make mask afterwards
+                    cv2.circle(image_with_circles, (x, y), radius, (255, 255, 0), -1)
         return image_with_circles
 
     def __show_obstacles_region_of_interest(self):
@@ -133,7 +140,24 @@ class ObstaclesDetector:
                     self.triangular_obstacles_coordinates[t] += tuple(
                         define_cardinal_point(calculate_angle(centroid, coordinate)))
 
-    def draw_triangles_vertices(self):
+    def __detect_circles(self):
+        contours = self.__find_obstacles_contours()
+        circles = []
+        for contour in contours:
+            (cx, cy), radius = cv2.minEnclosingCircle(contour)
+            area_of_circle = 2 * math.pi * radius
+            if 145 > area_of_circle > 120:
+                circles.append((int(round(cx)), int(round(cy))))
+                # only applies to 1200 x 1600 frames
+        round_obstacles_information = eliminate_close_points_in_list(circles, 200)
+        new_informations = []
+        for information in round_obstacles_information:
+            new_informations.append([information, "O"])
+        self.obstacles_information.extend(new_informations)
+
+        return self.obstacles_information
+
+    def draw_obstacles(self):
         """
         Draws the found vertices on actual frame
         :return: image with drawn triangle vertices
@@ -144,6 +168,13 @@ class ObstaclesDetector:
             for triangle_coordinates in triangles[1]:
                 for point in triangle_coordinates:
                     cv2.circle(image, point, 5, (222, 0, 233), -1)
+        for obstacles in self.obstacles_information:
+            if obstacles[1] == "O":
+                cv2.circle(image, (obstacles[0][0], obstacles[0][1]), 20, (255, 255, 0), 3)
+
+        smaller = cv2.resize(image, None, fx=0.5, fy=0.5)
+        cv2.imshow("image", smaller)
+        cv2.waitKey(0)
         return image
 
     def calculate_obstacles_information(self):
@@ -154,7 +185,10 @@ class ObstaclesDetector:
         """
         self.__detect_triangles()
         self.__calculate_obstacle_orientation()
+        self.__detect_circles()
 
         for triangle in self.triangular_obstacles_coordinates:
             self.obstacles_information.append([triangle[0], triangle[2]])
+        # print(self.obstacles_information)
+        # self.draw_obstacles()
         return self.obstacles_information

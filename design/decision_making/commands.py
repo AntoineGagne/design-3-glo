@@ -11,8 +11,9 @@ from design.decision_making.constants import (Step,
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 from design.pathfinding.pathfinder import PathStatus
 from design.pathfinding.constants import (PointOfInterest,
-                                          STANDARD_HEADING)
+                                          STANDARD_HEADING, TRANSLATION_SPEED)
 from design.telemetry.packets import (Packet, PacketType)
+from design.vision.exceptions import PaintingFrameNotFound, VerticesNotFound
 
 
 class Command():
@@ -42,9 +43,11 @@ class TranslationCommand(Command):
         :param telemetry_data: Data recieved by telemetry
         :returns: A boolean indicating if said telemetry is recieved and is a position packet
         :rtype: boolean """
-        if telemetry_data is None or not isinstance(
-                telemetry_data.packet_type, PacketType.POSITION):
-            time.sleep(50)
+        if telemetry_data is None:
+            time.sleep(0.5)
+            return False
+        elif not isinstance(telemetry_data, list):
+            time.sleep(0.5)
             return False
         else:
             return True
@@ -87,6 +90,7 @@ class BuildGameMapCommand(Command):
 
         rotation_angle = (self.pathfinder.robot_status.
                           set_target_heading_and_get_angular_difference(STANDARD_HEADING))
+        print("Sending initial rotate command")
         self.hardware.wheels.rotate(rotation_angle)
 
         return (next_step(self.current_step), None)
@@ -101,7 +105,7 @@ class PrepareTravelToAntennaAreaCommand(Command):
 
         print("prepare travel to antenna area")
 
-        self.pathfinder.generate_path_to_checkpoint(self.pathfinder.get_point_of_interest(
+        self.pathfinder.generate_path_to_checkpoint_a_to_b(self.pathfinder.get_point_of_interest(
             PointOfInterest.ANTENNA_START_SEARCH_POINT))
 
         new_vector = (self.pathfinder.robot_status.
@@ -109,7 +113,7 @@ class PrepareTravelToAntennaAreaCommand(Command):
                           self.pathfinder.robot_status.get_position()))
         self.hardware.wheels.move(new_vector)
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class TravelToPaintingsAreaCommand(Command):
@@ -137,7 +141,7 @@ class TravelToPaintingsAreaCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class PrepareToDrawCommand(Command):
@@ -170,7 +174,7 @@ class PrepareToDrawCommand(Command):
             self.pathfinder.nodes_queue_to_checkpoint.popleft()))
         self.hardware.pen.lower_pen()
 
-        return (next_step(self.current_step), None)
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class PrepareExitOfDrawingAreaCommand(Command):
@@ -196,7 +200,7 @@ class PrepareExitOfDrawingAreaCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class FinishCycleCommand(Command):
@@ -206,7 +210,7 @@ class FinishCycleCommand(Command):
         """ Stops current cycle """
         print("Cycle finished. Currently at position {0}".format(self.pathfinder.robot_status.get_position()))
         self.hardware.lights.turn_on_red_led()
-        return (Step.STANBY, Packet(PacketType.COMMAND, "Stop chronograph"))
+        return (Step.STANBY, Packet(PacketType.COMMAND, "STOP_CHRONOGRAPH"))
 
 
 class PrepareSearchForAntennaPositionCommand(Command):
@@ -220,14 +224,14 @@ class PrepareSearchForAntennaPositionCommand(Command):
 
         self.hardware.antenna.start_sampling()
 
-        self.pathfinder.generate_path_to_checkpoint(
+        self.pathfinder.generate_path_to_checkpoint_a_to_b(
             self.pathfinder.get_point_of_interest(PointOfInterest.ANTENNA_STOP_SEARCH_POINT))
 
         self.hardware.wheels.move(
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class SearchForAntennaPositionCommand(Command):
@@ -245,7 +249,7 @@ class SearchForAntennaPositionCommand(Command):
 
         # Executes normal routine check
         normal_routine_check = self.movement_strategy.get_translation_command(
-            self.current_step, self.hardware, self.pathfinder)
+            self.current_step, self.hardware, self.pathfinder, None)
         step, exit_telemetry = normal_routine_check.execute(
             robot_position_from_telemetry)
 
@@ -281,12 +285,12 @@ class PrepareMovingToAntennaPositionCommand(Command):
             position_x, position_y = max(self.antenna_information.strength_curve,
                                          key=self.antenna_information.strength_curve.get)
 
-            self.pathfinder.generate_path_to_checkpoint((position_x, position_y))
+            self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
             self.hardware.wheels.move(
                 self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                     self.pathfinder.robot_status.get_position()))
 
-            return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+            return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
         except ValueError:
             return (Step.COMPUTE_PAINTINGS_AREA, Packet(PacketType.NOTIFICATION, "Antenna position has not been found! Aborting search."))
 
@@ -307,14 +311,14 @@ class PrepareMarkingAntennaCommand(Command):
         self.hardware.pen.lower_pen()
 
         position_x, position_y = self.pathfinder.robot_status.get_position()
-        position_x = position_x - 5
-        self.pathfinder.generate_path_to_checkpoint((position_x, position_y))
+        position_x = position_x - 2
+        self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
 
         self.hardware.wheels.move(
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class PrepareTravelToDrawingAreaCommand(Command):
@@ -346,7 +350,7 @@ class PrepareTravelToDrawingAreaCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.nodes_queue_to_checkpoint))
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
 
 class RoutineCheckCommand(TranslationCommand):
@@ -362,65 +366,103 @@ class RoutineCheckCommand(TranslationCommand):
         if time_passed.total_seconds() <= NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS and \
            not robot_position_from_telemetry:
             return (self.current_step, None)
-
         Command.st_last_execution = datetime.datetime.now()
 
         self.pathfinder.robot_status.update_position()
 
         # Verifying current trajectory if we recieve our position from
         # telemetry
-        if robot_position_from_telemetry:
-            if self.pathfinder.verify_if_deviating(robot_position_from_telemetry):
-                new_vector = (self.pathfinder.robot_status.
-                              generate_new_translation_vector_towards_current_target(
-                                  robot_position_from_telemetry))
-                self.hardware.wheels.move(new_vector)
-
-        return (self.update_current_vector_if_necessary_and_determine_next_step(robot_position_from_telemetry), None)
+        return (self.update_current_vector_if_necessary_and_determine_next_step(None), None)
 
 
-class RoutineCheckThroughTelemetryCommand(TranslationCommand):
-    """ Command that performs a routine check. Checks if robot is not
-        deviating, otherwise corrects trajectory, and switches to new
-        movement vector if the robot is within threshold if it's next
-        node in the graph. Only updates supposed position when it is recieved
-        from telemetry."""
+class RoutineCheckWithVisualServoManagementCommand(TranslationCommand):
+    """ Commands that performs a routine check including telemetry data in order to
+    correct the servowheels' trajectory and heading if necessary. """
+
+    def __init__(self, current_step, interfacing_controller, pathfinder, servo_wheel_manager):
+        super(RoutineCheckWithVisualServoManagementCommand, self).__init__(current_step,
+                                                                           interfacing_controller, pathfinder)
+        self.servo_wheels_manager = servo_wheel_manager
 
     def execute(self, telemetry_data):
         """ Performs the routine check command """
 
+        print("Servo wheels management - Telemetry data in SWM: {0}".format(telemetry_data))
         if not self.is_positional_telemetry_recieved(telemetry_data):
             return (self.current_step, None)
 
-        real_position = telemetry_data[0]
-        position_timestamp = telemetry_data[2]
+        real_position, real_orientation, position_timestamp = telemetry_data
+        print("Servo wheels management - We have recieved telemetry position = {0}".format(real_position))
 
-        self.pathfinder.robot_status.update_position(position_timestamp)
+        return_telemetry = None
+        if not self.servo_wheels_manager.heading_correction_in_progress:
+            # Translation checks
 
-        # Verifying current trajectory if we recieve our position from
-        # telemetry
-        if self.pathfinder.verify_if_deviating(real_position):
-            new_vector = (self.pathfinder.robot_status.
-                          generate_new_translation_vector_towards_current_target(real_position))
+            print("Translation checks")
+            origin_to_target_vector = self.pathfinder.robot_status.get_translation_vector()
+            origin_to_real_position_vector = (real_position[0] - self.pathfinder.robot_status.origin_of_movement_vector[0],
+                                              real_position[1] - self.pathfinder.robot_status.origin_of_movement_vector[1])
+
+            if self.servo_wheels_manager.is_real_translation_deviating(
+                    real_position, origin_to_real_position_vector, origin_to_target_vector, position_timestamp):
+                pass
+                print("Translation deviating!")
+                correction_vector = self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
+                    self.servo_wheels_manager.calculated_current_real_position)
+                self.hardware.wheels.move(correction_vector)
+                return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
+
+            if self.servo_wheels_manager.has_the_robot_stopped_before_reaching_a_node(real_position):
+                pass
+                vector = self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(real_position)
+                self.hardware.wheels.move(vector)
+                return_telemetry = Packet(PacketType.PATH, self.pathfinder.get_current_path())
+
+        path_status, new_vector = self.pathfinder.get_vector_to_next_node(
+            self.servo_wheels_manager.calculated_current_real_position)
+
+        if new_vector is None:
+            print("DIDN'T RECIEVE NEW VECTOR! Continuing current trajectory")
+
+        if path_status == PathStatus.CHECKPOINT_REACHED:
+            print("AT CHECKPOINT!")
+        else:
+            print("MOVING TOWARDS CHECKPOINT...")
+
+        if new_vector and not self.servo_wheels_manager.has_robot_lost_its_heading(real_orientation):
+            print("Heading is OK, carry on with next vector")
             self.hardware.wheels.move(new_vector)
+        elif (new_vector or path_status == PathStatus.CHECKPOINT_REACHED) and \
+                self.servo_wheels_manager.has_robot_lost_its_heading(real_orientation) and not \
+                self.servo_wheels_manager.heading_correction_in_progress:
+            print("Lost heading!")
+            if not self.servo_wheels_manager.heading_correction_in_progress:
+                print("Initialize heading correction")
+                self.pathfinder.robot_status.heading = real_orientation
+                self.hardware.wheels.rotate(
+                    self.pathfinder.robot_status.set_target_heading_and_get_angular_difference(STANDARD_HEADING))
+                self.servo_wheels_manager.heading_correction_in_progress = True
+                return (self.current_step, None)
+        elif self.servo_wheels_manager.heading_correction_in_progress:
+            print("Carry on heading correction")
+            if not self.servo_wheels_manager.has_robot_lost_its_heading(real_orientation):
+                print("Terminate heading correction!")
+                self.servo_wheels_manager.heading_correction_in_progress = False
+            else:
+                if self.servo_wheels_manager.has_the_robot_stopped_before_completing_its_heading_correction(
+                        real_orientation):
+                    print("Robot rotation has stopped before the time! Sending new rotation command...")
+                    self.pathfinder.robot_status.heading = real_orientation
+                    self.hardware.wheels.rotate(
+                        self.pathfinder.robot_status.set_target_heading_and_get_angular_difference(
+                            STANDARD_HEADING))
+                return (self.current_step, None)
 
-        return (self.update_current_vector_if_necessary_and_determine_next_step(real_position), None)
+        new_step = self.current_step
+        if path_status == PathStatus.CHECKPOINT_REACHED:
+            new_step = next_step(self.current_step)
 
-
-class RoutineCheckWithoutDeviationChecksCommand(TranslationCommand):
-    """ Command that performs a routine check. Switches to new
-    movement vector if the robot is within threshold if it's next
-    node in the graph. Only updates supposed position when it is recieved
-    from telemetry. """
-
-    def execute(self, telemetry_data):
-        """ Performs de routine check command
-        :param telemetry_data: Position data recieved by telemetry """
-
-        if not self.is_positional_telemetry_recieved(telemetry_data):
-            return (self.current_step, None)
-
-        return (self.update_current_vector_if_necessary_and_determine_next_step(telemetry_data[0]), None)
+        return (new_step, return_telemetry)
 
 
 class RotatingCheckCommand(Command):
@@ -480,13 +522,13 @@ class AcquireInformationFromAntennaCommand(Command):
 
     def execute(self, data):
         """ Executes acquisition command """
-
         print("prepare acquisition of signal data")
 
+        antenna_data = None
         antenna_data = self.hardware.antenna.get_information_from_signal()
         print("Acquire information from signal, painting nb: {0}".format(antenna_data))
 
-        if self.antenna_information is None:
+        if antenna_data is None:
             return (self.current_step, None)
         else:
             self.antenna_information.painting_number = int(antenna_data.painting_number)
@@ -520,20 +562,35 @@ class FaceRelevantFigureForCaptureCommand(Command):
 class CaptureFigureCommand(Command):
     """ Allows the robot to capture the relevant figure """
 
-    def __init__(self, step, interfacing_controller, pathfinder, onboard_vision):
+    def __init__(self, step, interfacing_controller, pathfinder, antenna_information, onboard_vision):
         super(CaptureFigureCommand, self).__init__(step, interfacing_controller, pathfinder)
         self.vision = onboard_vision
+        self.antenna_information = antenna_information
 
     def execute(self, data):
         """ Executes capture command """
 
         print("capture figure")
 
-        self.vision.capture()
+        capture_can_be_computed = False
+
+        retry_translation_deltas = self.pathfinder.figures.get_figure_list_of_retries_movement_deltas(
+            self.antenna_information.painting_number)
+        for retry_delta_vector in retry_translation_deltas:
+            while not capture_can_be_computed:
+                try:
+                    self.vision.capture()
+                    self.vision.get_captured_vertices(2, 90)
+                    capture_can_be_computed = True
+                except (PaintingFrameNotFound, VerticesNotFound):
+                    capture_can_be_computed = False
+                    self.hardware.wheels.move(retry_delta_vector)
+                    time.sleep(math.hypot(retry_delta_vector[0], retry_delta_vector[1]) / TRANSLATION_SPEED)
+
         self.hardware.lights.light_green_led(1000)
 
         rotation_angle = (self.pathfinder.robot_status.
                           set_target_heading_and_get_angular_difference(STANDARD_HEADING))
         self.hardware.wheels.rotate(rotation_angle)
 
-        return (next_step(self.current_step), None)
+        return (next_step(self.current_step), Packet(PacketType.FIGURE_IMAGE, self.vision.last_capture))

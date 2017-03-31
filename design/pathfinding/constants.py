@@ -2,15 +2,17 @@
 
 from enum import Enum
 
-TRANSLATION_THRESHOLD = 0.50  # cm
+
+TRANSLATION_THRESHOLD = 0.5  # cm
 ROTATION_THRESHOLD = 0.25  # degree(s)
 TRANSLATION_SPEED = 5  # cm/s
-ROTATION_SPEED = 10  # degree(s) per second
+ROTATION_SPEED = 3  # degree(s) per second
 STANDARD_HEADING = 90  # degrees
 TABLE_X = 111
 TABLE_Y = 230
 OBSTACLE_RADIUS = 7
 ROBOT_SAFETY_MARGIN = 16
+DEVIATION_THRESHOLD = 1
 
 
 class PointOfInterest(Enum):

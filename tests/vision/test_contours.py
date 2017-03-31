@@ -8,8 +8,8 @@ import design.vision.contours as contours
 SAMPLE_IMAGES = list(list_files('samples'))
 CONTOURS_NUMBER_BY_ONBOARD_IMAGES_NAME_PATTERNS = (
     re.compile('boot.*'),
-    re.compile('^arrow.*'),
-    re.compile('^inverted_arrow.*'),
+    re.compile('/arrow.*'),
+    re.compile('inverted_arrow.*'),
     re.compile('hat.*'),
     re.compile('m(_\d+)?\.(jpg|png)'),
     re.compile('house.*'),

@@ -1,9 +1,8 @@
-import glob
-import sys
 import struct
 import serial
 import math
 from threading import Thread
+from design.interfacing.utils import detect_serial
 
 from design.pathfinding.antenna_information import AntennaInformation
 
@@ -29,9 +28,9 @@ class Constants:
     EMPTY_PARAM = 0x0000
     ENABLED = 0xFFFF
     DISABLED = 0x0000
-    MASK_FIGURE = 0x70
-    MASK_ORIENTATION = 0x0C
-    MASK_ZOOM = 0x02
+    MASK_FIGURE = 0x0E
+    MASK_ORIENTATION = 0x30
+    MASK_ZOOM = 0x40
 
 
 class Stm32Driver:
@@ -46,7 +45,7 @@ class Stm32Driver:
         self.response_format = "<HHH"
         self.response_size = 6
         self.thread = Thread(target=self.run)
-        self.port.port = self.detect_serial()[0]
+        self.port.port = detect_serial("USB")[0]
         self.port.open()
         self.is_running = True
         self.is_ready = False
@@ -75,6 +74,7 @@ class Stm32Driver:
         assert -32768 <= dx <= 32767, "The horizontal distance should be a 16 bits signed int."
         assert isinstance(dy, int)
         assert -32768 <= dy <= 32767, "The vertical distance should be a 16 bits signed int."
+        print("DRIVER - SENDING TRANSLATE COMMAND")
         self.send_command(Commands.TRANSLATE, dx + 32768, dy + 32768)
 
     def rotate_robot(self, theta):
@@ -85,6 +85,7 @@ class Stm32Driver:
         assert isinstance(theta, (int, float))
         assert -2 * math.pi <= theta <= 2 * math.pi, "The rotation angle should be in the range [-2Pi, 2Pi]."
         converted = int((theta + 2 * math.pi) * 100)
+        print("DRIVER - SENDING ROTATE COMMAND")
         self.send_command(Commands.ROTATE, converted)
 
     def stop_robot(self):
@@ -176,35 +177,6 @@ class Stm32Driver:
     def close(self):
         self.is_running = False
         self.thread.join()
-
-    @staticmethod
-    def detect_serial():
-        """ Lists serial port names
-        :raises EnvironmentError
-            On unsopported or unknown platforms
-        :returns:
-            A list of the serial ports available on the system
-        """
-
-        if sys.platform.startswith('win'):
-            ports = ['COM%s' % (i + 1) for i in range(256)]
-        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-            # this excludes your current terminal "/dev/tty"
-            ports = glob.glob('/dev/tty[A-Za-z]*')
-        elif sys.platform.startswith('darwin'):
-            ports = glob.glob('/dev/tty.*')
-        else:
-            raise EnvironmentError('Unsupported platform')
-
-        result = []
-        for port in ports:
-            try:
-                s = serial.Serial(port)
-                s.close()
-                result.append(port)
-            except (OSError, serial.SerialException):
-                pass
-        return result
 
     @staticmethod
     def validate_checksum(data_list):

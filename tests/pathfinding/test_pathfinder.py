@@ -84,9 +84,7 @@ def test_if_generate_path_to_checkpoint_with_a_star_return_good_path():
     pathfinder.robot_status.target_position = (30, 30)
     pathfinder.generate_path_to_checkpoint((20, 100))
 
-    assert (20, 20) in graph.graph_dict
-    assert pathfinder.nodes_queue_to_checkpoint.empty() is False
-    assert pathfinder.nodes_queue_to_checkpoint.qsize() == 2
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 0
 
 
 @pytest.mark.skip(reason="no way of currently testing this")
@@ -101,10 +99,4 @@ def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_st
     pathfinder.robot_status.target_position = (30, 30)
     pathfinder.generate_path_to_checkpoint((20, 200))
 
-    start_node = (20, 20)
-    end_node = (20, 200)
-    assert start_node in graph.graph_dict
-    assert end_node in graph.graph_dict
-    assert (84, 77) in pathfinder.graph.graph_dict.get(start_node)
-    assert (34, 163) in pathfinder.graph.graph_dict.get(end_node)
-    assert pathfinder.nodes_queue_to_checkpoint.qsize() == 6
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 4

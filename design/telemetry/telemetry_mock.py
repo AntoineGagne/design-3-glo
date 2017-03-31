@@ -45,7 +45,7 @@ class TelemetryMock():
 
             if PacketType[polled_telemetry.split('|')[0]] == PacketType.GAME_MAP:
                 packet_data = {}
-                packet_data["obstacles"] = [((47, 158), "N")]
+                packet_data["obstacles"] = [((47, 138), "N"), ((47, 180), "S"), ((60, 200), "O")]
                 packet_data["robot"] = [(20, 20), 60]
                 packet_data["table_corners"] = [(0, 0), (0, 231), (112, 231), (112, 0)]
                 packet_data["drawing_zone"] = [(26, 27), (26, 87), (86, 87), (86, 27)]

@@ -1,4 +1,4 @@
 mounted_camera 0B3t1hFS_2t57QTdrQncxTlUxWHM
-world_camera_samples 0B9qVdRIN5_PmSXhCRXU5c080anM
+world_camera_table_2 0B3t1hFS_2t57bjJNV0J4R2paemM
 mounted_camera_2 0B3t1hFS_2t57cWtRak1SZF9IM1U
 mounted_camera_3 0B3t1hFS_2t57UHZiUUVGcFZCbDg

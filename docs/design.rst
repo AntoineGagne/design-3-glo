@@ -11,6 +11,7 @@ Subpackages
     design.main_station
     design.pathfinding
     design.telemetry
+    design.ui
     design.vision
 
 Module contents

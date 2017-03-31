@@ -1,6 +1,8 @@
 import json
 import os.path as path
 
+import pytest
+
 from design.vision.obstacles_detector import ObstaclesDetector
 from tests.utils import (ImageAssertionHelper,
                          list_files)
@@ -16,6 +18,7 @@ SAMPLE_JSON = list_files(WORLD_CAMERA_SAMPLES_PATH,
 SAMPLES_IMAGES_AND_JSON = dict(zip(SAMPLE_IMAGES, SAMPLE_JSON))
 
 
+@pytest.mark.skip(reason='The images can not be extracted')
 def test_that_given_images_with_obstacles_when_find_obstacles_positions_then_all_obstacles_positions_are_found():
     image_assertion_helper = ImageAssertionHelper(0.12)  # 0.12 is the maximum error percentage (so min is 87)
     obstacles_detector = ObstaclesDetector()

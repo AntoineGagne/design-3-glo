@@ -2,6 +2,9 @@ import math
 import cv2
 import numpy as np
 
+from design.vision.constants import (MAXIMUM_ANGLE_BETWEEN_SIMILAR_ANGLES,
+                                     MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES)
+
 
 def calculate_angle(point1, point2):
     """
@@ -66,6 +69,187 @@ def eliminate_close_points(array, minimum_distance):
     array = array[keep]
     new = list(zip(*[array[i::2] for i in range(2)]))
     return new
+
+
+def eliminate_close_points_in_list(list_of_points, minimum_distance):
+    """
+    compares specific arguments with each other to detect if the
+    coordinates are too close depending on minimal distance required
+    :param list_of_points: list of lists that represents the points
+    :param minimum_distance: minimum distance between coordinates
+    :type list_of_points: list
+    :return: a list which only contains non-duplicated values
+    """
+    array = np.asarray(list_of_points)
+    keep = np.ones(array.shape, dtype=bool)
+    for i in range(len(array)):
+        x1 = array[i][0]
+        y1 = array[i][1]
+        for k in range(i, len(array)):
+            if i != k:
+                x2 = array[k][0]
+                y2 = array[k][1]
+                if calculate_norm(x1, y1, x2, y2) < minimum_distance:
+                    keep[k] = False
+    array = array[keep]
+    new = list(zip(*[array[i::2] for i in range(2)]))
+    new = [list(row) for row in new]
+    return new
+
+
+def get_best_information(list_of_information):
+    """
+    When given a list of multiple obstacles information, coming from multiple images,
+    calculates the obstacles information that is most susceptible to be valid
+    :param obstacles_information: multiples obstacles information lists to be compared against each other
+    :type obstacles_information: list
+    :param maximum_distance: maximum distance between corresponding obstacles coordinates
+    :type maximum_distance: int
+    :return: obstacles information that is most susceptible to be valid
+    :rtype: list
+    """
+    already_associated_information = []
+    associated_information = {}
+
+    number_of_set_of_coordinates = len(list_of_information)
+    for i in range(number_of_set_of_coordinates):
+        if i not in already_associated_information:
+            associated_information[i] = []
+            for j in range(i + 1, number_of_set_of_coordinates):
+                if j not in already_associated_information:
+                    result = check_if_both_information_are_similar(list_of_information[i],
+                                                                   list_of_information[j])
+                    if result:
+                        associated_information[i].append(j)
+                        already_associated_information.append(j)
+
+    most_popular_information = 0
+    for key, value in associated_information.items():
+        if len(value) > len(associated_information[most_popular_information]):
+            most_popular_information = key
+
+    return list_of_information[most_popular_information]
+
+
+def check_if_both_information_are_similar(information1, information2):
+    """
+    Redirects to the right function according to information type of data
+    :param information1: first information containing coordinates and possibly orientation
+    :type information1: list
+    :param information2: second information containing coordinates and possibly orientation
+    :type information2: list
+    :param maximum_distance: maximum distance between corresponding drawing zone coordinates
+    :type maximum_distance: int
+    :return: true if both given information have similar data, false otherwise
+    :rtype: bool
+    """
+    if type(information1[0]) == list:
+        return are_obstacles_information_similar(information1, information2)
+    if type(information1[0]) == tuple:
+        if type(information1[1]) == tuple:
+            return are_drawing_zone_information_similar(information1, information2)
+        if type(information1[1]) == float:
+            return are_robot_information_similar(information1, information2)
+
+
+def are_robot_information_similar(information1, information2):
+    """
+    Compares both given robot information, coming from two different images and
+    returns true if they have similar coordinates and orientation
+    :param information1: first robot information
+    :type information1: list
+    :param information2: second robot information
+    :type information2: list
+    :param maximum_distance: maximum distance between corresponding robot coordinates
+    :type maximum_distance: int
+    :return: true if robot information have similar data, false otherwise
+    :rtype: bool
+    """
+    x1 = information1[0][0]
+    y1 = information1[0][1]
+    orientation1 = information1[1]
+    x2 = information2[0][0]
+    y2 = information2[0][1]
+    orientation2 = information2[1]
+    if abs(orientation1 - orientation2) > MAXIMUM_ANGLE_BETWEEN_SIMILAR_ANGLES:
+        return False
+    if calculate_norm(x1, y1, x2, y2) > MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES:
+        return False
+    return True
+
+
+def are_drawing_zone_information_similar(information1, information2):
+    """
+    Compares both given drawing zone information, coming from two different images and
+    returns true if they have similar coordinates
+    :param information1: first drawing zone information
+    :type information1: list
+    :param information2: second drawing zone information
+    :type information2: list
+    :param maximum_distance: maximum distance between corresponding drawing zone coordinates
+    :type maximum_distance: int
+    :return: true if drawing zone coordinates have similar data, false otherwise
+    :rtype: bool
+    """
+    answer = False
+    similar_information = {}
+    eliminated_information = []
+    if len(information1) != len(information2):
+        return False
+    else:
+        for i in range(len(information1)):
+            x1 = information1[i][0]
+            y1 = information1[i][1]
+            for j in range(len(information2)):
+                if j not in eliminated_information:
+                    x2 = information2[j][0]
+                    y2 = information2[j][1]
+                    if calculate_norm(x1, y1, x2, y2) < MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES:
+                        similar_information[i] = j
+                        eliminated_information.append(j)
+                        break
+        if len(similar_information) == len(information1):
+            answer = True
+    return answer
+
+
+def are_obstacles_information_similar(information1, information2):
+    """
+    Compares both given obstacles information, coming from two different images and
+    returns true if they have the same number of obstacles, same orientation and similar coordinates
+    :param information1: first obstacles information
+    :type information1: list
+    :param information2: second obstacles information
+    :type information2: list
+    :param maximum_distance: maximum distance between corresponding obstacles coordinates
+    :type maximum_distance: int
+    :return: true if obstacles have similar data, false otherwise
+    :rtype: bool
+    """
+    answer = False
+    similar_informations = {}
+    eliminated_information = []
+    if len(information1) != len(information2):
+        return False
+    else:
+        for i in range(len(information1)):
+            x1 = information1[i][0][0]
+            y1 = information1[i][0][1]
+            orientation1 = information1[i][1]
+            for j in range(len(information2)):
+                if j not in eliminated_information:
+                    x2 = information2[j][0][0]
+                    y2 = information2[j][0][1]
+                    orientation2 = information2[j][1]
+                    if orientation1 != orientation2:
+                        continue
+                    if calculate_norm(x1, y1, x2, y2) < MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES:
+                        similar_informations[i] = j
+                        eliminated_information.append(j)
+                        break
+        if len(similar_informations) == len(information1):
+            answer = True
+    return answer
 
 
 def undistort_image(image, camera_matrix, distortion_coefficients):

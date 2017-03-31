@@ -18,8 +18,8 @@ class DrawingZoneDetector:
         self.drawing_zone_coordinates = []
         self._actual_frame = None
 
-    def refresh_frame(self, path):
-        self.actual_frame = cv2.imread(path)
+    def refresh_frame(self, image):
+        self.actual_frame = image
         self.drawing_zone_coordinates = []
 
     @staticmethod
@@ -34,6 +34,7 @@ class DrawingZoneDetector:
         transformed_image = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
         transformed_image = cv2.dilate(transformed_image, kernel, iterations=4)
         transformed_image = cv2.erode(transformed_image, kernel, iterations=4)
+
         return transformed_image
 
     @staticmethod
@@ -46,7 +47,7 @@ class DrawingZoneDetector:
         """
         return cv2.GaussianBlur(image, (5, 5), 0)
 
-    def apply_image_transformations(self):
+    def __apply_image_transformations(self):
         """
         Apply series of transformations on actual frame for pretreatment
         :return: transformed image
@@ -57,13 +58,13 @@ class DrawingZoneDetector:
         morph_image = self.apply_morphological_transformations(smooth_image)
         return morph_image
 
-    def find_drawing_zone_contours(self):
+    def __find_drawing_zone_contours(self):
         """
         Apply pretreatment and find the contours of the image
         :return: found contours
         :rtype: list
         """
-        pretreated_image = self.apply_image_transformations()
+        pretreated_image = self.__apply_image_transformations()
         _, contours, _ = cv2.findContours(pretreated_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
         return contours
 
@@ -73,7 +74,7 @@ class DrawingZoneDetector:
         :return: list of four coordinates
         :rtype: list
         """
-        contours = self.find_drawing_zone_contours()
+        contours = self.__find_drawing_zone_contours()
         minimal_area = math.inf
         minimal_approximated_contour = None
         for contour in contours:
@@ -90,5 +91,28 @@ class DrawingZoneDetector:
         if minimal_approximated_contour is not None:
             for i in minimal_approximated_contour:
                 self.drawing_zone_coordinates.append(tuple(i[0]))
+        self.__reorder_drawing_zone_vertices()
 
         return self.drawing_zone_coordinates
+
+    def __reorder_drawing_zone_vertices(self):
+        approximate_center = [0, 0]
+        for vertex in self.drawing_zone_coordinates:
+            approximate_center[0] += vertex[0]
+            approximate_center[1] += vertex[1]
+        approximate_center[0] /= 4
+        approximate_center[1] /= 4
+
+        ordered_drawing_zone_coordinates = [(), (), (), ()]
+
+        for vertex in self.drawing_zone_coordinates:
+            if vertex[0] < approximate_center[0] and vertex[1] < approximate_center[1]:
+                ordered_drawing_zone_coordinates[0] = vertex
+            if vertex[0] > approximate_center[0] and vertex[1] < approximate_center[1]:
+                ordered_drawing_zone_coordinates[1] = vertex
+            if vertex[0] > approximate_center[0] and vertex[1] > approximate_center[1]:
+                ordered_drawing_zone_coordinates[2] = vertex
+            else:
+                ordered_drawing_zone_coordinates[3] = vertex
+
+        self.drawing_zone_coordinates = ordered_drawing_zone_coordinates

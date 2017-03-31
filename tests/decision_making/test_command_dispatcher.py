@@ -14,7 +14,7 @@ def test_when_no_matches_for_step_and_telemetry_command_get_relevant_command_ret
 
     command_dispatcher = CommandDispatcher(
         MovementStrategy(TranslationStrategyType.VERIFY_CONSTANTLY_THROUGH_CINEMATICS, None),
-        None, None, None, None)
+        None, None, None, None, None)
 
     command = command_dispatcher.get_relevant_command(None, None)
 
@@ -25,7 +25,7 @@ def test_when_step_is_rotation_towards_capture_get_relevant_command_returns_rota
 
     command_dispatcher = CommandDispatcher(
         MovementStrategy(None, RotationStrategyType.VERIFY_CONSTANTLY_THROUGH_ANGULAR_CINEMATICS),
-        None, None, None, None)
+        None, None, None, None, None)
 
     command = command_dispatcher.get_relevant_command(None, Step.ROTATE_TO_FACE_PAINTING)
 

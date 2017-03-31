@@ -27,6 +27,8 @@ if __name__ == '__main__':
         author_email='antoine.gagne.2@ulaval.ca',
         url='https://github.com/AntoineGagne/design-3-glo',
         packages=['design'],
+        data_files=[('config', ['config/camera_optimized_values.json'])],
+        include_package_data=True,
         long_description=get_long_description('README.md'),
         setup_requires=['pytest-runner', 'flake8'],
         tests_require=['pytest'],

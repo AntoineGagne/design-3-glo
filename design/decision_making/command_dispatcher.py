@@ -23,11 +23,12 @@ class CommandDispatcher():
     """ Allows easy dispatching and computing of commands for the Brain """
 
     def __init__(self, movement_strategies, interfacing_controller, pathfinder,
-                 onboard_vision, antenna_information):
+                 onboard_vision, antenna_information, servo_wheels_manager):
 
         self.movement_strategy = movement_strategies
         self.interfacing_controller = interfacing_controller
         self.pathfinder = pathfinder
+        self.servo_wheels_manager = servo_wheels_manager
 
         self.steps_using_rotation = [Step.ROTATE_BACK_AFTER_CAPTURE,
                                      Step.ROTATE_TO_FACE_PAINTING,
@@ -85,7 +86,7 @@ class CommandDispatcher():
                               (None, Step.CAPTURE_CORRECT_PAINTING):
                               CaptureFigureCommand(
                                   Step.CAPTURE_CORRECT_PAINTING, interfacing_controller,
-                                  pathfinder, onboard_vision)}
+                                  pathfinder, antenna_information, onboard_vision)}
 
     def get_relevant_command(self, packet_type, current_step):
         """ Obtains the relevant command according to the telemetry packet
@@ -104,4 +105,4 @@ class CommandDispatcher():
                 current_step, self.interfacing_controller, self.pathfinder)
         else:
             return self.movement_strategy.get_translation_command(
-                current_step, self.interfacing_controller, self.pathfinder)
+                current_step, self.interfacing_controller, self.pathfinder, self.servo_wheels_manager)

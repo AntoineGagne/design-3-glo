@@ -36,6 +36,14 @@ design.decision_making.constants module
     :undoc-members:
     :show-inheritance:
 
+design.decision_making.movement_strategy module
+-----------------------------------------------
+
+.. automodule:: design.decision_making.movement_strategy
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

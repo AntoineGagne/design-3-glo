@@ -8,16 +8,17 @@
 """
 import cv2
 import numpy as np
-
+import json
 import os
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from glob import glob
 from errno import EEXIST
 
-
-DEFAULT_IMAGES_DIRECTORY = './data/left*.jpg'
+DEFAULT_IMAGES_DIRECTORY = './data/*.png'
 DEFAULT_OUTPUT_DIRECTORY = './output/'
 CHESSBOARD_PATTERN_SIZE = (9, 6)
+CHESSBOARD_SQUARE_SIZE = 2.6  # in cm
+DEFAULT_TABLE_NUMBER = 1
 
 
 def parse_arguments():
@@ -53,6 +54,12 @@ def parse_arguments():
                         action='store_false',
                         dest='output',
                         help='Output the images.')
+    parser.add_argument('-t',
+                        '--table',
+                        default=DEFAULT_TABLE_NUMBER,
+                        type=int,
+                        dest='table_number',
+                        help='Table number to calibrate.')
     return parser.parse_args()
 
 
@@ -63,13 +70,12 @@ def calibrate(directory=DEFAULT_IMAGES_DIRECTORY,
 
     :param directory: The directory that contains images
     :type directory: str
-    :param output: if True, the images are
+    :param output: if True, the images are saved to output directory
     :type output: bool
     :param output_directory: The directory that will contain original images
                              with found coordinates drawn
     :type output_directory: str
-    :return: A tuple containing the root mean square and the intrinsic camera
-             parameters
+    :return: A tuple containing the root mean square and the camera parameters
     :rtype: tuple
     """
     image_names = glob(directory)
@@ -81,7 +87,6 @@ def calibrate(directory=DEFAULT_IMAGES_DIRECTORY,
     image_points = []  # 2d points in image plane.
 
     height, width = 0, 0
-    undistorted_image_names = []
     for filename in image_names:
         print('Processing {0}... -> '.format(filename), end='')
         image = cv2.imread(filename, 0)
@@ -116,9 +121,6 @@ def calibrate(directory=DEFAULT_IMAGES_DIRECTORY,
                                                   name,
                                                   '_chess.png')
             cv2.imwrite(output_file_name, vis)
-            if found:
-                undistorted_image_names.append(output_file_name)
-
         if not found:
             print('The chessboard pattern could not be found.')
             continue
@@ -127,12 +129,11 @@ def calibrate(directory=DEFAULT_IMAGES_DIRECTORY,
         object_points.append(pattern_points)
         print('The processing was successful.')
 
-    # root_mean_square: (RMS) reprojection error (should be between 0.1 and
-    # 1.0 pixels in a good calibration)
-    # camera_matrix: intrinsics parameters including focal length and optical
-    # centers
+    # root_mean_square: (RMS) reprojection error (should be between 0.1 and 1.0 pixels in a good calibration)
+    # camera_matrix: intrinsics parameters including focal length and optical centers
     root_mean_square, camera_matrix, distorsion_coefficients, rotation_vectors, translation_vectors = \
         cv2.calibrateCamera(object_points, image_points, (width, height), None, None)
+
     return (root_mean_square,
             camera_matrix,
             distorsion_coefficients,
@@ -145,11 +146,9 @@ def _prepare_pattern_points():
 
     :returns: The pattern points
     """
-    # We put cm values (but it can be 26 mm or 0.026 m)
-    square_size = 2.6
     pattern_points = np.zeros((np.prod(CHESSBOARD_PATTERN_SIZE), 3), np.float32)
     pattern_points[:, :2] = np.indices(CHESSBOARD_PATTERN_SIZE).T.reshape(-1, 2)
-    pattern_points *= square_size
+    pattern_points *= CHESSBOARD_SQUARE_SIZE
     return pattern_points
 
 
@@ -179,74 +178,28 @@ def create_directory(path: str):
             raise
 
 
-def get_onboard_extrinsic_vectors(image_number,
-                                  rotation_vectors,
-                                  translation_vectors):
-    """Get a set of rotation and translation vectors for each image used to
-       calibrate the camera. We set world coordinates origin based on the corner
-       of the chessboard. Choosing the image allows to set the origin
-       coordinates we will refer to afterwards.
-
-    :param image_number: the image from which we want the referential
-    :param rotation_vectors: rotation vectors obtained after calibration
-    :param translation_vectors: translation vectors obtained after calibration
-    :returns: single rotation and translation vectors
-    """
-    return rotation_vectors[image_number], translation_vectors[image_number]
-
-
-def get_extrinsic_vectors(object_points,
-                          image_points,
-                          camera_matrix,
-                          distorsion_coefficients,
-                          rotation_vector=None,
-                          translation_vector=None):
-    """Get new rotation vector and translation vector values. Useful
-       for new picture in which we know both image and world coordinates image
-       points from vision.
-
-    :param object_points:
-    :param image_points:
-    :param camera_matrix:
-    :param distorsion_coefficients:
-    :param rotation_vector: output parameter
-    :param translation_vector: output parameter
-    :returns:
-
-    .. warning:: Careful for getting image points from undistorted image
-                 or do not put the distorsion coefficients to bypass
-                 undistorsion since it's already done.
-    """
-    value = not (rotation_vector is None and translation_vector is None)
-    cv2.solvePnP(object_points,
-                 image_points,
-                 camera_matrix,
-                 distorsion_coefficients,
-                 rotation_vector,
-                 translation_vector,
-                 value)
-
-    return rotation_vector, translation_vector
-
-
-def calculate_extrinsic_matrix(rotation_matrix, translation_vector):
-    """Get extrinsic matrix when we already have rotation and translation
-       vectors.
-
-    :param rotation_matrix: rotation vector
-    :type rotation_matrix: :class:numpy.ndarray
-    :param translation_vector: translation vector
-    :type translation_vector: :class:numpy.ndarray
-    :return: Extrinsic 3x4 matrix
-    :rtype: :class:numpy.ndarray
-    """
-    matrix = np.zeros(shape=(3, 3))
-    cv2.Rodrigues(rotation_matrix, matrix)
-    return np.column_stack((rotation_matrix, translation_vector))
+def write_json_file(table_number, intrinsic_matrix, rotation_vector, translation_vector):
+    calibration_data = {"intrinsic_matrix": intrinsic_matrix,
+                        "rotation_vector": rotation_vector,
+                        "translation_vector": translation_vector}
+    data_file_name = 'calibration_information_{}.json'.format(table_number)
+    with open(data_file_name, 'w', encoding='utf-8') as output_file:
+        json.dump(calibration_data, output_file)
 
 
 if __name__ == '__main__':
-    arguments = parse_arguments()
-    calibrate(arguments.input_directory,
-              arguments.output,
-              arguments.output_directory)
+    # arguments = parse_arguments()
+    # _, matrix_camera, _, vectors_rotation, vectors_translation = \
+    #     calibrate(arguments.input_directory, arguments.output, arguments.output_directory)
+    # write_json_file(arguments.table_number,
+    #                 matrix_camera.tolist(),
+    #                 coefficients_distorsion.tolist(),
+    #                 rotation_vectors[0].tolist(),
+    #                 translation_vectors[0].tolist())
+
+    _, matrix_camera, coefficients_distorsion, rotation_vectors, translation_vectors = calibrate(
+        './images_to_calibrate/p*.png')
+    write_json_file(2,
+                    matrix_camera.tolist(),
+                    rotation_vectors[0].tolist(),
+                    translation_vectors[0].tolist())

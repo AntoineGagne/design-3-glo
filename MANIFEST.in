@@ -1,0 +1,6 @@
+include config/*.json
+include design/ui/views/style/qdarkstyle/*.qss
+include design/ui/resources/*.png
+include design/ui/resources/*.jpg
+include README.md
+include datasets.txt
