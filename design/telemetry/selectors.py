@@ -24,13 +24,13 @@ class Selector:
         """Initialize the `Selector`.
 
         :param read_socket: The socket that will receive inputs
-        :type read_socket: :mod:`zmq`.`Socket`
+        :type read_socket: :class:`zmq.Socket`
         :param write_socket: The socket that will write outputs
-        :type write_socket: :mod:`zmq`.`Socket`
+        :type write_socket: :class:`zmq.Socket`
         :param consumed: The packets to be sent
-        :type consumed: :mod:queue.Queue
+        :type consumed: :class:`queue.Queue`
         :param produced: The received packets
-        :type produced: :mod:queue.Queue
+        :type produced: :class:`queue.Queue`
         :param kwargs: See below
 
         :Keyword Arguments:
@@ -70,13 +70,13 @@ class Selector:
 class ClientSelectorFactory:
     """Create a `Selector` object that contains the client side sockets."""
     def __init__(self,
-                 host: str,
+                 peer: str,
                  read_port: int,
                  write_port: int):
         """Initialize the `ClientSelectorFactory`.
 
-        :param host: The host on which to bind (i.e. '127.0.0.1')
-        :type host: str
+        :param peer: The address to connect to (i.e. '198.162.0.1')
+        :type peer: str
         :param read_port: The port on which to bind the reader socket
                           (i.e. 8000)
         :type read_port: int
@@ -88,8 +88,8 @@ class ClientSelectorFactory:
         .. important:: The *reader_port* and *writer_port* must be different.
         """
         assert read_port != write_port
-        self.read_address = 'tcp://{0}:{1}'.format(host, read_port)
-        self.write_address = 'tcp://{0}:{1}'.format(host, write_port)
+        self.read_address = 'tcp://{0}:{1}'.format(peer, read_port)
+        self.write_address = 'tcp://{0}:{1}'.format(peer, write_port)
 
     def create_selector(self,
                         consumed: queue.Queue,
@@ -97,15 +97,15 @@ class ClientSelectorFactory:
         """Create the `Selector` object.
 
         :param consumed: The queue of elements that needs to be sent
-        :type consumed: :mod:`queue`.`Queue`
+        :type consumed: :class:`queue.Queue`
         :param produced: The queue of elements that were read
-        :type produced: :mod:`queue`.`Queue`
+        :type produced: :class:`queue.Queue`
         :returns: A selector with the given sockets
-        :rtype: `Selector`
+        :rtype: :class:`design.telemetry.selectors.Selector`
         """
         context = zmq.Context()
         write_socket = context.socket(zmq.PUSH)
-        write_socket.bind(self.write_address)
+        write_socket.connect(self.write_address)
 
         read_socket = context.socket(zmq.PULL)
         read_socket.connect(self.read_address)
@@ -143,15 +143,15 @@ class ServerSelectorFactory:
         """Create the `Selector` object.
 
         :param consumed: The queue of elements that needs to be sent
-        :type consumed: :mod:`queue`.`Queue`
+        :type consumed: :class:`queue.Queue`
         :param produced: The queue of elements that were read
-        :type produced: :mod:`queue`.`Queue`
+        :type produced: :class:`queue.Queue`
         :returns: A selector with the given sockets
-        :rtype: `Selector`
+        :rtype: :class:`design.telemetry.selectors.Selector`
         """
         context = zmq.Context()
         read_socket = context.socket(zmq.PULL)
-        read_socket.connect(self.read_address)
+        read_socket.bind(self.read_address)
 
         write_socket = context.socket(zmq.PUSH)
         write_socket.bind(self.write_address)

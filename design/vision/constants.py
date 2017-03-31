@@ -1,29 +1,56 @@
 """Constants used by the modules in the `vision` module."""
 
-import itertools
-import operator
-
 # These were taken from the image samples
-PAINTING_FRAME_LOWER_GREEN = (35.1, 108, 69.75)
-PAINTING_FRAME_UPPER_GREEN = (65.45, 255, 154)
-
-# These were taken from the image samples
-LOWER_WHITE = (0, 0, 107.5)
-UPPER_WHITE = (170.5, 100, 200)
+PAINTING_FRAME_LOWER_GREEN = (35.1, 108, 51.75)
+PAINTING_FRAME_UPPER_GREEN = (68.2, 255, 214.5)
 
 # The dimension of the warped images (chosen arbitrarily)
 WARPED_IMAGE_DIMENSIONS = (300, 300)
 WARPED_IMAGE_CORNERS = [[0, 0], [300, 0], [300, 300], [0, 300]]
 
 # The real dimensions in centimeters
-REAL_PAINTING_DIMENSION = (14.8, 14.8)
+REAL_PAINTING_DIMENSION = 14.8
 REAL_DRAWING_AREA_DIMENSION = (59.7, 59.7)
 
-# The ratios with the warped dimensions
-# Given as: (x, y)
-PAINTING_DIMENSION_RATIO = tuple(itertools.starmap(operator.truediv,
-                                                   zip(REAL_PAINTING_DIMENSION,
-                                                       WARPED_IMAGE_DIMENSIONS)))
-DRAWING_DIMENSION_RATIO = tuple(itertools.starmap(operator.truediv,
-                                                  zip(REAL_PAINTING_DIMENSION,
-                                                      WARPED_IMAGE_DIMENSIONS)))
+#: The ratios between the real painting frame dimension and the image's one
+PAINTING_DIMENSION_RATIO = REAL_PAINTING_DIMENSION / WARPED_IMAGE_DIMENSIONS[0]
+
+LOWER_TRIANGLE_BOX_SIZE = 28
+HIGHER_TRIANGLE_BOX_SIZE = 80
+
+# drawing zone borders : green range
+MIN_GREEN = [40, 80, 120]
+MAX_GREEN = [80, 255, 255]
+
+MIN_MAGENTA = [160, 100, 100]
+MAX_MAGENTA = [170, 255, 255]
+
+DRAWING_ZONE_MIN_AREA = 100000
+DRAWING_ZONE_MAX_AREA = 300000
+
+OBSTACLE_MIN_RADIUS = 20
+OBSTACLE_MAX_RADIUS = 60
+OBSTACLES_WHITE_CIRCLE_MIN_RADIUS = 30
+
+MIN_ROBOT_CIRCLE_RADIUS = 5
+MIN_DISTANCE_BETWEEN_ROBOT_TOP_CIRCLES = 60
+
+LEFT_GAP_FROM_DRAWING_ZONE = 25.5  # in cm
+RIGHT_GAP_FROM_DRAWING_ZONE = 145
+TOP_GAP_FROM_DRAWING_ZONE = 25.75
+BOTTOM_GAP_FROM_DRAWING_ZONE = 25.75
+DRAWING_ZONE_WORLD_ARC_LENGTH = 59.7
+
+MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES = 10
+MAXIMUM_ANGLE_BETWEEN_SIMILAR_ANGLES = 5
+
+ROBOT_TRIANGLE_MINIMAL_AREA = 1600
+ROBOT_TRIANGLE_MAXIMAL_AREA = 1800
+
+NUMBER_OF_CAPTURES_TO_COMPARE = 10
+
+OBSTACLES_HEIGHT = 30
+ROBOT_HEIGHT = 15
+
+TABLE_WIDTH = 230
+TABLE_HEIGHT = 112

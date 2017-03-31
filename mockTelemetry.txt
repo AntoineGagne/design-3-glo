@@ -1,1 +1,1 @@
-15:06:00|GAME_MAP_DATA|ROBOT_POS/(20,20)/ROBOT_ORI/60$FIG_ZONE/(50,170)/ANT_ZONE/(100,42)/DRW_ZONE/(40,40)
+07:05:00|GAME_MAP|builds_the_game_map_from_data_within_the_telemetry_mock

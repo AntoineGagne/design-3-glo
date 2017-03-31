@@ -1,4 +1,16 @@
-.PHONY: init test install extract_tar_archives check clean
+DOCUMENTATION_DIRECTORY := docs
+
+.PHONY: init \
+		test \
+		install \
+		extract_tar_archives \
+		download_datasets \
+		coverage \
+		doc \
+		check \
+		clean \
+		html \
+		man
 
 init:
 	@pip install -r requirements.txt
@@ -25,7 +37,17 @@ coverage:
 test: extract_tar_archives
 	@./setup.py test
 
+doc:
+	@sphinx-apidoc --force -o docs/ ./design/
+
+html: doc
+	@$(MAKE) -C $(DOCUMENTATION_DIRECTORY) html
+
+man: doc
+	@$(MAKE) -C $(DOCUMENTATION_DIRECTORY) man
+
 clean:
+	@$(MAKE) -C $(DOCUMENTATION_DIRECTORY) clean
 	@rm -rf dist/
 	@rm -rf build/
 	@rm -rf design.egg-info/

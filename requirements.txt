@@ -1,7 +1,12 @@
 pytest
 scipy
 sympy
+pyzmq
 opencv
 pyzmq
 numpy
 coverage
+pyqt
+pyserial
+Sphinx
+dill
