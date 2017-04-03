@@ -1,6 +1,7 @@
 import json
 import os.path as path
 
+import cv2
 import pytest
 
 from tests.utils import (ImageAssertionHelper,
@@ -19,11 +20,11 @@ SAMPLES_IMAGES_AND_JSON = dict(zip(SAMPLE_IMAGES, SAMPLE_JSON))
 
 @pytest.mark.skip(reason='The images can not be extracted')
 def test_that_given_images_with_robot_when_find_robot_position_then_robot_position_is_found():
-    image_assertion_helper = ImageAssertionHelper(0.12)  # 0.12 is the maximum error percentage (so min is 87)
+    image_assertion_helper = ImageAssertionHelper(0.12)
     robot_detector = RobotDetector()
     for image_path, json_path in SAMPLES_IMAGES_AND_JSON.items():
-        robot_detector.refresh_frame(image_path)
-        found_robot_position, _ = robot_detector.detect_robot()
+        image = cv2.imread(image_path)
+        found_robot_position, _ = robot_detector.detect_robot(image)
         with open(json_path) as data_file:
             data = json.load(data_file)
             robot_position = data["robot"]

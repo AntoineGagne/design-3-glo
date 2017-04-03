@@ -1,9 +1,6 @@
-"""
-The controller class does the real logic,
-and passes on data to the model
-"""
 from design.ui.models.world_model import WorldModel
 import numpy
+import collections
 
 
 class WorldController:
@@ -30,12 +27,12 @@ class WorldController:
         self.world_model.obstacles_coordinates = coordinates
         self.world_model.announce_update()
 
-    def update_robot_real_path(self, coordinates):
-        self.world_model.robot_real_path.append(coordinates)
+    def update_real_path(self, coordinates):
+        self.world_model.real_path.append(coordinates)
         self.world_model.announce_update()
 
     def reset_robot_real_path(self):
-        self.world_model.robot_real_path = None
+        self.world_model.real_path = collections.deque(maxlen=100)
         self.world_model.announce_update()
 
     def update_game_zone_coordinates(self, coordinates):

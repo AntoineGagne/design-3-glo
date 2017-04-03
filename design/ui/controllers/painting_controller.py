@@ -1,7 +1,3 @@
-"""
-The controller class does the real logic,
-and passes on data to the model
-"""
 from design.ui.models.painting_model import PaintingModel
 import numpy
 

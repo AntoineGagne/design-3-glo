@@ -1,7 +1,3 @@
-"""
-Sources:
-http://stackoverflow.com/questions/37399515/how-to-make-a-widgets-height-a-fixed-proportion-to-its-width
-"""
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QPixmap
@@ -14,16 +10,10 @@ from design.ui.controllers.painting_controller import PaintingController
 
 
 class PaintingView(QWidget):
-    """
-    Reimplementation to keep aspect ratio of widget
-    """
-
     def __init__(self, painting_model: PaintingModel, painting_controller: PaintingController):
         super().__init__()
         self.model = painting_model
         self.controller = painting_controller
-
-        # This is only for fun at the beginning
         trump_painting = QPixmap(
             resource_filename('design.ui',
                               'resources/donald-trump.png')
@@ -37,8 +27,8 @@ class PaintingView(QWidget):
         self.grid_layout = QtWidgets.QGridLayout(self)
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.painting_view = QtWidgets.QGraphicsView(self)
-        self.painting_view.setResizeAnchor(0)  # stuff always on top left corner
-        self.painting_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)  # and coordinates will start at top left corner
+        self.painting_view.setResizeAnchor(0)
+        self.painting_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.painting_scene = QtWidgets.QGraphicsScene()
         self.painting_view.setScene(self.painting_scene)
         self.grid_layout.addWidget(self.painting_view, 0, 0)
@@ -69,7 +59,6 @@ class PaintingView(QWidget):
         self.painting_view.setFixedSize(width, height)
 
     def update_world_image(self):
-        # convert to QPixmap
         if self.model.painting_image is not None:
             height, width, channel = self.model.painting_image.shape
             bytes_per_line = 3 * width
@@ -82,12 +71,10 @@ class PaintingView(QWidget):
             self.painting_scene.addPixmap(self.scene_img)
 
     def draw_path(self):
-        print("Im about to drawing")
         path = self.model.painting_vertices
         path_to_paint = QtGui.QPainterPath()
         points_to_paint = QtGui.QPainterPath()
         if path:
-            print("Im really drawing")
             self.painting_scene.clear()
             path_to_paint.moveTo(path[0][0], path[0][1])
             for i in range(len(path)):
@@ -97,6 +84,5 @@ class PaintingView(QWidget):
                     path_to_paint.moveTo(path[0][0], path[0][1])
                     i += 1
                 path_to_paint.lineTo(path[i][0], path[i][1])
-
             self.painting_scene.addPath(path_to_paint, self.path_lines_pen)
             self.painting_scene.addPath(points_to_paint, self.path_points_pen)

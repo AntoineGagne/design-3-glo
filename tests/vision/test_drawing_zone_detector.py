@@ -1,6 +1,6 @@
 import json
 import os.path as path
-
+import cv2
 import pytest
 
 from design.vision.drawing_zone_detector import DrawingZoneDetector
@@ -19,31 +19,27 @@ SAMPLES_IMAGES_AND_JSON = dict(zip(SAMPLE_IMAGES, SAMPLE_JSON))
 
 @pytest.mark.skip(reason='The images can not be extracted')
 def test_that_given_images_with_drawing_zone_when_find_drawing_zone_then_drawing_zone_is_found():
-    image_assertion_helper = ImageAssertionHelper(0.15)  # 0.15 is the maximum error percentage (so min is 87)
+    image_assertion_helper = ImageAssertionHelper(0.15)
     drawing_zone_detector = DrawingZoneDetector()
 
     for image_path, json_path in SAMPLES_IMAGES_AND_JSON.items():
 
+        image = cv2.imread(image_path)
+
         drawing_zone_coordinates = []
         found_drawing_zone_coordinates = []
-
-        # get found coordinates
-        drawing_zone_detector.refresh_frame(image_path)
-        found_coordinates = drawing_zone_detector.find_drawing_zone_vertices()
+        found_coordinates = drawing_zone_detector.find_drawing_zone_vertices(image)
 
         if found_coordinates is not None:
             for coordinate in found_coordinates:
                 found_drawing_zone_coordinates.append(coordinate)
 
-        # get coordinates to test against
         with open(json_path) as data_file:
             data = json.load(data_file)
             for key in ["upper-right", "upper-left", "lower-right", "lower-left"]:
                 if key in data.keys():
                     drawing_zone_coordinates.append(data[key])
-            # print(drawing_zone_coordinates)
 
-        # no need to compare coordinates if not all coordinates are found
         image_assertion_helper.assert_equal(
             len(found_drawing_zone_coordinates) == len(drawing_zone_coordinates),
             image_path=image_path,

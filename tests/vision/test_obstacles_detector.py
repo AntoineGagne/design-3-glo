@@ -1,6 +1,7 @@
 import json
 import os.path as path
 
+import cv2
 import pytest
 
 from design.vision.obstacles_detector import ObstaclesDetector
@@ -27,10 +28,10 @@ def test_that_given_images_with_obstacles_when_find_obstacles_positions_then_all
 
         obstacles_coordinates = []
         found_obstacles_coordinates = []
+        image = cv2.imread(image_path)
 
         # get found coordinates
-        obstacles_detector.refresh_frame(image_path)
-        found_obstacles_information = obstacles_detector.calculate_obstacles_information()
+        found_obstacles_information = obstacles_detector.calculate_obstacles_information(image)
         if found_obstacles_information is not None:
             for obstacle_information in found_obstacles_information:
                 found_obstacles_coordinates.append(obstacle_information[0])

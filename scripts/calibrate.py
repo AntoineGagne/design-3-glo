@@ -22,13 +22,6 @@ DEFAULT_TABLE_NUMBER = 1
 
 
 def parse_arguments():
-    """Parse the command line arguments.
-
-    :returns: The parsed arguments
-
-    .. seealso::
-        https://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.parse_args
-    """
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             prog='calibrate',
                             description='Calibrate the camera.')
@@ -142,10 +135,6 @@ def calibrate(directory=DEFAULT_IMAGES_DIRECTORY,
 
 
 def _prepare_pattern_points():
-    """Prepare the pattern points.
-
-    :returns: The pattern points
-    """
     pattern_points = np.zeros((np.prod(CHESSBOARD_PATTERN_SIZE), 3), np.float32)
     pattern_points[:, :2] = np.indices(CHESSBOARD_PATTERN_SIZE).T.reshape(-1, 2)
     pattern_points *= CHESSBOARD_SQUARE_SIZE
@@ -153,24 +142,12 @@ def _prepare_pattern_points():
 
 
 def split_filename(filename):
-    """Split the file's name.
-
-    :param filename: The file's name
-    :type filename: str
-    :returns: A tuple containing the path, name and extension of the file
-    :rtype: tuple<str, str, str>
-    """
     path, filename = os.path.split(filename)
     name, extension = os.path.splitext(filename)
     return path, name, extension
 
 
 def create_directory(path: str):
-    """Create a directory at the given path if it doesn't exist.
-
-    :param path: The path to the directory
-    :type path: str
-    """
     try:
         os.makedirs(path)
     except OSError as exception:
@@ -188,18 +165,9 @@ def write_json_file(table_number, intrinsic_matrix, rotation_vector, translation
 
 
 if __name__ == '__main__':
-    # arguments = parse_arguments()
-    # _, matrix_camera, _, vectors_rotation, vectors_translation = \
-    #     calibrate(arguments.input_directory, arguments.output, arguments.output_directory)
-    # write_json_file(arguments.table_number,
-    #                 matrix_camera.tolist(),
-    #                 coefficients_distorsion.tolist(),
-    #                 rotation_vectors[0].tolist(),
-    #                 translation_vectors[0].tolist())
-
     _, matrix_camera, coefficients_distorsion, rotation_vectors, translation_vectors = calibrate(
-        './images_to_calibrate/p*.png')
-    write_json_file(2,
+        './camera_data/p*.png')
+    write_json_file(5,
                     matrix_camera.tolist(),
                     rotation_vectors[0].tolist(),
                     translation_vectors[0].tolist())

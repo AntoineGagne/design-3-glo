@@ -1,8 +1,3 @@
-"""
-    We inherit from main_window that is designed with
-    Qt Designer and add everything related to actions and
-    models to enable real time data visualization
-"""
 from PyQt5.QtCore import pyqtSlot, QTimer
 from PyQt5.QtWidgets import QMainWindow
 from design.ui.views.generated.ui_main_view import Ui_main_window
@@ -17,15 +12,9 @@ class MainView(QMainWindow):
         self.model = model
 
         self.timer = QTimer(self)
-
-        # then build the UI
         self.ui = Ui_main_window()
         self.ui.setupUi(self)
-
-        # setting up slot/signal connections
         self.setup_connections()
-
-        # the methods are called by the model when it executes announce_update
         self.model.subscribe_update_function(self.start_timer)
         self.model.subscribe_update_function(self.update_console_log)
 

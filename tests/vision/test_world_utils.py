@@ -1,8 +1,6 @@
 import math
-
-import numpy
-
 import design.vision.world_utils as utils
+import numpy
 
 
 def test_that_given_points_when_calculate_angle_then_angle_is_calculated():
@@ -28,7 +26,7 @@ def test_than_given_points_when_calculate_norm_then_norm_is_calculated():
 def test_that_given_array_when_eliminate_close_points_then_close_points_are_eliminated():
     array = numpy.array([[[666, 153]], [[709, 176]], [[686, 219]], [[643, 195]]])
     minimal_distance = 50
-    new_array = (utils.eliminate_close_points(array, minimal_distance))
+    new_array = (utils.eliminate_duplicated_points(array, minimal_distance))
     assert new_array == [(666, 153)]
 
 

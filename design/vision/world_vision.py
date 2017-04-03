@@ -1,11 +1,12 @@
 from design.vision.drawing_zone_detector import DrawingZoneDetector
 from design.vision.robot_detector import RobotDetector
 from design.vision.obstacles_detector import ObstaclesDetector
-from design.vision.conversion import Converter, calculate_table_rotation, extrapolate_table
+from design.vision.conversion import Converter, calculate_table_rotation, extrapolate_table, \
+    set_top_left_world_game_zone_coordinate
 from design.vision.camera import Camera
 from design.vision.constants import NUMBER_OF_CAPTURES_TO_COMPARE, OBSTACLES_HEIGHT, ROBOT_HEIGHT
 from design.vision.world_utils import get_best_information
-from design.vision.exceptions import GameMapNotFound, RobotNotFound
+from design.vision.exceptions import GameMapNotFound, RobotNotFound, DrawingZoneNotFound, ObstaclesNotFound
 
 
 class WorldVision:
@@ -16,197 +17,117 @@ class WorldVision:
                  camera: Camera):
 
         self.camera = camera
-        self.actual_frame = None
-
-        # these informations are in world coordinates
-        self.actual_robot_information = None
-        self.game_map = {}
-
-        # this is useful for drawing in the UI
-        self.game_map_in_pixels = {}
-
-        self.rotation_angle_of_table = 0.0
-
         self.obstacles_detector = obstacles_detector
         self.drawing_zone_detector = drawing_zone_detector
         self.robot_detector = robot_detector
+        self.converter = Converter(table_number)
 
-        self.converter = Converter(2)
+        self.actual_frame = None
 
-        self.camera.open()
+        self.actual_robot_information = None
 
-    def detect_obstacles(self):
-        """
-        Takes multiple pictures and gets obstacles information from it
-        :return:
-        """
+        self.game_map = {}  # values are in pixels
+        self.world_game_map = {}  # values are in cm
+
+        self.rotation_angle_of_table = 0.0
+        self.top_left_table_coordinate = None
+
+    def get_world_game_map(self, first_time: bool = True):
+
+        self.detect_game_items(first_time)
+        self.__adjust_converter()
+
+        if first_time:
+            self.world_game_map["drawing_zone"] = []
+            for position in self.game_map["drawing_zone"]:
+                world_position = self.converter.get_world_coordinates_translated(0,
+                                                                                 position[0],
+                                                                                 position[1])
+
+                self.world_game_map["drawing_zone"].append((world_position[0], world_position[1]))
+
+        self.world_game_map["obstacles"] = []
+        for information in self.game_map["obstacles"]:
+            world_information = self.converter.get_world_coordinates_translated(OBSTACLES_HEIGHT,
+                                                                                information[0][0],
+                                                                                information[0][1])
+            self.world_game_map["obstacles"].append([(world_information[0], world_information[1]), information[1]])
+
+        self.world_game_map["robot"] = [self.converter.get_world_coordinates_translated(ROBOT_HEIGHT,
+                                                                                        self.game_map["robot"][0][0],
+                                                                                        self.game_map["robot"][0][1]),
+                                        self.game_map["robot"][1]]
+
+        return self.world_game_map
+
+    def detect_game_items(self, first_time: bool = True):
+        drawing_zone_information = []
         obstacles_information = []
-        for picture in self.camera.take_pictures(NUMBER_OF_CAPTURES_TO_COMPARE):
-            self.obstacles_detector.refresh_frame(picture)
-            new_information = self.obstacles_detector.calculate_obstacles_information()
-            if new_information != []:
-                obstacles_information.append(new_information)
+        robot_information = []
 
-        obstacles_information = filter_information(obstacles_information)
-        obstacles_final_information = get_best_information(obstacles_information)
+        try:
+            for picture in self.camera.take_pictures(NUMBER_OF_CAPTURES_TO_COMPARE):
+                try:
+                    if first_time:
+                        drawing_zone_information.append(self.drawing_zone_detector.find_drawing_zone_vertices(picture))
+                    obstacles_information.append(self.obstacles_detector.calculate_obstacles_information(picture))
+                    robot_information.append(self.robot_detector.detect_robot(picture))
+                except (DrawingZoneNotFound, RobotNotFound, ObstaclesNotFound):
+                    pass
 
-        self.game_map_in_pixels["obstacles"] = obstacles_final_information
+            self.__set_game_map(drawing_zone_information, obstacles_information, robot_information, first_time)
 
-        obstacles_world_information = []
-        for information in obstacles_final_information:
-            world_information = self.converter.get_world_coordinates(OBSTACLES_HEIGHT,
-                                                                     information[0][0],
-                                                                     information[0][1])
-            obstacles_world_information.append([(world_information[0], world_information[1]), information[1]])
+        except:
+            raise GameMapNotFound
 
-        return obstacles_world_information
+    def __set_game_map(self,
+                       drawing_zone_information: list,
+                       obstacles_information: list,
+                       robot_information: list,
+                       first_time: bool):
+        if first_time:
+            self.game_map["drawing_zone"] = get_best_information(drawing_zone_information)
+            self.rotation_angle_of_table = calculate_table_rotation(self.game_map["drawing_zone"])
+            self.__adjust_converter()
+            self.__get_table_coordinates()
 
-    def detect_robot(self):
-        """
-        Algorithm to call when vision performance is more important (might be riskier to not having robot detected)
-        :return: new robot information
-        """
+        self.game_map["obstacles"] = get_best_information(obstacles_information)
+        self.game_map["robot"] = get_best_information(robot_information)
+        self.game_map["robot"][1] = self.game_map["robot"][1] - self.rotation_angle_of_table
+
+    def detect_robot_fast(self):
         for picture in self.camera.take_picture():
             self.actual_frame = picture
-        self.robot_detector.refresh_frame(self.actual_frame)
-        actual_robot_information = self.robot_detector.detect_robot()
+            self.game_map["robot"] = self.robot_detector.detect_robot(picture)
 
-        if actual_robot_information == [(0, 0), 0.0]:
-            raise RobotNotFound
+        self.game_map["robot"][0] = self.converter.get_world_coordinates_translated(ROBOT_HEIGHT,
+                                                                                    self.game_map["robot"][0][0],
+                                                                                    self.game_map["robot"][0][1])
+        self.game_map["robot"][1] -= self.rotation_angle_of_table
 
-        self.game_map_in_pixels["robot"] = actual_robot_information
+        return self.game_map["robot"]
 
-        robot_world_information = self.converter.get_world_coordinates(ROBOT_HEIGHT,
-                                                                       actual_robot_information[0][0],
-                                                                       actual_robot_information[0][1])
-        # adjust angle according to table angle
-        robot_angle = actual_robot_information[1] - self.rotation_angle_of_table
-        self.actual_robot_information = [robot_world_information, robot_angle]
+    def __get_table_coordinates(self):
+        temporary_table_corners = extrapolate_table(self.top_left_table_coordinate, self.rotation_angle_of_table)
 
-        return self.actual_robot_information
+        self.world_game_map["table_corners"] = []
+        self.game_map["table_corners"] = []
 
-    def detect_robot_at_the_beginning(self):
-        """
-        Takes multiple pictures and gets robot information from it
-        :return:
-        """
-        robot_information = []
-        for picture in self.camera.take_pictures(NUMBER_OF_CAPTURES_TO_COMPARE):
-            self.actual_frame = picture
-            self.robot_detector.refresh_frame(picture)
-            new_information = self.robot_detector.detect_robot()
-            if new_information != []:
-                robot_information.append(new_information)
+        for point in temporary_table_corners:
+            table_pix = self.converter.get_pixel_coordinates(int(point[0]), int(point[1]), 0)
+            self.game_map["table_corners"].append(table_pix)
+            self.world_game_map["table_corners"].append(self.converter.get_world_coordinates_translated(0,
+                                                                                                        table_pix[0],
+                                                                                                        table_pix[1]))
 
-        robot_information = filter_information(robot_information)
-        robot_final_information = get_best_information(robot_information)
-
-        if robot_final_information == [(0, 0), 0.0]:
-            raise RobotNotFound
-
-        self.game_map_in_pixels["robot"] = robot_final_information
-
-        # adjust angle according to table angle
-        robot_angle = robot_final_information[1] - self.rotation_angle_of_table
-
-        world_information = self.converter.get_world_coordinates(ROBOT_HEIGHT,
-                                                                 robot_final_information[0][0],
-                                                                 robot_final_information[0][1])
-        robot_world_information = [(world_information[0], world_information[1]), robot_angle]
-
-        return robot_world_information
-
-    def detect_drawing_zone(self):
-        """
-        Takes multiple pictures and gets drawing zone information from it
-        Will be called only once at the beginning of the game
-        :return:
-        """
-        drawing_zone_information = []
-        for picture in self.camera.take_pictures(NUMBER_OF_CAPTURES_TO_COMPARE):
-            self.drawing_zone_detector.refresh_frame(picture)
-            new_information = self.drawing_zone_detector.find_drawing_zone_vertices()
-            if new_information != []:
-                drawing_zone_information.append(new_information)
-
-        drawing_zone_information = filter_information(drawing_zone_information)
-        drawing_zone_final_information = get_best_information(drawing_zone_information)
-
-        self.adjust_converter(drawing_zone_final_information)
-
-        self.game_map_in_pixels["drawing_zone"] = drawing_zone_final_information
-        drawing_zone_top_left_world_coordinate = \
-            self.converter.get_world_coordinates(0,
-                                                 drawing_zone_final_information[0][0],
-                                                 drawing_zone_final_information[0][1])
-        self.converter.set_origin(drawing_zone_top_left_world_coordinate[0], drawing_zone_top_left_world_coordinate[1])
-
-        drawing_zone_world_coordinates = []
-        for position in drawing_zone_final_information:
-            world_position = self.converter.get_world_coordinates(0,
-                                                                  position[0],
-                                                                  position[1])
-
-            drawing_zone_world_coordinates.append((world_position[0], world_position[1]))
-
-        return drawing_zone_world_coordinates
-
-    def adjust_converter(self, drawing_zone):
-        # once the drawing zone is found, we are able to calculate the table's rotation
-        self.rotation_angle_of_table = calculate_table_rotation(drawing_zone)
+    def __adjust_converter(self):
         temporary_world_drawing_zone = self.converter.get_world_coordinates(0,
-                                                                            drawing_zone[0][0],
-                                                                            drawing_zone[0][1])
-        temporary_table_corners = extrapolate_table(temporary_world_drawing_zone, self.rotation_angle_of_table)
-        self.converter.set_origin(temporary_table_corners[0][0], temporary_table_corners[0][1])
+                                                                            self.game_map["drawing_zone"][0][0],
+                                                                            self.game_map["drawing_zone"][0][1])
+        self.top_left_table_coordinate = set_top_left_world_game_zone_coordinate(
+            temporary_world_drawing_zone, self.rotation_angle_of_table)
+        self.converter.set_origin(self.top_left_table_coordinate[0], self.top_left_table_coordinate[1])
 
-        table_corners = []
-        for corner in temporary_table_corners:
-            table_corners.append((corner[0] + self.converter.translation_x, corner[1] + self.converter.translation_y))
-
-        self.game_map["table_corners"] = table_corners
-        self.game_map_in_pixels["table_corners"] = []
-        for corner in table_corners:
-            self.game_map_in_pixels["table_corners"].append(
-                self.converter.get_pixel_coordinates(corner[0], corner[1], 0))
-
-    def get_initial_game_map(self):
-        """
-        Used at the beginning of the game, to send by telemetry
-        :return: game map in world coordinates, in cm
-        :rtype: dict
-        """
-        try:
-            self.game_map["drawing_zone"] = self.detect_drawing_zone()
-            self.game_map["obstacles"] = self.detect_obstacles()
-            self.game_map["robot"] = self.detect_robot_at_the_beginning()
-        except:
-            raise GameMapNotFound
-
-        return self.game_map
-
-    def get_new_cycle_game_map(self):
-        """
-        Used at the beginning of a new cycle
-        :return: game map in world coordinates, in cm
-        :rtype: dict
-        """
-        try:
-            self.game_map["obstacles"] = self.detect_obstacles()
-            self.game_map["robot"] = self.detect_robot_at_the_beginning()
-        except:
-            raise GameMapNotFound
-        return self.game_map
-
-    def get_game_map_in_pixels(self):
-        """
-        Contains all data from game map but in pixels for drawing purposes
-        Note : excludes the game zone coordinates (to be implemented)
-        :return: game map in pixel coordinates
-        :rtype: dict
-        """
-        return self.game_map_in_pixels
-
-
-def filter_information(information):
-    return list(filter(any, information))
+    def get_new_cycle_game_map(self, first_time: bool = True):
+        self.get_world_game_map(first_time)
+        return self.world_game_map

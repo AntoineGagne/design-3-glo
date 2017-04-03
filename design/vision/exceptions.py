@@ -15,3 +15,11 @@ class GameMapNotFound(Exception):
 
 class RobotNotFound(Exception):
     pass
+
+
+class DrawingZoneNotFound(Exception):
+    pass
+
+
+class ObstaclesNotFound(Exception):
+    pass

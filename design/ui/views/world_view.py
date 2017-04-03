@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import QGraphicsView, QWidget
 from PyQt5.QtCore import Qt, pyqtSlot
 import PyQt5.QtGui as QtGui
 from PyQt5.QtGui import QColor
-
 from design.ui.controllers.world_controller import WorldController
 from design.ui.models.world_model import WorldModel
 
@@ -20,10 +19,8 @@ class WorldView(QWidget):
         self.robot_pen = None
         self.obstacles_pen = None
         self.radius = None
-
         self.grid_layout = QtWidgets.QGridLayout(self)
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
-
         self.horizontal_layout = QtWidgets.QHBoxLayout()
         self.button_reset_zoom = QtWidgets.QPushButton()
         self.horizontal_layout.addWidget(self.button_reset_zoom)
@@ -38,9 +35,9 @@ class WorldView(QWidget):
         spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontal_layout.addItem(spacer_item)
         self.world_view = QtWidgets.QGraphicsView(self)
-        self.world_view.setResizeAnchor(0)  # stuff always on top left corner
-        self.world_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)  # and coordinates will start at top left corner
-        self.world_view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)  # for mouse zooming
+        self.world_view.setResizeAnchor(0)
+        self.world_view.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.world_view.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         self.world_scene = QtWidgets.QGraphicsScene()
         self.world_view.setScene(self.world_scene)
         self.grid_layout.addWidget(self.world_view, 1, 0)
@@ -79,7 +76,7 @@ class WorldView(QWidget):
     def setup_painting(self):
         self.path_lines_pen = QtGui.QPen(QColor('#f44280'), 5, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
         self.path_points_pen = QtGui.QPen(QColor('#95ff95'), 10)
-        self.real_path_lines_pen = QtGui.QPen(QColor('#f44290'), 5, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
+        self.real_path_lines_pen = QtGui.QPen(QColor('#f44290'), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
         self.real_path_points_pen = QtGui.QPen(QColor('#85ff95'), 10)
         self.drawing_zone_pen = QtGui.QPen(QColor('#11ed23'), 10)
         self.game_zone_pen = QtGui.QPen(QColor('#hhff53'), 10)
@@ -97,7 +94,6 @@ class WorldView(QWidget):
             self.zoom = 0
 
     def update_world_image(self):
-        # convert to QPixmap
         if self.model.game_image is not None:
             height, width, channel = self.model.game_image.shape
             bytes_per_line = 3 * width
@@ -143,21 +139,17 @@ class WorldView(QWidget):
             self.world_scene.addPath(points_to_paint, self.path_points_pen)
 
     def draw_real_path(self):
-        path = self.model.robot_real_path
+        path = list(self.model.real_path)
         path_to_paint = QtGui.QPainterPath()
-        points_to_paint = QtGui.QPainterPath()
         if path:
             path_to_paint.moveTo(path[0][0], path[0][1])
             for i in range(len(path)):
-                points_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] -
-                                           self.radius / 2, self.radius, self.radius)
                 if i == 0:
                     path_to_paint.moveTo(path[0][0], path[0][1])
                     i += 1
                 path_to_paint.lineTo(path[i][0], path[i][1])
 
             self.world_scene.addPath(path_to_paint, self.real_path_lines_pen)
-            self.world_scene.addPath(points_to_paint, self.real_path_points_pen)
 
     def draw_drawing_square_coordinates(self):
         path = self.model.drawing_zone_coordinates

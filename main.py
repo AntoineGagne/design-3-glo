@@ -3,16 +3,17 @@ from typing import Tuple
 
 import cv2
 import netifaces
-
 import queue
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-
 import sys
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+from typing import Tuple
 
+import cv2
+
+from design.base_station.main_station import MainApp
 from design.decision_making.brain import Brain
+from design.decision_making.constants import RotationStrategyType, TranslationStrategyType
 from design.decision_making.movement_strategy import MovementStrategy
-from design.decision_making.constants import TranslationStrategyType
-from design.decision_making.constants import RotationStrategyType
 from design.interfacing.hardware_controllers import (AntennaController,
                                                      LightsController,
                                                      PenController)
@@ -26,11 +27,10 @@ from design.telemetry.selectors import (ClientSelectorFactory,
 from design.vision.camera import Camera, CameraSettings
 from design.vision.drawing_zone_detector import DrawingZoneDetector
 from design.vision.obstacles_detector import ObstaclesDetector
-from design.vision.robot_detector import RobotDetector
-from design.vision.world_vision import WorldVision
 from design.vision.onboard_vision import OnboardVision
+from design.vision.robot_detector import RobotDetector
 from design.vision.vertices import HighFrequencyFilter, VerticesFinder
-from design.ui.main_app import MainApp
+from design.vision.world_vision import WorldVision
 
 CAMERA_SETTINGS_FILE = 'config/camera_optimized_values.json'
 
