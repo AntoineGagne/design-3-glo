@@ -1,8 +1,6 @@
-"""Constants used by the modules in the `vision` module."""
-
 # These were taken from the image samples
-PAINTING_FRAME_LOWER_GREEN = (35.1, 108, 51.75)
-PAINTING_FRAME_UPPER_GREEN = (68.2, 255, 214.5)
+PAINTING_FRAME_LOWER_GREEN = (35.1, 108, 49.5)
+PAINTING_FRAME_UPPER_GREEN = (78.1, 255, 236.5)
 
 # The dimension of the warped images (chosen arbitrarily)
 WARPED_IMAGE_DIMENSIONS = (300, 300)
@@ -10,7 +8,7 @@ WARPED_IMAGE_CORNERS = [[0, 0], [300, 0], [300, 300], [0, 300]]
 
 # The real dimensions in centimeters
 REAL_PAINTING_DIMENSION = 14.8
-REAL_DRAWING_AREA_DIMENSION = (59.7, 59.7)
+REAL_DRAWING_AREA_DIMENSION = 59.7
 
 #: The ratios between the real painting frame dimension and the image's one
 PAINTING_DIMENSION_RATIO = REAL_PAINTING_DIMENSION / WARPED_IMAGE_DIMENSIONS[0]

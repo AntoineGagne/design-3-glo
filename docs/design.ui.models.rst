@@ -12,6 +12,14 @@ design.ui.models.main_model module
     :undoc-members:
     :show-inheritance:
 
+design.ui.models.painting_model module
+--------------------------------------
+
+.. automodule:: design.ui.models.painting_model
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 design.ui.models.world_model module
 -----------------------------------
 

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-"""A script that starts the robot or the main station."""
 from typing import Tuple
 
 import cv2
@@ -37,13 +36,6 @@ CAMERA_SETTINGS_FILE = 'config/camera_optimized_values.json'
 
 
 def parse_arguments():
-    """Parse the command line arguments.
-
-    :returns: The parsed arguments
-
-    .. seealso::
-        https://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.parse_args
-    """
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             prog='main.py',
                             description='Start the main station or the robot.')
@@ -57,7 +49,6 @@ def parse_arguments():
 
 
 def _create_parent_parser():
-    """Create a parser that parse arguments common to subparsers."""
     parent_parser = ArgumentParser(add_help=False)
     networking_group = parent_parser.add_argument_group('networking arguments')
     networking_group.add_argument('-p',
@@ -77,13 +68,6 @@ def _create_parent_parser():
 
 
 def _create_main_station_parser(subparser, parent_parser):
-    """Create a parser for the main station's specific arguments.
-
-    :param subparser: The subparser to which we are adding the main station's
-                      parser
-    :param parent_parser: The common arguments
-    :return: The main station's parser
-    """
     main_station_parser = subparser.add_parser(
         'main_station',
         parents=[parent_parser],
@@ -109,13 +93,6 @@ def _create_main_station_parser(subparser, parent_parser):
 
 
 def _create_robot_parser(subparser, parent_parser):
-    """Create a parser for the robot's specific arguments.
-
-    :param subparser: The subparser to which we are adding the main station's
-                      parser
-    :param parent_parser: The common arguments
-    :return: The main station's parser
-    """
     robot_parser = subparser.add_parser(
         'robot',
         parents=[parent_parser],
@@ -126,10 +103,6 @@ def _create_robot_parser(subparser, parent_parser):
 
 
 def start_main_station(arguments):
-    """Start the main station and injects the dependencies.
-
-    :param arguments: The command line arguments
-    """
     command_handler = create_command_handler(arguments.host,
                                              arguments.ports,
                                              ClientSelectorFactory)
@@ -147,10 +120,6 @@ def start_main_station(arguments):
 
 
 def start_robot(arguments):
-    """Start the robot and inject the dependencies.
-
-    :param arguments: The command line arguments
-    """
     command_handler = create_command_handler(
         netifaces.ifaddresses('wlp4s0')[2][0]['addr'],
         arguments.ports,
@@ -170,11 +139,6 @@ def start_robot(arguments):
 
 
 def create_interfacing_controller() -> InterfacingController:
-    """Create the interfacing controller.
-
-    :returns: The interfacing controller
-    :rtype: :class:`design.interfacing.interfacing_controller.InterfacingController`
-    """
     microcontroller_driver = Stm32Driver()
     prehensor_driver = PenDriver()
     return InterfacingController(
@@ -186,11 +150,6 @@ def create_interfacing_controller() -> InterfacingController:
 
 
 def create_movement_strategy() -> MovementStrategy:
-    """Create the movement strategy.
-
-    :returns: The movement strategy
-    :rtype: :class:`design.decision_making.movement_strategy.MovementStrategy`
-    """
     return MovementStrategy(
         TranslationStrategyType.VERIFY_CONSTANTLY_THROUGH_CINEMATICS,
         RotationStrategyType.VERIFY_CONSTANTLY_THROUGH_ANGULAR_CINEMATICS
@@ -200,17 +159,6 @@ def create_movement_strategy() -> MovementStrategy:
 def create_command_handler(host: str,
                            ports: Tuple[int, int],
                            selector_factory) -> CommandHandler:
-    """Create a command handler.
-
-    :param host: The address of the sockets
-    :type host: str
-    :param ports: The read and write port of the sockets
-    :type ports: tuple<int, int>
-    :param selector_factory: The constructor of the corresponding selector
-                             factory
-    :returns: A command handler with the corresponding sockets
-    :rtype :class:`design.telemetry.commands.CommandHandler`
-    """
     consumer = queue.LifoQueue()
     producer = queue.LifoQueue()
     selector_factory = selector_factory(host, *ports)
@@ -220,12 +168,6 @@ def create_command_handler(host: str,
 
 
 def create_onboard_vision(camera_port: int) -> OnboardVision:
-    """Create an :class:`design.vision.onboard_vision.OnboardVision` object.
-
-    :param camera_port: The port of the camera to connect to
-    :returns: The onboard vision object
-    :rtype: :class:`design.vision.onboard_vision.OnboardVision`
-    """
     camera = Camera(camera_port, CameraSettings())
     vertices_finder = VerticesFinder(HighFrequencyFilter())
     return OnboardVision(vertices_finder, camera)

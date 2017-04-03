@@ -116,6 +116,14 @@ design.vision.world_utils module
     :undoc-members:
     :show-inheritance:
 
+design.vision.world_vision module
+---------------------------------
+
+.. automodule:: design.vision.world_vision
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

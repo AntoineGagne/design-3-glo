@@ -12,6 +12,14 @@ design.ui.controllers.main_controller module
     :undoc-members:
     :show-inheritance:
 
+design.ui.controllers.painting_controller module
+------------------------------------------------
+
+.. automodule:: design.ui.controllers.painting_controller
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 design.ui.controllers.world_controller module
 ---------------------------------------------
 

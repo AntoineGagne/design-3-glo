@@ -20,6 +20,14 @@ design.interfacing.interfacing_controller module
     :undoc-members:
     :show-inheritance:
 
+design.interfacing.pen_driver module
+------------------------------------
+
+.. automodule:: design.interfacing.pen_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 design.interfacing.simulated_controllers module
 -----------------------------------------------
 
@@ -32,6 +40,14 @@ design.interfacing.stm32_driver module
 --------------------------------------
 
 .. automodule:: design.interfacing.stm32_driver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+design.interfacing.utils module
+-------------------------------
+
+.. automodule:: design.interfacing.utils
     :members:
     :undoc-members:
     :show-inheritance:

@@ -517,13 +517,19 @@ build/
 
 ### VisualStudioCode ###
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
 
 # End of https://www.gitignore.io/api/visualstudiocode
 
 # The samples directory
 samples/
 data/
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.gif
+!design/ui/resources/*

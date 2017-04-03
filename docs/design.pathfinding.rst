@@ -60,6 +60,14 @@ design.pathfinding.mutable_position module
     :undoc-members:
     :show-inheritance:
 
+design.pathfinding.node module
+------------------------------
+
+.. automodule:: design.pathfinding.node
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 design.pathfinding.pathfinder module
 ------------------------------------
 
@@ -80,6 +88,14 @@ design.pathfinding.robot_supposed_status module
 -----------------------------------------------
 
 .. automodule:: design.pathfinding.robot_supposed_status
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+design.pathfinding.servo_wheels_manager module
+----------------------------------------------
+
+.. automodule:: design.pathfinding.servo_wheels_manager
     :members:
     :undoc-members:
     :show-inheritance:

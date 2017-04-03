@@ -8,7 +8,6 @@ Subpackages
 
     design.decision_making
     design.interfacing
-    design.main_station
     design.pathfinding
     design.telemetry
     design.ui
