@@ -62,6 +62,7 @@ def _create_parent_parser():
     vision_group.add_argument('-c',
                               '--camera_port',
                               default=cv2.CAP_ANY,
+                              type=int,
                               metavar='CAMERA_PORT',
                               help='The port of the camera to connect to')
     return parent_parser
@@ -109,14 +110,14 @@ def start_main_station(arguments):
     obstacles_detector = ObstaclesDetector()
     robot_detector = RobotDetector()
     drawing_zone_detector = DrawingZoneDetector()
-    camera = Camera(arguments.camera_port, CameraSettings(width=1600, height=1200), True)
-    world_vision = WorldVision(arguments.table_number,
-                               obstacles_detector,
-                               drawing_zone_detector,
-                               robot_detector,
-                               camera)
-    app = MainApp(sys.argv, command_handler, world_vision)
-    sys.exit(app.exec_())
+    with Camera(arguments.camera_port, CameraSettings(width=1600, height=1200), True) as camera:
+        world_vision = WorldVision(arguments.table_number,
+                                   obstacles_detector,
+                                   drawing_zone_detector,
+                                   robot_detector,
+                                   camera)
+        app = MainApp(sys.argv, command_handler, world_vision)
+        sys.exit(app.exec_())
 
 
 def start_robot(arguments):

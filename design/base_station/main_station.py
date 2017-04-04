@@ -39,7 +39,6 @@ class MainApp(QApplication):
         self.main_controller = MainController(self.main_model)
         self.main_view = MainView(self.main_model, self.main_controller)
 
-        self.main_model.subscribe_update_function(self.prepare_new_cycle)
         self.main_model.subscribe_update_function(self.find_robot)
 
         self.world_model = WorldModel()
