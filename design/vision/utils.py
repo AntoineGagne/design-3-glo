@@ -22,3 +22,8 @@ class StdErrOutputDisplayManager:
 
     def __exit__(self, exception_type, exception_value, exception_traceback):
         os.dup2(self.saved_file_descriptor, 2)
+
+
+def swap_point(point):
+    x, y = point
+    return y, x

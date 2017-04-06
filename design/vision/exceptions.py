@@ -1,6 +1,3 @@
-"""Contain the exceptions related to numeric vision's errors."""
-
-
 class VerticesNotFound(Exception):
     pass
 
