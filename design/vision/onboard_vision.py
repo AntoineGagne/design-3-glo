@@ -45,7 +45,6 @@ class OnboardVision:
             have_same_center_position
         )
         self.last_capture = self._captures[index]
-        self.contour = figure.coordinates
         self.pixel_coordinates = list(chain.from_iterable(figure.coordinates))
 
         transformed_figure = figure.apply_transformations(
