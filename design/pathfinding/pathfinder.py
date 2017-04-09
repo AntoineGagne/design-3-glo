@@ -28,6 +28,7 @@ class Pathfinder():
         self.game_map = GameMap()
         self.figures = FiguresInformation()
         self.robot_status = None
+
         self.graph = None
 
         self.nodes_queue_to_checkpoint = deque()  # in cm
@@ -46,13 +47,8 @@ class Pathfinder():
 
         obstacles = game_map_data.get("obstacles")
         if obstacles:
-            self.logger.log("Pathfinder - Assigning obstacles: {0}".format(obstacles))
-            self.graph = Graph(obstacles)
-        else:
-            self.graph = Graph([])
+            pass
 
-        self.graph.generate_nodes_of_graph()
-        self.graph.generate_graph()
 
         # table_corners_positions = None
         table_corners_positions = game_map_data.get("table_corners")
@@ -128,48 +124,4 @@ class Pathfinder():
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
 
-        print("Generating path with A star. Checkpoint position = {0}".format(checkpoint_position))
-
-        if checkpoint_position in self.graph.list_of_inaccessible_nodes:
-            raise CheckpointNotAccessibleError("Le point d'arrivé est non accessible par le robot")
-        else:
-            self.nodes_queue_to_checkpoint.clear()
-            start_node = self.robot_status.get_position()
-            print("Generating path with A star. start position = {0}".format(start_node))
-            self.graph.add_start_end_node(start_node, checkpoint_position)
-            priority_queue = PriorityQueue()
-            priority_queue.put(start_node, 0)
-            came_from = {}
-            cost_so_far = {}
-            came_from[start_node] = None
-            cost_so_far[start_node] = 0
-
-            while not priority_queue.empty():
-                current = priority_queue.get()
-                if current == checkpoint_position:
-                    break
-                if (self.graph.get_position_minimum_of_graph() > checkpoint_position[1]) and (self.graph.get_position_minimum_of_graph() > current[1]):
-                    came_from[checkpoint_position] = current
-                    break
-                for next_node in self.graph.graph_dict[current]:
-                    new_cost = cost_so_far[current] + self.graph.estimate_distance(current, next_node)
-                    if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
-                        cost_so_far[next_node] = new_cost
-                        priority = new_cost + self.graph.estimate_distance(next_node, checkpoint_position)
-                        priority_queue.put(next_node, priority)
-                        came_from[next_node] = current
-
-            self.graph.graph_dict[self.graph.graph_dict.get(start_node)[0]].remove(start_node)
-            self.graph.graph_dict[self.graph.graph_dict.get(checkpoint_position)[0]].remove(checkpoint_position)
-            del self.graph.graph_dict[start_node]
-            del self.graph.graph_dict[checkpoint_position]
-
-            current = checkpoint_position
-            while current != start_node:
-                self.nodes_queue_to_checkpoint.append(current)
-                current = came_from.get(current)
-
-            self.nodes_queue_to_checkpoint.reverse()
-
-            self.robot_status.generate_new_translation_vector_towards_new_target(
-                self.nodes_queue_to_checkpoint.popleft())
+        checkpoint_grid_position = checkpoint_position

@@ -14,6 +14,8 @@ OBSTACLE_RADIUS = 7
 ROBOT_SAFETY_MARGIN = 16
 DEVIATION_THRESHOLD = 1
 
+GRAPH_GRID_WIDTH = 3
+
 
 class TranslationStatus(Enum):
     """ Translation status enumeration of visual servo management """

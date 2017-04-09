@@ -61,33 +61,3 @@ def test_if_close_enough_to_next_node_and_it_is_checkpoint_return_checkpoint_rea
     assert path_status == PathStatus.CHECKPOINT_REACHED
     assert new_vector is None
     assert pathfinder.robot_status.target_position == (29.91, 29.91)
-
-
-@pytest.mark.skip(reason="no way of currently testing this")
-def test_if_generate_path_to_checkpoint_with_a_star_return_good_path():
-
-    graph = Graph([((50, 100), "N"), ((75, 140), "S")])
-    graph.generate_nodes_of_graph()
-    graph.generate_graph()
-    pathfinder = Pathfinder(ExecutionLogger())
-    pathfinder.graph = graph
-    pathfinder.robot_status = RobotStatus((20, 20), 90)
-    pathfinder.robot_status.target_position = (30, 30)
-    pathfinder.generate_path_to_checkpoint((20, 100))
-
-    assert len(pathfinder.nodes_queue_to_checkpoint) == 0
-
-
-@pytest.mark.skip(reason="no way of currently testing this")
-def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status():
-
-    pathfinder = Pathfinder(ExecutionLogger())
-    graph = Graph([((50, 100), "N"), ((75, 140), "S")])
-    graph.generate_nodes_of_graph()
-    graph.generate_graph()
-    pathfinder.graph = graph
-    pathfinder.robot_status = RobotStatus((20, 20), 90)
-    pathfinder.robot_status.target_position = (30, 30)
-    pathfinder.generate_path_to_checkpoint((20, 200))
-
-    assert len(pathfinder.nodes_queue_to_checkpoint) == 4
