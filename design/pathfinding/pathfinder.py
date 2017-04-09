@@ -1,5 +1,5 @@
 """ This module allows mocking of pathfinder object """
-
+from collections import defaultdict
 from collections import deque
 from enum import Enum
 
@@ -130,4 +130,17 @@ class Pathfinder():
         if self.graph.get_vertex_weight(checkpoint_position) == math.inf:
             raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
 
-        source_node = self.graph.get_grid_element_index_from_position(checkpoint_position)
+        source_vertex = self.graph.get_grid_element_index_from_position(self.robot_status.get_position())
+        destination_vertex = self.graph.get_grid_element_index_from_position(checkpoint_position)
+
+        visited_vertices = [source_vertex]
+        vertices_weights = defaultdict(lambda: -1)
+        parent_of_vertices = defaultdict(None)
+
+        # Initialize weight of source vertex to 0
+        vertices_weights[source_vertex] = 0
+
+
+
+
+

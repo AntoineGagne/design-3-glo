@@ -24,7 +24,7 @@ class Graph():
     def get_middle_position_from_grid_element_index(self, i, j):
         return (i * GRAPH_GRID_WIDTH) + (0.5 * GRAPH_GRID_WIDTH),  (j * GRAPH_GRID_WIDTH) + (0.5 * GRAPH_GRID_WIDTH)
 
-    def get_edge_delta_weight(self, source_position, destination_position):
+    def get_edge_distance(self, source_position, destination_position):
 
         source_i, source_j = self.get_grid_element_index_from_position(source_position)
         destination_i, destination_j = self.get_grid_element_index_from_position(destination_position)
@@ -35,3 +35,24 @@ class Graph():
 
         i, j = self.get_grid_element_index_from_position(position)
         return self.matrix[i][j]
+
+    def get_neighbours_indexes_from_element_index(self, index):
+
+        i, j = index
+        neighbours = []
+
+        neighbours.append((i + 1, j))
+        neighbours.append((i - 1, j))
+        neighbours.append((i + 1, j + 1))
+        neighbours.append((i - 1, j - 1))
+        neighbours.append((i + 1, j - 1))
+        neighbours.append((i - 1, j + 1))
+        neighbours.append((i, j - 1))
+        neighbours.append((i, j + 1))
+
+        for neighbour_index in neighbours:
+            neighbour_i, neighbour_j = neighbour_index
+            if neighbour_i < 0 or neighbour_j < 0:
+                neighbours.remove((neighbour_i, neighbour_j))
+
+        return neighbours
