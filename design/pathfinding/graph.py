@@ -24,9 +24,14 @@ class Graph():
     def get_middle_position_from_grid_element_index(self, i, j):
         return (i * GRAPH_GRID_WIDTH) + (0.5 * GRAPH_GRID_WIDTH),  (j * GRAPH_GRID_WIDTH) + (0.5 * GRAPH_GRID_WIDTH)
 
-    def get_edge_weight(self, source_position, destination_position):
+    def get_edge_delta_weight(self, source_position, destination_position):
 
         source_i, source_j = self.get_grid_element_index_from_position(source_position)
         destination_i, destination_j = self.get_grid_element_index_from_position(destination_position)
 
         return self.matrix[destination_i][destination_j] - self.matrix[source_i][source_j]
+
+    def get_vertex_weight(self, position):
+
+        i, j = self.get_grid_element_index_from_position(position)
+        return self.matrix[i][j]

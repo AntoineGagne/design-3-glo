@@ -2,6 +2,9 @@
 
 from collections import deque
 from enum import Enum
+
+import math
+
 from design.pathfinding.game_map import GameMap
 from design.pathfinding.figures_information import FiguresInformation
 from design.pathfinding.robot_status import RobotStatus
@@ -124,4 +127,7 @@ class Pathfinder():
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
 
-        checkpoint_grid_position = checkpoint_position
+        if self.graph.get_vertex_weight(checkpoint_position) == math.inf:
+            raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
+
+        source_node = self.graph.get_grid_element_index_from_position(checkpoint_position)
