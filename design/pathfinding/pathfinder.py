@@ -131,16 +131,29 @@ class Pathfinder():
             raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
 
         source_vertex = self.graph.get_grid_element_index_from_position(self.robot_status.get_position())
+        current_vertex = source_vertex
         destination_vertex = self.graph.get_grid_element_index_from_position(checkpoint_position)
 
-        visited_vertices = [source_vertex]
-        vertices_weights = defaultdict(lambda: -1)
+        visited_vertices = [current_vertex]
+        vertices_weights = defaultdict(lambda: math.inf)
         parent_of_vertices = defaultdict(None)
 
         # Initialize weight of source vertex to 0
-        vertices_weights[source_vertex] = 0
+        vertices_weights[current_vertex] = 0
 
+        # Generate vertices' parents dictionary
+        while current_vertex is not destination_vertex:
+            for neighbour in self.graph.get_neighbours_indexes_from_element_index(current_vertex):
+                if neighbour not in visited_vertices and vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour) < vertices_weights[neighbour]:
+                    vertices_weights[neighbour] = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour)
+                    parent_of_vertices[neighbour] = current_vertex
+                    visited_vertices.append(current_vertex)
+            current_vertex = min(vertices_weights, key=vertices_weights.get)
 
+        # Rebuild path
+        while current_vertex is not source_vertex:
+            self.nodes_queue_to_checkpoint.appendleft(self.graph.get_middle_position_from_grid_element_index(current_vertex))
+            current_vertex = parent_of_vertices[current_vertex]
 
-
-
+        self.robot_status.generate_new_translation_vector_towards_new_target(
+            self.nodes_queue_to_checkpoint.popleft())
