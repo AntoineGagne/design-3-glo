@@ -12,3 +12,7 @@ class AntennaInformation():
         self.strength_curve = {}
 
         print("AntennaInformationConstructorCalled")
+
+    def __str__(self):
+        return "Painting number: {0} Zoom: {1} Orientation: {2}".format(self.painting_number, self.zoom,
+                                                                        self.orientation)

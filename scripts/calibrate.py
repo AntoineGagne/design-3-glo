@@ -17,7 +17,7 @@ from errno import EEXIST
 DEFAULT_IMAGES_DIRECTORY = './data/*.png'
 DEFAULT_OUTPUT_DIRECTORY = './output/'
 CHESSBOARD_PATTERN_SIZE = (9, 6)
-CHESSBOARD_SQUARE_SIZE = 2.6  # in cm
+CHESSBOARD_SQUARE_SIZE = 4.3  # in cm
 DEFAULT_TABLE_NUMBER = 1
 
 
@@ -166,8 +166,8 @@ def write_json_file(table_number, intrinsic_matrix, rotation_vector, translation
 
 if __name__ == '__main__':
     _, matrix_camera, coefficients_distorsion, rotation_vectors, translation_vectors = calibrate(
-        './camera_data/p*.png')
-    write_json_file(5,
+        './camera_dt2/photo*.png')
+    write_json_file(2,
                     matrix_camera.tolist(),
                     rotation_vectors[0].tolist(),
                     translation_vectors[0].tolist())

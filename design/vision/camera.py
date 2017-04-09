@@ -31,16 +31,16 @@ class Camera:
     def take_pictures(self, pictures_number: int) -> Iterator[Any]:
         if self.camera and self.camera.isOpened():
             for _ in range(pictures_number):
-                yield self.take_picture()
+                yield from self.take_picture()
 
     def stream_pictures(self) -> Iterator[Any]:
         while self.camera and self.camera.isOpened():
-            yield self.take_picture()
+            yield from self.take_picture()
 
     def take_picture(self):
         picture_taken, picture = self.camera.read()
         if picture_taken:
-            return picture
+            yield picture
 
     def set_camera_settings(self):
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, self.settings.width)

@@ -1,12 +1,10 @@
 """ This module allows mocking of pathfinder object """
 
-import math
 from collections import deque
 from enum import Enum
-from design.pathfinding.constants import TRANSLATION_THRESHOLD
 from design.pathfinding.game_map import GameMap
 from design.pathfinding.figures_information import FiguresInformation
-from design.pathfinding.robot_supposed_status import RobotSupposedStatus
+from design.pathfinding.robot_status import RobotStatus
 from design.pathfinding.graph import Graph
 from design.pathfinding.priority_queue import PriorityQueue
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
@@ -14,15 +12,18 @@ from design.pathfinding.exceptions import CheckpointNotAccessibleError
 
 class PathStatus(Enum):
     """ Enum of pathfinding status """
-    MOVING_TOWARDS_CHECKPOINT = 0
-    CHECKPOINT_REACHED = 1
+    MOVING_TOWARDS_TARGET = 0
+    INTERMEDIATE_NODE_REACHED = 1
+    CHECKPOINT_REACHED = 2
 
 
 class Pathfinder():
     """Mocks pathfinder object"""
 
-    def __init__(self):
+    def __init__(self, logger):
         """ TEST CASE """
+
+        self.logger = logger
 
         self.game_map = GameMap()
         self.figures = FiguresInformation()
@@ -37,12 +38,15 @@ class Pathfinder():
 
         robot_information = game_map_data.get("robot")
         if robot_information:
-            self.robot_status = RobotSupposedStatus(robot_information[0], robot_information[1])
+            self.logger.log("Pathfinder - Assigning start position = {0} and orientation = {1}".format(
+                robot_information[0], robot_information[1]))
+            self.robot_status = RobotStatus(robot_information[0], robot_information[1])
         else:
-            self.robot_status = RobotSupposedStatus((20, 20), 90)
+            self.robot_status = RobotStatus((20, 20), 90)
 
         obstacles = game_map_data.get("obstacles")
         if obstacles:
+            self.logger.log("Pathfinder - Assigning obstacles: {0}".format(obstacles))
             self.graph = Graph(obstacles)
         else:
             self.graph = Graph([])
@@ -50,29 +54,24 @@ class Pathfinder():
         self.graph.generate_nodes_of_graph()
         self.graph.generate_graph()
 
+        # table_corners_positions = None
         table_corners_positions = game_map_data.get("table_corners")
         if table_corners_positions:
+            self.logger.log("Pathfinding - Assigning table corner positions: {0}".format(table_corners_positions))
             self.figures.compute_positions(table_corners_positions[0], table_corners_positions[1],
                                            table_corners_positions[2], table_corners_positions[3])
         else:
             self.figures.compute_positions((0, 0), (0, 231), (112, 231), (112, 0))
 
+        # drawing_zone_corners = None
         drawing_zone_corners = game_map_data.get("drawing_zone")
         if drawing_zone_corners:
+            self.logger.log("Pathfinding - Assigning drawing zone corners: {0}".format(drawing_zone_corners))
             self.game_map.set_drawing_zone_borders(game_map_data.get("drawing_zone"))
             self.game_map.set_antenna_search_points(table_corners_positions[3])
         else:
             self.game_map.set_drawing_zone_borders(((26, 27), (26, 87), (86, 87), (86, 27)))
             self.game_map.set_antenna_search_points((112, 0))
-
-    def verify_if_deviating(self, current_robot_position):
-        """ Returns true if deviating outside defined THRESHOLD,
-        otherwise returns false """
-
-        distance = math.hypot(self.robot_status.get_position()[0] - current_robot_position[0],
-                              self.robot_status.get_position()[1] - current_robot_position[1])
-
-        return not distance <= TRANSLATION_THRESHOLD
 
     def get_vector_to_next_node(self, current_robot_position=None):
         """ If close enough to next node (within THRESHOLD), switch to new one """
@@ -84,13 +83,13 @@ class Pathfinder():
             if self.nodes_queue_to_checkpoint:
                 new_vector = self.robot_status.generate_new_translation_vector_towards_new_target(
                     self.nodes_queue_to_checkpoint.popleft())
-                return (PathStatus.MOVING_TOWARDS_CHECKPOINT, new_vector)
+                return (PathStatus.INTERMEDIATE_NODE_REACHED, new_vector)
             else:
                 self.robot_status.generate_new_translation_vector_towards_new_target(
                     self.robot_status.get_position())
                 return (PathStatus.CHECKPOINT_REACHED, None)
         else:
-            return (PathStatus.MOVING_TOWARDS_CHECKPOINT, None)
+            return (PathStatus.MOVING_TOWARDS_TARGET, None)
 
     def get_point_of_interest(self, point_of_interest):
         """ Returns any data about the specified point of interest within

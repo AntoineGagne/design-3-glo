@@ -1,7 +1,6 @@
 """ Contains position and orientation to take the capture from """
-import math
 
-MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE = 23
+MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE = 40
 OUTER_FRAME_SIZE = 16.4
 INNER_FRAME_SIZE = 14.8
 SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES = 8
@@ -25,15 +24,9 @@ class FiguresInformation():
                             self.southwest_corner[1] - (2 * SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES) - (1.5 * OUTER_FRAME_SIZE)),
                            180)
 
-        self.figures[1] = ((self.southwest_corner[0] + MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE,
-                            self.southwest_corner[1] - (2 * SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES) - (1.5 * OUTER_FRAME_SIZE)),
-                           180 - math.degrees(math.atan((SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES + OUTER_FRAME_SIZE) /
-                                                        MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE)))
+        self.figures[1] = ((self.southwest_corner[0] + MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE, self.southwest_corner[1] - 20), 160)
 
-        self.figures[2] = ((self.southwest_corner[0] + (2 * WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES) + (1.5 * OUTER_FRAME_SIZE),
-                            self.southwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE),
-                           90 + math.degrees(math.atan((WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES + OUTER_FRAME_SIZE) /
-                                                       MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE)))
+        self.figures[2] = ((self.southwest_corner[0] + 20, self.southwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE), 94)
 
         self.figures[3] = ((self.southwest_corner[0] + (1.5 * OUTER_FRAME_SIZE) + (2 * WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES),
                             self.southwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE),
@@ -43,16 +36,9 @@ class FiguresInformation():
                             self.northwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE),
                            90)
 
-        self.figures[5] = ((self.northwest_corner[0] - (1.5 * OUTER_FRAME_SIZE) - (2 * WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES),
-                            self.northwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE),
-                           90 - math.degrees(math.atan((WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES + OUTER_FRAME_SIZE) /
-                                                       MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE)))
+        self.figures[5] = ((self.northwest_corner[0] - 20, self.northwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE), 81)
 
-        self.figures[6] = ((self.northwest_corner[0] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE,
-                            self.northwest_corner[1] - (2 * SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES) - (1.5 * OUTER_FRAME_SIZE)),
-                           math.degrees(math.atan(
-                               (SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES + OUTER_FRAME_SIZE) /
-                               MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE)))
+        self.figures[6] = ((self.northwest_corner[0] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE, self.northwest_corner[1] - 20), 20)
 
         self.figures[7] = ((self.northwest_corner[0] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE,
                             self.northwest_corner[1] - (1.5 * OUTER_FRAME_SIZE) - (2 * SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES)),

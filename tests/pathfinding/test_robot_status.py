@@ -3,12 +3,12 @@ Last modified: March 3rd, 2017
 
 Contains tests for robot_status class """
 
-from design.pathfinding.robot_supposed_status import RobotSupposedStatus
+from design.pathfinding.robot_status import RobotStatus
 
 
 def test_current_heading_is_within_threshold_returns_true():
 
-    robot_status = RobotSupposedStatus((20, 20), 90)
+    robot_status = RobotStatus((20, 20), 90)
     robot_status.target_heading = 90
     robot_status.heading = 89.95
 
@@ -17,7 +17,7 @@ def test_current_heading_is_within_threshold_returns_true():
 
 def test_current_heading_is_not_within_threshold_returns_false():
 
-    robot_status = RobotSupposedStatus((20, 20), 90)
+    robot_status = RobotStatus((20, 20), 90)
     robot_status.target_heading = 90
     robot_status.heading = 89
 

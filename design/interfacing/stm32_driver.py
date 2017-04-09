@@ -22,6 +22,9 @@ class Response:
     STM_READY = 0x0008
     SIGNAL_STRENGTH = 0x0009
     SIGNAL_DATA = 0x000A
+    TRANSLATION_FINISHED = 0X000B
+    ROTATION_FINISHED = 0X000C
+    DECODING_FAILED = 0x000D
 
 
 class Constants:
@@ -157,15 +160,25 @@ class Stm32Driver:
                             self.signal_strength = data_list[1]
                             self.notify_all_observers(Response.SIGNAL_STRENGTH)
                         elif data_list[0] == Response.SIGNAL_DATA:
-                            painting_number = data_list[1] & Constants.MASK_FIGURE
-                            zoom = data_list[1] & Constants.MASK_ZOOM + 2
-                            orientation = (360 - (data_list[1] & Constants.MASK_ORIENTATION) * 90) % 360
+                            painting_number = (data_list[1] & Constants.MASK_FIGURE) >> 1
+                            zoom = ((data_list[1] & Constants.MASK_ZOOM) >> 5) + 2
+                            orientation = (360 - ((data_list[1] & Constants.MASK_ORIENTATION) >> 4) * 90) % 360
                             print("DRIVER IS BUILDING ANTENNA_INFO")
                             self.antenna_information = AntennaInformation()
                             self.antenna_information.painting_number = painting_number
                             self.antenna_information.zoom = zoom
                             self.antenna_information.orientation = orientation
                             self.notify_all_observers(Response.SIGNAL_DATA)
+                        elif data_list[0] == Response.DECODING_FAILED:
+                            self.antenna_information = AntennaInformation()
+                            self.antenna_information.painting_number = None
+                            self.antenna_information.zoom = None
+                            self.antenna_information.orientation = None
+                            self.notify_all_observers(Response.SIGNAL_DATA)
+                        elif data_list[0] == Response.TRANSLATION_FINISHED:
+                            self.notify_all_observers(Response.TRANSLATION_FINISHED)
+                        elif data_list[0] == Response.ROTATION_FINISHED:
+                            self.notify_all_observers(Response.ROTATION_FINISHED)
                         else:
                             print("Invalid opcode")
                 except struct.error:

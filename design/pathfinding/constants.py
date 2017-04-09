@@ -3,7 +3,7 @@
 from enum import Enum
 
 
-TRANSLATION_THRESHOLD = 0.5  # cm
+TRANSLATION_THRESHOLD = 1.5  # cm
 ROTATION_THRESHOLD = 0.25  # degree(s)
 TRANSLATION_SPEED = 5  # cm/s
 ROTATION_SPEED = 3  # degree(s) per second
@@ -13,6 +13,20 @@ TABLE_Y = 230
 OBSTACLE_RADIUS = 7
 ROBOT_SAFETY_MARGIN = 16
 DEVIATION_THRESHOLD = 1
+
+
+class TranslationStatus(Enum):
+    """ Translation status enumeration of visual servo management """
+    MOVING = "MOVING"
+    CORRECTING_HEADING = "CORRECTING_HEADING"
+    CORRECTING_POSITION = "CORRECTING_POSITION"
+
+
+class RotationStatus(Enum):
+    """ Rotation status enumeration of visual servo management """
+    ROTATING = "ROTATING"
+    CORRECTING_POSITION = "CORRECTION_POSITION"
+    CORRECTING_HEADING = "CORRECTING_HEADING"
 
 
 class PointOfInterest(Enum):

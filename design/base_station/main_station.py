@@ -51,6 +51,7 @@ class MainApp(QApplication):
         self.main_view.add_painting(self.painting_view)
 
         self.telemetry_timer = QTimer()
+        self.robot_timer = QTimer()
 
         self.setup_telemetry_timer()
         self._set_default_style()
@@ -105,7 +106,8 @@ class MainApp(QApplication):
         path_converted = []
         for coordinate in new_path:
             path_converted.append(
-                self.main_vision.converter.get_pixel_coordinates_translated(coordinate[1], coordinate[0], 0))
+                self.main_vision.converter.get_pixel_coordinates_translated(coordinate[1], coordinate[0], 0,
+                                                                            self.main_vision.rotation_angle_of_table))
         self.world_controller.update_path(path_converted)
 
     def send_game_map(self):
@@ -163,6 +165,10 @@ class MainApp(QApplication):
             self.game_map["robot"][0] = new_robot_information[0][::-1]
             self.game_map["robot"][1] = 90 - new_robot_information[1]
 
+            pos_y, pos_x = new_robot_information[0]
+            new_robot_information[0] = (pos_x, pos_y)
+            new_robot_information[1] = 90 - new_robot_information[1]
+
             new_robot_information.append(datetime.datetime.now())
             position = Packet(packet_type=PacketType.POSITION, packet_data=new_robot_information)
             self.telemetry.put_command(position)
@@ -176,9 +182,12 @@ class MainApp(QApplication):
     def start_cycle_timer(self):
         self.main_controller.activate_timer()
         self.main_controller.update_console_log("READY TO START NEW CYCLE")
-        self.telemetry_timer.timeout.connect(self.send_robot_position)
+        self.robot_timer.timeout.connect(self.send_robot_position)
+        self.robot_timer.setInterval(100)
+        self.robot_timer.start()
 
     def stop_cycle_timer(self):
         self.main_controller.deactivate_timer()
         self.main_controller.update_console_log("STOPPED ACTUAL CYCLE")
-        self.telemetry_timer.timeout.disconnect(self.send_robot_position)
+        self.robot_timer.timeout.disconnect(self.send_robot_position)
+        self.telemetry_timer.stop()

@@ -52,11 +52,11 @@ class DrawingZoneDetector:
         if not self.drawing_zone_coordinates:
             raise DrawingZoneNotFound
 
-        self.__reorder_drawing_zone_vertices()
+        self.reorder_drawing_zone_vertices()
 
         return self.drawing_zone_coordinates
 
-    def __reorder_drawing_zone_vertices(self):
+    def reorder_drawing_zone_vertices(self):
         approximate_center = [0, 0]
         for vertex in self.drawing_zone_coordinates:
             approximate_center[0] += vertex[0]

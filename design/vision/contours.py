@@ -44,7 +44,7 @@ class PaintingFrameFinder:
         )
         contour = find_contour_with_lowest_point_distance_to_image_center(
             contours,
-            image.shape
+            tuple(reversed(image.shape[:2]))
         )
         closed_contour = cv2.convexHull(contour)
         epsilon = 0.1 * cv2.arcLength(closed_contour, True)

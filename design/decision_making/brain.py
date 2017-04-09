@@ -2,6 +2,8 @@
 
 from design.decision_making.constants import Step
 from design.decision_making.command_dispatcher import CommandDispatcher
+from design.decision_making.integrity_manager import IntegrityManager
+from design.pathfinding.capture_repositioning_manager import CaptureRepositioningManager
 from design.pathfinding.pathfinder import Pathfinder
 from design.pathfinding.antenna_information import AntennaInformation
 from design.pathfinding.servo_wheels_manager import ServoWheelsManager
@@ -11,21 +13,23 @@ from design.telemetry.packets import PacketType, Packet
 class Brain():
     """Controls decisionmaking of the robot"""
 
-    def __init__(self, telemetry, interfacing_controller, onboard_vision, movement_strategies):
+    def __init__(self, telemetry, interfacing_controller, logger, onboard_vision, movement_strategies, translation_lock, rotation_lock):
         """Initializes robot on STANBY mode, waiting for game map objects
         to be transmitted in order to start its routine"""
 
         self.current_status = Step.STANBY
         self.base_station = telemetry
         self.dispatcher = CommandDispatcher(
-            movement_strategies, interfacing_controller, Pathfinder(),
-            onboard_vision, AntennaInformation(), ServoWheelsManager())
+            movement_strategies, interfacing_controller, Pathfinder(logger), logger,
+            onboard_vision, AntennaInformation(), ServoWheelsManager(translation_lock, rotation_lock, logger),
+            CaptureRepositioningManager())
 
     def main(self):
         """Main loop of the robot. Polls on telemetry and acts according
         to what it recieves."""
 
         main_sequence_has_started = False
+        positional_integrity_verifier = IntegrityManager()
 
         ready_packet = Packet(PacketType.NOTIFICATION,
                               "STANDBY - Robot ready to roll! Cycle start when GAME_MAP is recieved.")
@@ -34,34 +38,32 @@ class Brain():
         while True:
 
             telemetry_recieved = self.base_station.fetch_command()
-            if telemetry_recieved and telemetry_recieved.packet_type == PacketType.GAME_MAP:
-                cycle_start_notification = Packet(PacketType.COMMAND, "START_CHRONOGRAPH")
-                self.base_station.put_command(cycle_start_notification)
-                main_sequence_has_started = True
+            if telemetry_recieved:
+                if telemetry_recieved.packet_type == PacketType.GAME_MAP:
+                    cycle_start_notification = Packet(PacketType.COMMAND, "START_CHRONOGRAPH")
+                    self.base_station.put_command(cycle_start_notification)
+                    main_sequence_has_started = True
+                elif telemetry_recieved.packet_type == PacketType.POSITION and positional_integrity_verifier.does_telemetry_make_sense(telemetry_recieved.packet_data):
+                    telemetry_recieved = None
 
             if main_sequence_has_started:
 
-                telemetry_type = None
                 telemetry_data = None
                 if telemetry_recieved:
-                    telemetry_type = telemetry_recieved.packet_type
                     telemetry_data = telemetry_recieved.packet_data
 
-                command = self.dispatcher.get_relevant_command(telemetry_type,
-                                                               self.current_status)
+                command = self.dispatcher.get_relevant_command(self.current_status)
 
                 next_status, exit_telemetry = command.execute(telemetry_data)
                 self.current_status = next_status
 
-                # print("Current status: {0}".format(self.current_status))
-
                 if exit_telemetry:
-                    self.base_station.put_command(exit_telemetry)
+                    if isinstance(exit_telemetry, list):
+                        for exit_packet in exit_telemetry:
+                            self.base_station.put_command(exit_packet)
+                    elif isinstance(exit_telemetry, Packet):
+                        self.base_station.put_command(exit_telemetry)
 
                 if self.current_status == Step.STANBY:
-                    # Redébuter un cycle en attendant les données de jeu
-                    # Missing reinit of some objects
                     self.base_station.put_command(ready_packet)
                     main_sequence_has_started = False
-
-        self.current_status = Step.STANBY

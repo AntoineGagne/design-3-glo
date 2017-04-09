@@ -1,4 +1,7 @@
 #! /usr/bin/env python
+"""A script that starts the robot or the main station."""
+from threading import Lock
+
 from typing import Tuple
 
 import cv2
@@ -16,14 +19,16 @@ from design.decision_making.constants import RotationStrategyType, TranslationSt
 from design.decision_making.movement_strategy import MovementStrategy
 from design.interfacing.hardware_controllers import (AntennaController,
                                                      LightsController,
-                                                     PenController)
+                                                     PenController,
+                                                     WheelsController)
 from design.interfacing.interfacing_controller import InterfacingController
 from design.interfacing.pen_driver import PenDriver
-from design.interfacing.simulated_controllers import SimulatedWheelsController
+from design.interfacing.simulated_controllers import SimulatedAntennaController
 from design.interfacing.stm32_driver import Stm32Driver
 from design.telemetry.commands import CommandHandler
 from design.telemetry.selectors import (ClientSelectorFactory,
                                         ServerSelectorFactory)
+from design.utils.execution_logger import ExecutionLogger
 from design.vision.camera import Camera, CameraSettings
 from design.vision.drawing_zone_detector import DrawingZoneDetector
 from design.vision.obstacles_detector import ObstaclesDetector
@@ -127,33 +132,41 @@ def start_robot(arguments):
         ServerSelectorFactory
     )
     onboard_vision = create_onboard_vision(arguments.camera_port)
-    interfacing_controller = create_interfacing_controller()
+    logger = ExecutionLogger()
+    translation_lock = Lock()
+    rotation_lock = Lock()
+    interfacing_controller = create_interfacing_controller(logger, translation_lock, rotation_lock)
     movement_strategy = create_movement_strategy()
 
     brain = Brain(
         command_handler,
         interfacing_controller,
+        logger,
         onboard_vision,
-        movement_strategy
+        movement_strategy,
+        translation_lock,
+        rotation_lock
     )
     brain.main()
 
 
-def create_interfacing_controller() -> InterfacingController:
+def create_interfacing_controller(logger, translation_lock, rotation_lock) -> InterfacingController:
     microcontroller_driver = Stm32Driver()
     prehensor_driver = PenDriver()
+    signal_strength_lock = Lock()
+    signal_data_lock = Lock()
     return InterfacingController(
-        SimulatedWheelsController(),
-        AntennaController(microcontroller_driver),
-        PenController(prehensor_driver),
-        LightsController(microcontroller_driver)
+        WheelsController(microcontroller_driver, translation_lock, rotation_lock, logger),
+        SimulatedAntennaController(),
+        PenController(prehensor_driver, logger),
+        LightsController(microcontroller_driver, logger)
     )
 
 
 def create_movement_strategy() -> MovementStrategy:
     return MovementStrategy(
-        TranslationStrategyType.VERIFY_CONSTANTLY_THROUGH_CINEMATICS,
-        RotationStrategyType.VERIFY_CONSTANTLY_THROUGH_ANGULAR_CINEMATICS
+        TranslationStrategyType.BASIC_WHEEL_SERVOING,
+        RotationStrategyType.BASIC_WHEEL_SERVOING
     )
 
 

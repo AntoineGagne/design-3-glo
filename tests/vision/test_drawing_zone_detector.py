@@ -55,3 +55,10 @@ def test_that_given_images_with_drawing_zone_when_find_drawing_zone_then_drawing
             expected_coordinates=drawing_zone_coordinates
         )
     image_assertion_helper.assert_below_threshold()
+
+
+def test_that_given_drawing_zone_coordinates_when_reorder_then_coordinates_are_reordered():
+    drawing_zone_detector = DrawingZoneDetector()
+    drawing_zone_detector.drawing_zone_coordinates = [(0, 0), (0, 100), (100, 0), (100, 100)]
+    drawing_zone_detector.reorder_drawing_zone_vertices()
+    assert [(0, 0), (100, 0), (100, 100), (100, 0)] == drawing_zone_detector.drawing_zone_coordinates

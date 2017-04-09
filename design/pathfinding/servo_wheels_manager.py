@@ -1,75 +1,95 @@
 """ This module contains a manager for all data and steps related to visual servowheel management
 when telemetry translation movement strategy is used. """
 
-import math
-import numpy
-
-from design.pathfinding.constants import DEVIATION_THRESHOLD, STANDARD_HEADING
+from design.pathfinding.constants import STANDARD_HEADING, TranslationStatus, RotationStatus
 
 
 class ServoWheelsManager():
+    """ This class contains everything necessary to keep track of visual servoing parameters throughout
+    translations and rotations. """
 
-    def __init__(self):
-        self.calculated_current_real_position = (-1, -1)
-        self.last_recorded_position = (-1, -1)
-        self.last_recorded_heading = -5000
-        self.heading_correction_in_progress = False
+    def __init__(self, translation_lock, rotation_lock, logger):
 
-    def is_real_translation_deviating(self, telemetry_position, telemetry_vector, supposed_vector, real_timestamp):
-        """ Verifies if the robot's movement is deviating and returns true if so.
-        :param telemetry_vector: Vector between telemetry's position and the origin of the current translation movement.
-        :param supposed_vector: Vector between target position and origin of movement
-        :param real_timestamp: Time at which the real position was computed on the base station
-        :returns: A boolean indicating if the robot is indeed deviating. """
+        self.translation_lock = translation_lock
+        self.rotation_lock = rotation_lock
+        self.translation_status = TranslationStatus.MOVING
+        self.rotation_status = RotationStatus.ROTATING
+        self.logger = logger
 
-        angle = math.degrees(
-            numpy.arccos(
-                numpy.clip(numpy.dot(
-                    telemetry_vector / numpy.linalg.norm(telemetry_vector),
-                    supposed_vector / numpy.linalg.norm(supposed_vector)), -1.0, 1.0)))
+    def is_current_translation_movement_done(self, wheels_controller):
+        """ Returns true if the current translation order of the robot is completed, otherwise
+        returns false.
+        :param wheels_controller: Wheels controller, used to communicate with the wheels
+        :returns: A boolean indicating if the order is completed """
+        self.translation_lock.acquire()
+        translation_is_done = False
+        if wheels_controller.translation_done:
+            translation_is_done = True
+        self.translation_lock.release()
+        return translation_is_done
 
-        # time_elapsed_since_real_position_was_computed = (datetime.datetime.now() - real_timestamp).total_seconds()
-        # self.calculated_current_real_position = telemetry_position + (
-        #     (telemetry_vector[1] / telemetry_vector[0]) * time_elapsed_since_real_position_was_computed)
-        self.calculated_current_real_position = telemetry_position
+    def is_current_rotation_movement_done(self, wheels_controller):
+        """ Returns true if the current rotation order of the robot is completed, otherwise
+        returns false.
+        :param wheels_controller: Wheels controller, used to communicate with the wheels
+        :returns: A boolean indicating if the order is completed """
+        self.rotation_lock.acquire()
+        rotation_is_done = False
+        if wheels_controller.rotation_done:
+            rotation_is_done = True
+        self.rotation_lock.release()
+        return rotation_is_done
 
-        # If the angle is above our deviation threshold, correct trajectory
-        if angle >= DEVIATION_THRESHOLD:
-            return True
-        else:
-            return False
+    def translating_start_heading_correction(self, current_heading, robot_status, wheels_controller):
+        """ Starts a heading correction after a translation movement is completed.
+        :param current_heading: Robot heading from telemetry
+        :param robot_status: Robot status object
+        :param wheels_controller: Used to send orders to the wheels """
+        self.translation_status = TranslationStatus.CORRECTING_HEADING
+        robot_status.heading = current_heading
+        wheels_controller.rotate(
+            robot_status.set_target_heading_and_get_angular_difference(STANDARD_HEADING))
+        self.logger.log("Servo Manager: Heading correction for translation has been started. Current heading = {0}".format(
+            current_heading))
 
-    def has_the_robot_stopped_before_reaching_a_node(self, position):
-        """ Verifies if the robot has stopped before even reaching a node, or went over it.
-        :param position: Robot position
-        :param target_node: Position of the current target"""
+    def translating_start_position_correction(self, current_position, robot_status, wheels_controller):
+        """ Starts a position correction after the heading correction is completed. Goes towards
+        current target node
+        :param current_position: Position from telemetry
+        :param robot_status: Robot status object
+        :param wheels_controller: Used to send orders to the wheels """
+        self.translation_status = TranslationStatus.CORRECTING_POSITION
+        vector = robot_status.generate_new_translation_vector_towards_current_target(current_position)
+        wheels_controller.move(vector)
+        self.logger.log("Servo Manager: Position correction for translation has been started. Current position = {0} - Target = {1}".format(
+            current_position, robot_status.target_position))
 
-        print("Verifying if robot has stopped its translation...")
-        if math.hypot(position[0] - self.last_recorded_position[0],
-                      position[1] - self.last_recorded_position[1]) <= 1:
-            self.last_recorded_position = position
-            print("Robot has stopped moving!")
-            return True
-        else:
-            self.last_recorded_position = position
-            return False
+    def finish_translation_and_get_new_path_status_and_vector(self, current_position, pathfinder):
+        """ Terminates the translation check movements and updates the current path status. Also
+        returns a new vector if we stopped at an intermediate node. """
+        self.translation_status = TranslationStatus.MOVING
+        pathfinder.robot_status.set_position(current_position)
+        path_status, new_vector = pathfinder.get_vector_to_next_node(current_position)
+        self.logger.log("Servo Manager: Finishing translation. Updated position = {0} - Path Status = {1} - Vector = {2}".format(
+            pathfinder.robot_status.get_position(), path_status, new_vector))
+        return (path_status, new_vector)
 
-    def has_robot_lost_its_heading(self, heading):
-        """ Verifies if the robot has lost its heading after reaching its target node.
-        :param heading: Current heading, in degrees
-        :returns: A boolean indicating if the robot has lost its heading """
-        if math.fabs(heading - STANDARD_HEADING) >= DEVIATION_THRESHOLD:
-            return True
-        else:
-            return False
+    def rotating_start_heading_correction(self, current_heading, robot_status, wheels_controller):
+        """ Starts a heading correction after a translation movement is completed.
+        :param current_heading: Robot heading from telemetry
+        :param robot_status: Robot status object
+        :param wheels_controller: Used to send orders to the wheels """
+        self.rotation_status = RotationStatus.CORRECTING_HEADING
+        robot_status.heading = current_heading
+        wheels_controller.rotate(
+            robot_status.set_target_heading_and_get_angular_difference(robot_status.target_heading))
+        self.logger.log("Servo Manager: Heading correction for rotation has been started. Current heading = {0} - Target heading = {1}".format(
+            robot_status.heading, robot_status.target_heading))
 
-    def has_the_robot_stopped_before_completing_its_heading_correction(self, heading):
-        """ Verifies if the robot has stopped correcting its heading.
-        :param heading: Current heading
-        :returns: A boolean indicating if the robot has most likely stopped """
-        if math.fabs(math.fabs(heading - self.last_recorded_heading)) <= DEVIATION_THRESHOLD:
-            self.last_recorded_heading = heading
-            return True
-        else:
-            self.last_recorded_heading = heading
-            return False
+    def finish_rotation_and_set_new_robot_position(self, current_position, robot_status):
+        """ Terminates the rotation check movements and updates the current robot status position.
+        :param current_position: Position from telemetry
+        :param robot_status: Robot status object """
+        self.rotation_status = RotationStatus.ROTATING
+        robot_status.set_position(current_position)
+        self.logger.log("Servo Manager: Finishing rotation. Updated position = {0}".format(robot_status.get_position()))

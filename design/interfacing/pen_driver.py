@@ -6,7 +6,7 @@ from design.interfacing.utils import detect_serial
 
 class PenDriver:
 
-    def __init__(self, channel=0, low_position=4600, high_position=4000, speed=0, acceleration=0):
+    def __init__(self, channel=0, low_position=8000, high_position=6000, speed=0, acceleration=0):
         self.pen_channel = channel
         self.low_position = low_position
         self.high_position = high_position
@@ -18,7 +18,7 @@ class PenDriver:
         self.Targets = [0] * 24
         self.Mins = [0] * 24
         self.Maxs = [0] * 24
-        self._set_range(self.pen_channel, 2000, 8000)
+        self._set_range(self.pen_channel, 5000, 9000)
         self._set_speed(self.pen_channel, speed)
         self._set_acceleration(self.pen_channel, acceleration)
         self.raise_pen()

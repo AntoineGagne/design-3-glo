@@ -9,3 +9,12 @@ class CheckpointNotAccessibleError(Exception):
     def __init__(self, message):
         super(CheckpointNotAccessibleError, self).__init__()
         self.message = message
+
+
+class OutOfRetriesForCaptureError(Exception):
+    """ This exception is raised when there are no more capture retry vectors
+    to do. """
+
+    def __init__(self, message):
+        super(OutOfRetriesForCaptureError, self).__init__()
+        self.message = message

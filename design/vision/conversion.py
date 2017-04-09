@@ -66,9 +66,10 @@ class Converter:
         world_coordinate = self.get_world_coordinates(height, u, v)
         return [world_coordinate[0] + self.translation_x, world_coordinate[1] + self.translation_y]
 
-    def get_pixel_coordinates_translated(self, x, y, z):
-        new_x = x + self.translation_x
-        new_y = y + self.translation_y
+    def get_pixel_coordinates_translated(self, x, y, z, table_angle):
+        angle = -math.radians(table_angle)
+        new_x = ((x - self.translation_x) * math.cos(angle) - (y - self.translation_y) * math.sin(angle))
+        new_y = ((x - self.translation_x) * math.sin(angle) + (y - self.translation_y) * math.cos(angle))
         return self.get_pixel_coordinates(new_x, new_y, z)
 
 
@@ -107,4 +108,4 @@ def extrapolate_table(top_left_corner_world, table_angle):
     bottom_right = (((x - px) * math.cos(angle) - (y - py) * math.sin(angle)),
                     ((x - px) * math.sin(angle) + (y - py) * math.cos(angle)))
 
-    return [(x, y), top_right, bottom_left, bottom_right]
+    return [(x, y), top_right, bottom_right, bottom_left]
