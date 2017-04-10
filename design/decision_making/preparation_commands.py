@@ -467,8 +467,7 @@ class CaptureFigureCommand(Command):
 
             self.vision.pixel_coordinates.append(self.vision.pixel_coordinates[0])
 
-            return (next_step(self.current_step), [Packet(PacketType.FIGURE_VERTICES, self.vision.pixel_coordinates),
-                                                   Packet(PacketType.FIGURE_IMAGE, self.vision.last_capture)])
+            return (next_step(self.current_step), Packet(PacketType.FIGURE_VERTICES, self.vision.pixel_coordinates))
         except PaintingFrameNotFound:
             self.logger.log("Capture Figure: Failure - Painting Frame Not Found")
             return (Step.REPOSITION_FOR_CAPTURE_RETRY, None)
