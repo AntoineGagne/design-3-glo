@@ -99,4 +99,128 @@ def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_st
     pathfinder.robot_status.target_position = (30, 30)
     pathfinder.generate_path_to_checkpoint((20, 200))
 
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 3
+
+
+def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status2():
+
+    pathfinder = Pathfinder()
+    graph = Graph([((30, 150), "N"), ((85, 155), "S")])
+    graph.generate_nodes_of_graph()
+    graph.generate_graph()
+    pathfinder.graph = graph
+    pathfinder.robot_status = RobotSupposedStatus((20, 20), 90)
+    pathfinder.robot_status.target_position = (30, 30)
+    pathfinder.generate_path_to_checkpoint((20, 200))
+
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 2
+
+
+def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status_N_O():
+
+    pathfinder = Pathfinder()
+    graph = Graph([((30, 150), "N"), ((85, 155), "O")])
+    graph.generate_nodes_of_graph()
+    graph.generate_graph()
+    pathfinder.graph = graph
+    pathfinder.robot_status = RobotSupposedStatus((20, 20), 90)
+    pathfinder.robot_status.target_position = (30, 30)
+    pathfinder.generate_path_to_checkpoint((20, 200))
+
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 3
+
+
+def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status_N_N():
+
+    pathfinder = Pathfinder()
+    graph = Graph([((30, 150), "N"), ((70, 155), "N")])
+    graph.generate_nodes_of_graph()
+    graph.generate_graph()
+    pathfinder.graph = graph
+    pathfinder.robot_status = RobotSupposedStatus((20, 20), 90)
+    pathfinder.robot_status.target_position = (30, 30)
+    pathfinder.generate_path_to_checkpoint((20, 200))
+
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 2
+
+
+def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status_S_S():
+
+    pathfinder = Pathfinder()
+    graph = Graph([((30, 150), "S"), ((70, 155), "S")])
+    graph.generate_nodes_of_graph()
+    graph.generate_graph()
+    pathfinder.graph = graph
+    pathfinder.robot_status = RobotSupposedStatus((20, 20), 90)
+    pathfinder.robot_status.target_position = (30, 30)
+    pathfinder.generate_path_to_checkpoint((20, 200))
+
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 2
+
+
+def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status_O_O():
+
+    pathfinder = Pathfinder()
+    graph = Graph([((30, 150), "O"), ((50, 155), "O")])
+    graph.generate_nodes_of_graph()
+    graph.generate_graph()
+    pathfinder.graph = graph
+    pathfinder.robot_status = RobotSupposedStatus((20, 20), 90)
+    pathfinder.robot_status.target_position = (30, 30)
+    pathfinder.generate_path_to_checkpoint((20, 200))
+
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 2
+
+
+def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status_N_N_S():
+
+    pathfinder = Pathfinder()
+    graph = Graph([((30, 110), "N"), ((30, 150), "N"), ((50, 155), "S")])
+    graph.generate_nodes_of_graph()
+    graph.generate_graph()
+    pathfinder.graph = graph
+    pathfinder.robot_status = RobotSupposedStatus((20, 20), 90)
+    pathfinder.robot_status.target_position = (30, 30)
+    pathfinder.generate_path_to_checkpoint((20, 200))
+
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 5
+
+def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status_N_N_S2():
+
+    pathfinder = Pathfinder()
+    graph = Graph([((45, 120), "N"), ((30, 150), "N"), ((50, 155), "S")])
+    graph.generate_nodes_of_graph()
+    graph.generate_graph()
+    pathfinder.graph = graph
+    pathfinder.robot_status = RobotSupposedStatus((20, 20), 90)
+    pathfinder.robot_status.target_position = (30, 30)
+    pathfinder.generate_path_to_checkpoint((20, 200))
+
     assert len(pathfinder.nodes_queue_to_checkpoint) == 4
+
+
+def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status_N_O_S():
+
+    pathfinder = Pathfinder()
+    graph = Graph([((74, 110), "N"), ((10, 135), "O"), ((65, 174), "S")])
+    graph.generate_nodes_of_graph()
+    graph.generate_graph()
+    pathfinder.graph = graph
+    pathfinder.robot_status = RobotSupposedStatus((86, 82), 90)
+    pathfinder.robot_status.target_position = (30, 30)
+    pathfinder.generate_path_to_checkpoint((20, 200))
+
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 6
+
+def test_if_generate_path_to_checkpoint_with_a_star_return_checkpoint_reached_status_N_O_S2():
+
+    pathfinder = Pathfinder()
+    graph = Graph([((19, 134), 'O'), ((69, 108), 'N'), ((69, 163), 'S')])
+    graph.generate_nodes_of_graph()
+    graph.generate_graph()
+    pathfinder.graph = graph
+    pathfinder.robot_status = RobotSupposedStatus((86, 82), 90)
+    pathfinder.robot_status.target_position = (30, 30)
+    pathfinder.generate_path_to_checkpoint((20, 200))
+
+    assert len(pathfinder.nodes_queue_to_checkpoint) == 6
