@@ -49,9 +49,10 @@ class AntennaController(HardwareObserver):
         :rtype: `int` """
         self.signal_strength_lock.acquire()
         if self.new_signal_strength_value_available:
-            self.logger.log("Antenna Controller - Acquired signal amplitude = {0}".format(self.stm32_driver.signal_strength))
+            signal_strength = self.stm32_driver.get_signal_strength()
+            self.logger.log("Antenna Controller - Acquired signal amplitude = {0}".format(signal_strength))
             self.signal_strength_lock.release()
-            return self.stm32_driver.signal_strength
+            return signal_strength
         else:
             self.signal_strength_lock.release()
             return None
