@@ -19,7 +19,7 @@ class Graph():
         self.matrix_width = table_width // GRAPH_GRID_WIDTH
         self.matrix_height = table_height // GRAPH_GRID_WIDTH
 
-        self.matrix = [[0 for y in range(self.matrix_height)] for x in range(self.matrix_width)]    # FIXME: matrix[width][height] is this right ?
+        self.matrix = [[0 for y in range(self.matrix_height)] for x in range(self.matrix_width)]
 
     def generate_impassable_zones_in_matrix(self, obstacle_list):
         self.add_walls_safety_margin()
@@ -27,7 +27,7 @@ class Graph():
         self.connect_obstacles_and_walls(obstacle_list)
 
     def add_walls_safety_margin(self):
-        num_square = ROBOT_SAFETY_MARGIN // GRAPH_GRID_WIDTH
+        num_square = ROBOT_SAFETY_MARGIN // GRAPH_GRID_WIDTH + 1
         for i in range(self.matrix_width):
             for j in range(self.matrix_height):
                 if i <= num_square or i > self.matrix_width - num_square:
@@ -51,10 +51,21 @@ class Graph():
         return min_index, max_index
 
     def get_euclidian_distance(self, point1, point2):
-        return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1]))
+        return math.ceil(math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])))
 
     def connect_obstacles_and_walls(self, obstacle_list):
-        pass    # TODO: this function
+        for obstacle in obstacle_list:
+            if obstacle[1] != "O":
+                sign = self.determine_sign()
+                i = obstacle[0][0] + sign * self.obstacle_safe_radius
+                no_infinite_weight = True
+                while no_infinite_weight:
+                    for j in range(obstacle[0][1] - self.obstacle_safe_radius, obstacle[0][1] + self.obstacle_safe_radius):
+                        if self.matrix[i][j] == math.inf:
+                            no_infinite_weight = False
+                        else:
+                            self.matrix[i][j] = math.inf
+                    i = i + sign
 
     def get_grid_element_index_from_position(self, position):
 
