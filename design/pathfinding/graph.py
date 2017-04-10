@@ -51,7 +51,7 @@ class Graph():
         return min_index, max_index
 
     def get_euclidian_distance(self, point1, point2):
-        return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1]))
+        return math.hypot(point2[0] - point1[0], point2[1] - point1[1])
 
     def connect_obstacles_and_walls(self, obstacle_list):
         pass    # TODO: this function
