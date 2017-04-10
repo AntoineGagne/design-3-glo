@@ -52,7 +52,9 @@ class Stm32Driver:
         self.port.open()
         self.is_running = True
         self.is_ready = False
-        self.signal_strength = None
+        self.signal_strength = []
+        self.filter_window_size = 25
+        self.filtered_signal_strength = []
         self.antenna_information = None
 
         self.thread.start()
@@ -142,6 +144,9 @@ class Stm32Driver:
         """
         self.send_command(Commands.DECODE_MANCHESTER)
 
+    def get_signal_strength(self):
+        return self.filtered_signal_strength[-1]
+
     def send_command(self, command, param1=Constants.EMPTY_PARAM, param2=Constants.EMPTY_PARAM):
         checksum = (65536 - command - param1 - param2) % 65536
         packet = struct.pack(self.command_format, command, param1, param2, checksum)
@@ -157,7 +162,8 @@ class Stm32Driver:
                         if data_list[0] == Response.STM_READY:
                             self.is_ready = True
                         elif data_list[0] == Response.SIGNAL_STRENGTH:
-                            self.signal_strength = data_list[1]
+                            self.signal_strength.append(data_list[1])
+                            self.filter_signal_strength()
                             self.notify_all_observers(Response.SIGNAL_STRENGTH)
                         elif data_list[0] == Response.SIGNAL_DATA:
                             painting_number = (data_list[1] & Constants.MASK_FIGURE) >> 1
@@ -199,3 +205,11 @@ class Stm32Driver:
         else:
             print("Invalid Checksum : expected = 0, calculated = {}".format(checksum))
             return False
+
+    def filter_signal_strength(self):
+        length = len(self.signal_strength)
+        if length < self.filter_window_size:
+            average = sum(self.signal_strength) / length
+        else:
+            average = sum(self.signal_strength[-self.filter_window_size:]) / self.filter_window_size
+        self.filtered_signal_strength.append(average)
