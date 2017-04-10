@@ -269,7 +269,7 @@ class SearchForAntennaPositionCommand(Command):
         if current_signal_amplitude is not None:
             self.logger.log("Search For Antenna Position: Obtaining value = {0} at position {1}".format(current_signal_amplitude,
                                                                                                         self.pathfinder.robot_status.get_position()))
-            self.antenna_information.strength_curve[self.pathfinder.robot_status.get_position()] = current_signal_amplitude
+            self.antenna_information.strength_curve[robot_position_from_telemetry[0]] = current_signal_amplitude
 
         return_telemetry = None
         if step != self.current_step:
@@ -292,7 +292,7 @@ class PrepareMovingToAntennaPositionCommand(Command):
 
         self.hardware.antenna.stop_sampling()
         try:
-            position_x, position_y = max(self.antenna_information.strength_curve.values(),
+            position_x, position_y = max(self.antenna_information.strength_curve,
                                          key=self.antenna_information.strength_curve.get)
 
             self.logger.log("Prepare Moving to Antenna Position: Calculated position of max signal amplitude = {0}".format(
