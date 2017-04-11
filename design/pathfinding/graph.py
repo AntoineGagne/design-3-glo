@@ -17,11 +17,17 @@ class Graph():
         table_width = northwestern_corner[0] - southeastern_corner[0]
         table_height = northwestern_corner[1] - southeastern_corner[1]
 
+        self.convert_obstacle_position_to_index(obstacle_list)
+
         self.matrix_width = table_width // GRAPH_GRID_WIDTH
         self.matrix_height = table_height // GRAPH_GRID_WIDTH
 
         self.matrix = [[0 for y in range(self.matrix_height)] for x in range(self.matrix_width)]
         self.generate_potential_field_in_graph_matrix(obstacle_list)
+
+    def convert_obstacle_position_to_index(self, obstacle_list):
+        for obstacle in obstacle_list:
+            obstacle[0] = self.get_grid_element_index_from_position(obstacle[0])
 
     def generate_potential_field_in_graph_matrix(self, obstacle_list):
         self.generate_impassable_zones_in_graph_matrix(obstacle_list)
@@ -76,11 +82,10 @@ class Graph():
             i = self.move_to_next_row(i, obstacle[1])
 
     def determine_starting_row(self, obstacle):
-        # FIXME: what if i is outside of the walls ?
         if obstacle[1] == "N":
-            return obstacle[0][0] - self.obstacle_safe_radius - 1
+            return max(obstacle[0][0] - self.obstacle_safe_radius - 1, 1)
         else:
-            return obstacle[0][0] + self.obstacle_safe_radius
+            return min(obstacle[0][0] + self.obstacle_safe_radius, self.matrix_width-1)
 
     def move_to_next_row(self, current_row_index, obstacle_orientation):
         if obstacle_orientation == "N":
@@ -90,7 +95,7 @@ class Graph():
 
     def add_weight_in_graph_matrix(self):
         weight = math.inf
-        while weight > 0:
+        while weight > GRAPH_GRID_WIDTH:
             self.propagate(weight)
             weight = self.decrement_weight(weight)
 
@@ -106,9 +111,9 @@ class Graph():
     def decrement_weight(self, weight):
         assert(weight > 0)
         if weight == math.inf:
-            return 9
+            return MAXIMUM_GRID_NODE_HEIGHT
         else:
-            return weight - 1
+            return weight - GRAPH_GRID_WIDTH
 
     def get_grid_element_index_from_position(self, position):
 
