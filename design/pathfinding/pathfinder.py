@@ -167,9 +167,6 @@ class Pathfinder():
 
         # Remove superflous nodes
         self.nodes_queue_to_checkpoint = self.graph.get_points_of_discontinuity(self.nodes_queue_to_checkpoint)
-        print("Nodes queue: {0}".format(self.nodes_queue_to_checkpoint))
-        self.nodes_queue_to_checkpoint.appendleft(self.robot_status.get_position())
-        print("Nodes queue after adding start point: {0}".format(self.nodes_queue_to_checkpoint))
 
         self.robot_status.generate_new_translation_vector_towards_new_target(self.nodes_queue_to_checkpoint.popleft())
 
