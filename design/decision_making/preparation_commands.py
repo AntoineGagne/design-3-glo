@@ -8,7 +8,7 @@ from design.decision_making.constants import (Step,
                                               next_step)
 from design.pathfinding.exceptions import CheckpointNotAccessibleError, OutOfRetriesForCaptureError
 from design.pathfinding.constants import (PointOfInterest,
-                                          STANDARD_HEADING)
+                                          STANDARD_HEADING, PEN_TO_ANTENNA_OFFSET)
 from design.telemetry.packets import (Packet, PacketType)
 from design.vision.exceptions import PaintingFrameNotFound, VerticesNotFound
 
@@ -334,6 +334,7 @@ class PrepareMarkingAntennaCommand(Command):
 
         position_x, position_y = self.pathfinder.robot_status.get_position()
         position_x = position_x - 4
+        position_y = position_y + PEN_TO_ANTENNA_OFFSET
         self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
 
         self.hardware.wheels.move(
