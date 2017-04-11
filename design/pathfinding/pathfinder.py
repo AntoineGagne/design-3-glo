@@ -143,7 +143,7 @@ class Pathfinder():
 
         # Generate vertices' parents dictionary
         while current_vertex is not destination_vertex:
-            for neighbour in self.graph.get_neighbours_indexes_from_element_index(current_vertex):
+            for neighbour in self.graph.get_eight_neighbours_indexes_from_element_index(current_vertex):
                 if neighbour not in visited_vertices and vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour) < vertices_weights[neighbour]:
                     vertices_weights[neighbour] = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour)
                     parent_of_vertices[neighbour] = current_vertex

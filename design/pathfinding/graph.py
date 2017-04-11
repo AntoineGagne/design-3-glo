@@ -22,7 +22,11 @@ class Graph():
 
         self.matrix = [[0 for y in range(self.matrix_height)] for x in range(self.matrix_width)]
 
-    def generate_impassable_zones_in_matrix(self, obstacle_list):
+    def generate_potential_field_in_graph_matrix(self, obstacle_list):
+        self.generate_impassable_zones_in_graph_matrix(obstacle_list)
+        self.add_weight_in_graph_matrix()
+
+    def generate_impassable_zones_in_graph_matrix(self, obstacle_list):
         self.add_walls_safety_margin()
         self.place_obstacles_in_matrix(obstacle_list)
         self.connect_obstacles_and_walls(obstacle_list)
@@ -83,6 +87,28 @@ class Graph():
         else:
             return current_row_index + 1
 
+    def add_weight_in_graph_matrix(self):
+        weight = math.inf
+        while weight > 0:
+            self.propagate(weight)
+            weight = self.decrement_weight(weight)
+
+    def propagate(self, weight):
+        next_weight = self.decrement_weight(weight)
+        for i in range(self.matrix_width):
+            for j in range(self.matrix_height):
+                if self.matrix[i][j] == weight:
+                    for neighbour_index in self.get_four_neighbours_indexes_from_element_index((i, j)):
+                        if self.matrix[neighbour_index[0]][neighbour_index[1]] < next_weight:
+                            self.matrix[neighbour_index[0]][neighbour_index[1]] = next_weight
+
+    def decrement_weight(self, weight):
+        assert(weight > 0)
+        if weight == math.inf:
+            return 9
+        else:
+            return weight - 1
+
     def get_grid_element_index_from_position(self, position):
 
         i = position[0] // GRAPH_GRID_WIDTH
@@ -100,24 +126,28 @@ class Graph():
 
         return MAXIMUM_GRID_NODE_HEIGHT + (self.matrix[destination_i][destination_j] - self.matrix[source_i][source_j])
 
-    def get_neighbours_indexes_from_element_index(self, index):
-
-        i, j = index
+    def get_eight_neighbours_indexes_from_element_index(self, element_index):
+        # FIXME: this is a bad name because there can be less than 8 neighbours returned, but it shows which neighbours are considered
+        element_i, element_j = element_index
         neighbours = []
 
-        neighbours.append((i + 1, j))
-        neighbours.append((i - 1, j))
-        neighbours.append((i + 1, j + 1))
-        neighbours.append((i - 1, j - 1))
-        neighbours.append((i + 1, j - 1))
-        neighbours.append((i - 1, j + 1))
-        neighbours.append((i, j - 1))
-        neighbours.append((i, j + 1))
-
-        for neighbour_index in neighbours:
-            neighbour_i, neighbour_j = neighbour_index
-            if neighbour_i < 0 or neighbour_j < 0 or neighbour_i >= self.matrix_width \
-                    or neighbour_j >= self.matrix_height:
-                neighbours.remove((neighbour_i, neighbour_j))
+        for i in range(element_i - 1, element_i + 2):
+            for j in range(element_j - 1, element_j + 2):
+                if i != element_i and j != element_j and self.is_index_inside_matrix((i, j)):
+                    neighbours.append((i, j))
 
         return neighbours
+
+    def get_four_neighbours_indexes_from_element_index(self, element_index):
+        # FIXME: this is a bad name because there can be less than 4 neighbours returned, but it shows which neighbours are considered
+        i, j = element_index
+        neighbours = [(i, j-1), (i, j+1), (i-1, j), (i+1, j)]
+
+        for neighbour in neighbours:
+            if not self.is_index_inside_matrix(neighbour):
+                neighbours.remove(neighbour)
+
+        return neighbours
+
+    def is_index_inside_matrix(self, index):
+        return 0 <= index[0] < self.matrix_width and 0 <= index[1] < self.matrix_height
