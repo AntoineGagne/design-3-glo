@@ -129,6 +129,8 @@ class Pathfinder():
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
 
+        self.nodes_queue_to_checkpoint.clear()
+
         checkpoint_i, checkpoint_j = self.graph.get_grid_element_index_from_position(checkpoint_position)
         if self.graph.matrix[checkpoint_i][checkpoint_j] == math.inf:
             raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
@@ -170,3 +172,10 @@ class Pathfinder():
         print("Nodes queue after adding start point: {0}".format(self.nodes_queue_to_checkpoint))
 
         self.robot_status.generate_new_translation_vector_towards_new_target(self.nodes_queue_to_checkpoint.popleft())
+
+    def is_checkpoint_accessible(self, checkpoint_position):
+        checkpoint_i, checkpoint_j = self.graph.get_grid_element_index_from_position(checkpoint_position)
+        if self.graph.matrix[checkpoint_i][checkpoint_j] == math.inf:
+            return False
+        else:
+            return True

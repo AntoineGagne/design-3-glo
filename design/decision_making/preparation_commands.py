@@ -187,13 +187,11 @@ class PrepareExitOfDrawingAreaCommand(Command):
         possible_exit_locations = self.pathfinder.get_point_of_interest(PointOfInterest.EXIT_DRAWING_ZONE_AFTER_CYCLE)
 
         for exit_location in possible_exit_locations:
-            try:
+            if self.pathfinder.is_checkpoint_accessible(exit_location):
                 self.pathfinder.generate_path_to_checkpoint(exit_location)
                 break
-            except CheckpointNotAccessibleError:
-                pass
 
-        self.logger.log("Prepare Exit of Drawing Area: Sortie location at position = {0}".format(
+        self.logger.log("Prepare Exit of Drawing Area: Exit location at position = {0}".format(
             self.pathfinder.robot_status.target_position))
 
         self.hardware.wheels.move(
