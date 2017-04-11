@@ -12,7 +12,7 @@ class Graph():
         self.matrix_height = 0
         self.obstacle_safe_radius = (OBSTACLE_RADIUS + ROBOT_SAFETY_MARGIN) // GRAPH_GRID_WIDTH
 
-    def initialize_graph_matrix(self, southeastern_corner, northwestern_corner):
+    def initialize_graph_matrix(self, southeastern_corner, northwestern_corner, obstacle_list):
 
         table_width = northwestern_corner[0] - southeastern_corner[0]
         table_height = northwestern_corner[1] - southeastern_corner[1]
@@ -21,6 +21,7 @@ class Graph():
         self.matrix_height = table_height // GRAPH_GRID_WIDTH
 
         self.matrix = [[0 for y in range(self.matrix_height)] for x in range(self.matrix_width)]
+        self.generate_potential_field_in_graph_matrix(obstacle_list)
 
     def generate_potential_field_in_graph_matrix(self, obstacle_list):
         self.generate_impassable_zones_in_graph_matrix(obstacle_list)
