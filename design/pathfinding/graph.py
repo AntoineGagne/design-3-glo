@@ -1,5 +1,9 @@
 """ This module includes a graph represented by an adjacency matrix. Used for the robot's pathfinding. """
 import math
+from collections import deque
+
+from copy import deepcopy
+
 from design.pathfinding.constants import GRAPH_GRID_WIDTH, OBSTACLE_RADIUS, ROBOT_SAFETY_MARGIN, \
     MAXIMUM_GRID_NODE_HEIGHT, ROBOT_HALF_WIDTH
 
@@ -160,3 +164,24 @@ class Graph():
 
     def get_weight_of_element(self, element_index):
         return self.matrix[element_index[0]][element_index[1]]
+
+    def get_points_of_discontinuity(self, nodes_queue):
+
+        LENGTH_TO_CONSIDER = 5
+        SLOPE_THRESHOLD = 5
+
+        points_of_discontinuity = deque()
+        current_point_index = 0
+        slope = self.compute_slope(self, nodes_queue, current_point_index)
+
+        while current_point_index < len(nodes_queue):
+            current_point_index += 1
+            new_slope = self.compute_slope(self, nodes_queue, current_point_index, LENGTH_TO_CONSIDER)
+            if math.fabs(new_slope - slope) >= SLOPE_THRESHOLD:
+                points_of_discontinuity.append(nodes_queue[current_point_index + LENGTH_TO_CONSIDER])
+                current_point_index = current_point_index + LENGTH_TO_CONSIDER + 1
+
+        return points_of_discontinuity
+
+    def compute_slope(self, nodes_queue, start_index, length_to_consider):
+        return nodes_queue[start_index + length_to_consider - 1][0] - nodes_queue[start_index][0] / nodes_queue[start_index + length_to_consider - 1][1] - nodes_queue[start_index][1]

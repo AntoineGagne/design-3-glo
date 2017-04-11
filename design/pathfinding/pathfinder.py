@@ -161,5 +161,8 @@ class Pathfinder():
             self.nodes_queue_to_checkpoint.appendleft(self.graph.get_position_from_grid_element_index(*current_vertex))
             current_vertex = parent_of_vertices[current_vertex]
 
+        # Remove superflous nodes
+        self.nodes_queue_to_checkpoint = self.graph.get_points_of_discontinuity(self.nodes_queue_to_checkpoint)
+
         self.robot_status.generate_new_translation_vector_towards_new_target(
             self.nodes_queue_to_checkpoint.popleft())
