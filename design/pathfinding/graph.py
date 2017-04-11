@@ -174,20 +174,28 @@ class Graph():
     def get_points_of_discontinuity(self, nodes_queue):
 
         LENGTH_TO_CONSIDER = 5
-        SLOPE_THRESHOLD = 5
+        SLOPE_THRESHOLD = 1.75
 
         points_of_discontinuity = deque()
         current_point_index = 0
-        slope = self.compute_slope(self, nodes_queue, current_point_index)
+        slope = self.compute_slope(nodes_queue, current_point_index, LENGTH_TO_CONSIDER)
 
         while current_point_index < len(nodes_queue):
             current_point_index += 1
-            new_slope = self.compute_slope(self, nodes_queue, current_point_index, LENGTH_TO_CONSIDER)
+            try:
+                new_slope = self.compute_slope(nodes_queue, current_point_index, LENGTH_TO_CONSIDER)
+            except IndexError:
+                break
             if math.fabs(new_slope - slope) >= SLOPE_THRESHOLD:
-                points_of_discontinuity.append(nodes_queue[current_point_index + LENGTH_TO_CONSIDER])
+                try:
+                    points_of_discontinuity.append(nodes_queue[current_point_index + LENGTH_TO_CONSIDER])
+                except IndexError:
+                    points_of_discontinuity.append(nodes_queue[-1])
+                    break
                 current_point_index = current_point_index + LENGTH_TO_CONSIDER + 1
 
         return points_of_discontinuity
 
     def compute_slope(self, nodes_queue, start_index, length_to_consider):
-        return nodes_queue[start_index + length_to_consider - 1][0] - nodes_queue[start_index][0] / nodes_queue[start_index + length_to_consider - 1][1] - nodes_queue[start_index][1]
+
+        return (nodes_queue[start_index + length_to_consider - 1][0] - nodes_queue[start_index][0]) / (nodes_queue[start_index + length_to_consider - 1][1] - nodes_queue[start_index][1])
