@@ -4,7 +4,6 @@ game elements and their positions. """
 from design.pathfinding.constants import ROBOT_SAFETY_MARGIN
 from design.pathfinding.constants import PointOfInterest
 
-
 ANTENNA_SLIDER_LENGTH = 75
 ANTENNA_SLIDER_START_OFFSET_OF_MAP_CORNER = 42
 

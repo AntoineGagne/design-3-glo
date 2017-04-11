@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QPixmap
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QGraphicsView, QWidget
 from pkg_resources import resource_filename
 import PyQt5.QtGui as QtGui
@@ -22,8 +22,6 @@ class PaintingView(QWidget):
         pixmap_size = trump_painting.size()
         self.setMinimumSize(pixmap_size)
         self._height_for_width_factor = 1.0 * pixmap_size.height() / pixmap_size.width()
-        self.path_lines_pen = QtGui.QPen(QColor('#f44280'), 5, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
-        self.path_points_pen = QtGui.QPen(QColor('#95ff95'), 10)
         self.grid_layout = QtWidgets.QGridLayout(self)
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.painting_view = QtWidgets.QGraphicsView(self)
@@ -36,12 +34,9 @@ class PaintingView(QWidget):
         self.painting_view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.painting_view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.radius = 5
-
         self.painting_scene.addPixmap(trump_painting)
-
         self._painting_graphics = QGraphicsView()
-
-        self.model.subscribe_update_function(self.draw_path)
+        self.model.subscribe_update_function(self.update_world_image)
 
     def hasHeightForWidth(self):
         return True
@@ -69,20 +64,3 @@ class PaintingView(QWidget):
             self.setMinimumSize(pixmap_size)
             self._height_for_width_factor = 1.0 * pixmap_size.height() / pixmap_size.width()
             self.painting_scene.addPixmap(self.scene_img)
-
-    def draw_path(self):
-        path = self.model.painting_vertices
-        path_to_paint = QtGui.QPainterPath()
-        points_to_paint = QtGui.QPainterPath()
-        if path:
-            self.painting_scene.clear()
-            path_to_paint.moveTo(path[0][0], path[0][1])
-            for i in range(len(path)):
-                points_to_paint.addEllipse(path[i][0] - self.radius / 2, path[i][1] -
-                                           self.radius / 2, self.radius, self.radius)
-                if i == 0:
-                    path_to_paint.moveTo(path[0][0], path[0][1])
-                    i += 1
-                path_to_paint.lineTo(path[i][0], path[i][1])
-            self.painting_scene.addPath(path_to_paint, self.path_lines_pen)
-            self.painting_scene.addPath(points_to_paint, self.path_points_pen)

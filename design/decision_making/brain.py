@@ -12,7 +12,8 @@ from design.telemetry.packets import PacketType, Packet
 class Brain():
     """Controls decisionmaking of the robot"""
 
-    def __init__(self, telemetry, interfacing_controller, logger, onboard_vision, movement_strategies, translation_lock, rotation_lock):
+    def __init__(self, telemetry, interfacing_controller, logger, onboard_vision, movement_strategies, translation_lock,
+                 rotation_lock):
         """Initializes robot on STANBY mode, waiting for game map objects
         to be transmitted in order to start its routine"""
 

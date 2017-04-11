@@ -2,9 +2,11 @@ class MainModel:
     def __init__(self):
         self.time = 0
         self.timer_is_on = False
-        self.start_new_cycle = False
+        self.send_new_game_map_flag = False
         self.find_robot_flag = False
         self.log_messages = ""
+        self.detect_static_items = False
+        self.update_image_flag = False
 
         self._update_functions = []
 
