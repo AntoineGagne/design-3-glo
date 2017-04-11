@@ -148,7 +148,8 @@ class Pathfinder():
                 current = priority_queue.get()
                 if current == checkpoint_position:
                     break
-                if (self.graph.get_position_minimum_of_graph() > checkpoint_position[1]) and (self.graph.get_position_minimum_of_graph() > current[1]):
+                if (self.graph.get_position_minimum_of_graph() > checkpoint_position[1]) \
+                        and (self.graph.get_position_minimum_of_graph() > current[1]):
                     came_from[checkpoint_position] = current
                     break
                 for next_node in self.graph.graph_dict[current]:

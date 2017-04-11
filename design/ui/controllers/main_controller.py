@@ -9,9 +9,6 @@ class MainController:
         self.model.time = 0
         self.model.announce_update()
 
-    def is_timer_on(self):
-        return self.model.timer_is_on
-
     def activate_timer(self):
         self.model.timer_is_on = True
         self.model.announce_update()
@@ -24,8 +21,8 @@ class MainController:
         self.model.time += 1
         self.model.announce_update()
 
-    def start_new_cycle(self):
-        self.model.start_new_cycle = True
+    def send_new_game_map(self):
+        self.model.send_new_game_map_flag = True
         self.model.announce_update()
 
     def update_console_log(self, new_message: str):
@@ -34,4 +31,8 @@ class MainController:
 
     def find_robot(self):
         self.model.find_robot_flag = True
+        self.model.announce_update()
+
+    def detect_static_items(self):
+        self.model.detect_static_items = True
         self.model.announce_update()

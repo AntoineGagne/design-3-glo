@@ -145,6 +145,18 @@ def test_that_given_two_items_information_when_comparing_then_they_are_similar()
                                                        information4)
     assert utils.check_if_both_information_are_similar(information5,
                                                        information6)
+    assert utils.check_if_both_information_are_similar(information1,
+                                                       information1)
+    assert utils.check_if_both_information_are_similar(information2,
+                                                       information2)
+    assert utils.check_if_both_information_are_similar(information3,
+                                                       information3)
+    assert utils.check_if_both_information_are_similar(information4,
+                                                       information4)
+    assert utils.check_if_both_information_are_similar(information5,
+                                                       information5)
+    assert utils.check_if_both_information_are_similar(information6,
+                                                       information6)
 
 
 def test_that_given_two_items_information_when_comparing_then_they_are_not_similar():
@@ -165,3 +177,8 @@ def test_that_given_two_items_information_when_comparing_then_they_are_not_simil
                                                            information5)
     assert not utils.check_if_both_information_are_similar(information6,
                                                            information7)
+
+
+def test_that_given_close_points_in_list_when_eliminate_close_points_then_they_are_eliminated():
+    circles = [(1018, 497), (1018, 497)]
+    assert [[1018, 497]] == utils.eliminate_close_points_in_list(circles, 200)

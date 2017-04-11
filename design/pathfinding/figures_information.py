@@ -21,27 +21,36 @@ class FiguresInformation():
         self.northeast_corner = (112, 0)
 
         self.figures[0] = ((self.southwest_corner[0] + MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE,
-                            self.southwest_corner[1] - (2 * SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES) - (1.5 * OUTER_FRAME_SIZE)),
+                            self.southwest_corner[1] - (
+                                2 * SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES) - (
+                            1.5 * OUTER_FRAME_SIZE)),
                            180)
 
-        self.figures[1] = ((self.southwest_corner[0] + MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE, self.southwest_corner[1] - 20), 160)
+        self.figures[1] = (
+            (self.southwest_corner[0] + MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE, self.southwest_corner[1] - 20), 160)
 
-        self.figures[2] = ((self.southwest_corner[0] + 20, self.southwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE), 94)
+        self.figures[2] = (
+            (self.southwest_corner[0] + 20, self.southwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE), 94)
 
-        self.figures[3] = ((self.southwest_corner[0] + (1.5 * OUTER_FRAME_SIZE) + (2 * WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES),
-                            self.southwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE),
-                           90)
+        self.figures[3] = (
+            (self.southwest_corner[0] + (1.5 * OUTER_FRAME_SIZE) + (2 * WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES),
+             self.southwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE),
+            90)
 
-        self.figures[4] = ((self.northwest_corner[0] - (1.5 * OUTER_FRAME_SIZE) - (2 * WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES),
-                            self.northwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE),
-                           90)
+        self.figures[4] = (
+            (self.northwest_corner[0] - (1.5 * OUTER_FRAME_SIZE) - (2 * WESTERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES),
+             self.northwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE),
+            90)
 
-        self.figures[5] = ((self.northwest_corner[0] - 20, self.northwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE), 81)
+        self.figures[5] = (
+            (self.northwest_corner[0] - 20, self.northwest_corner[1] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE), 81)
 
-        self.figures[6] = ((self.northwest_corner[0] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE, self.northwest_corner[1] - 20), 20)
+        self.figures[6] = (
+            (self.northwest_corner[0] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE, self.northwest_corner[1] - 20), 20)
 
         self.figures[7] = ((self.northwest_corner[0] - MINIMUM_DISTANCE_BETWEEN_ROBOT_AND_FIGURE,
-                            self.northwest_corner[1] - (1.5 * OUTER_FRAME_SIZE) - (2 * SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES)),
+                            self.northwest_corner[1] - (1.5 * OUTER_FRAME_SIZE) - (
+                                2 * SOUTHERN_AND_NORTHERN_WALL_DISTANCE_BETWEEN_OUTER_FRAMES)),
                            0)
 
         self.figures_backup_deltas[0] = [(0, -DELTA_INCREMENT), (0, 2 * DELTA_INCREMENT), (0, -DELTA_INCREMENT)]

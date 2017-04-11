@@ -65,10 +65,14 @@ class Graph:
         """ Generating the list of nodes of the graph associated with the obstacle"""
 
         if obstacle[1] == "O":
-            node1 = (((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            node2 = (((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] + (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            node3 = (((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS), (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            node4 = (((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS), (obstacle[0][1] + (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
+            node1 = (
+                ((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
+            node2 = (
+                ((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] + (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
+            node3 = (((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS),
+                     (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
+            node4 = (((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS),
+                     (obstacle[0][1] + (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
             self.add_node_in_graph_dict(node1)
             self.add_node_in_graph_dict(node2)
             self.add_node_in_graph_dict(node3)
@@ -76,14 +80,34 @@ class Graph:
             self.add_edge_of_graph(node1, node2)
             self.add_edge_of_graph(node3, node4)
         if obstacle[1] == "N":
-            node1 = ((((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS)), (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            node2 = ((((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS)), ((obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)) + (2 * (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS))))
+            node1 = (
+                (
+                    ((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) +
+                    (obstacle[0][0] + OBSTACLE_RADIUS)),
+                (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS))
+            )
+            node2 = (
+                (
+                    ((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS)
+                ),
+                ((obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)) +
+                 (2 * (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS))
+                 )
+            )
             self.add_node_in_graph_dict(node1)
             self.add_node_in_graph_dict(node2)
             self.add_edge_of_graph(node1, node2)
         if obstacle[1] == "S":
-            node1 = (((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            node2 = (((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS) + (2 * (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS))))
+            node1 = (
+                ((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
+            node2 = (
+                (
+                    (obstacle[0][0] - OBSTACLE_RADIUS) / 2),
+                (
+                    obstacle[0][1] -
+                    (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS) + (2 * (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS))
+                )
+            )
             self.add_node_in_graph_dict(node1)
             self.add_node_in_graph_dict(node2)
             self.add_edge_of_graph(node1, node2)
@@ -113,9 +137,11 @@ class Graph:
         """ Draw the safety zone for the walls"""
         for x in range(TABLE_X):
             for y in range(TABLE_Y):
-                if (x <= ROBOT_SAFETY_MARGIN) or (
-                    x >= (TABLE_X - ROBOT_SAFETY_MARGIN)) or (
-                        y <= ROBOT_SAFETY_MARGIN) or (y >= (TABLE_Y - ROBOT_SAFETY_MARGIN)):
+                if (x <= ROBOT_SAFETY_MARGIN
+                    ) or (x >= (TABLE_X - ROBOT_SAFETY_MARGIN)
+                          ) or (y <= ROBOT_SAFETY_MARGIN
+                                ) or (y >= (TABLE_Y - ROBOT_SAFETY_MARGIN)
+                                      ):
                     self.list_of_inaccessible_nodes.append((x, y))
 
     def add_node_in_graph_dict(self, node):

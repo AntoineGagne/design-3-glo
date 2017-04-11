@@ -20,20 +20,23 @@ class RotationCheckCommand(Command):
         position = telemetry_data[0]
         orientation = telemetry_data[1]
 
-        self.logger.log("Rotation Check: Execution. Step = {0} - Telemetry position = {1} - Telemetry heading = {2}".format(
-            self.current_step, position, orientation))
+        self.logger.log(
+            "Rotation Check: Execution. Step = {0} - Telemetry position = {1} - Telemetry heading = {2}".format(
+                self.current_step, position, orientation))
 
         if self.servo_wheels_manager.rotation_status == RotationStatus.ROTATING:
             if not self.servo_wheels_manager.is_current_rotation_movement_done(self.hardware.wheels):
                 return (self.current_step, None)
             else:
-                self.servo_wheels_manager.rotating_start_heading_correction(orientation, self.pathfinder.robot_status, self.hardware.wheels)
+                self.servo_wheels_manager.rotating_start_heading_correction(orientation, self.pathfinder.robot_status,
+                                                                            self.hardware.wheels)
                 return (self.current_step, None)
         elif self.servo_wheels_manager.rotation_status == RotationStatus.CORRECTING_HEADING:
             if not self.servo_wheels_manager.is_current_rotation_movement_done(self.hardware.wheels):
                 return (self.current_step, None)
             else:
-                self.servo_wheels_manager.finish_rotation_and_set_new_robot_position(position, self.pathfinder.robot_status)
+                self.servo_wheels_manager.finish_rotation_and_set_new_robot_position(position,
+                                                                                     self.pathfinder.robot_status)
                 return (next_step(self.current_step), None)
 
 

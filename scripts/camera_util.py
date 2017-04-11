@@ -2,7 +2,6 @@ import cv2
 
 import os
 import time
-from typing import Any, Sequence
 
 
 class Camera:
@@ -69,11 +68,11 @@ def get_frames(camera, camera_number, number_of_frames=1):
 
 if __name__ == "__main__":
     cam = Camera(1600, 1200)
-    cam.set_camera_port(1)
+    cam.set_camera_port(0)
     cam.open_camera()
     while cam.camera_is_opened():
         time.sleep(1)
-        cam.get_frames(1, folder='camera_data')
+        cam.get_frames(1, folder='camera_data4')
         time.sleep(1)
 
 # if table 4 camera port is 0

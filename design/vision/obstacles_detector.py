@@ -2,14 +2,18 @@ import cv2
 import numpy
 import numpy as np
 import math
+
+import time
+
 import design.vision.constants as constants
+from design.vision.camera import CameraSettings, Camera
 from design.vision.exceptions import ObstaclesNotFound
 from design.vision.world_utils import (calculate_angle,
                                        define_cardinal_point,
                                        eliminate_duplicated_points,
                                        triangle_shortest_edge,
                                        calculate_centroid,
-                                       eliminate_close_points_in_list)
+                                       eliminate_close_points_in_list, get_best_information)
 
 
 class ObstaclesDetector:
@@ -96,7 +100,7 @@ class ObstaclesDetector:
         for contour in contours:
             (cx, cy), radius = cv2.minEnclosingCircle(contour)
             area_of_circle = 2 * math.pi * radius
-            if 145 > area_of_circle > 120:
+            if 150 > area_of_circle > 120:
                 circles.append((int(round(cx)), int(round(cy))))
         round_obstacles_information = eliminate_close_points_in_list(circles, 200)
         new_informations = []
@@ -135,3 +139,18 @@ class ObstaclesDetector:
             raise ObstaclesNotFound
 
         return self.obstacles_information
+
+
+if __name__ == "__main__":
+    obstacle_detector = ObstaclesDetector()
+    obstacles_information = []
+    with Camera(0, CameraSettings(width=1600, height=1200), True) as camera:
+        time.sleep(5)
+        for picture in camera.take_pictures(10):
+            try:
+                obstacles_information.append(obstacle_detector.calculate_obstacles_information(picture))
+                print(obstacles_information[-1])
+            except ObstaclesNotFound:
+                continue
+        print("DONE")
+        print(get_best_information(obstacles_information))

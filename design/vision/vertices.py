@@ -1,3 +1,5 @@
+import pdb
+
 import cv2
 import numpy as np
 
@@ -88,6 +90,7 @@ def find_best_figure(figures, *predicates, **kwargs):
         if best_comparison_value < comparison_value:
             best_figure, best_comparison_value, best_figure_index = figure, comparison_value, index
     if best_comparison_value < len(figures) * allowed_percentage:
+        pdb.set_trace()
         raise VerticesNotFound('No good figures could be found')
     return best_figure, best_figure_index
 

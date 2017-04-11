@@ -10,7 +10,6 @@ from design.interfacing.stm32_driver import Response
 
 
 class HardwareObserver():
-
     def notify(self, response_type):
         raise NotImplementedError("This method must be implemented. HardwareObserver acts as an interface.")
 
@@ -49,9 +48,10 @@ class AntennaController(HardwareObserver):
         :rtype: `int` """
         self.signal_strength_lock.acquire()
         if self.new_signal_strength_value_available:
-            self.logger.log("Antenna Controller - Acquired signal amplitude = {0}".format(self.stm32_driver.signal_strength))
+            signal_strength = self.stm32_driver.get_signal_strength()
+            self.logger.log("Antenna Controller - Acquired signal amplitude = {0}".format(signal_strength))
             self.signal_strength_lock.release()
-            return self.stm32_driver.signal_strength
+            return signal_strength
         else:
             self.signal_strength_lock.release()
             return None
@@ -116,12 +116,14 @@ class WheelsController(HardwareObserver):
         :param vector: (dx, dy), both values in centimeters """
         if math.hypot(vector[0], vector[1]) >= 0.2:
             self.last_vector_given = vector
-            self.logger.log("Wheels Controller - Translating {0}, length = {1}".format(vector, math.hypot(vector[0], vector[1])))
+            self.logger.log(
+                "Wheels Controller - Translating {0}, length = {1}".format(vector, math.hypot(vector[0], vector[1])))
             dx, dy = vector
             self.stm32_driver.translate_robot(int(dx * 10), int(dy * 10))
             self.translation_done = False
         else:
-            self.logger.log("Wheels Controller - Recieved very small vector. Discarding and notifying translation as finished.")
+            self.logger.log(
+                "Wheels Controller - Recieved very small vector. Discarding and notifying translation as finished.")
             self.notify(Response.TRANSLATION_FINISHED)
 
     def rotate(self, amount):
