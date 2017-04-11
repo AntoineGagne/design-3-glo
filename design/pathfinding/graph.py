@@ -122,8 +122,8 @@ class Graph():
 
         return i, j
 
-    def get_middle_position_from_grid_element_index(self, i, j):
-        return (i * GRAPH_GRID_WIDTH) + (0.5 * GRAPH_GRID_WIDTH),  (j * GRAPH_GRID_WIDTH) + (0.5 * GRAPH_GRID_WIDTH)
+    def get_position_from_grid_element_index(self, i, j):
+        return i * GRAPH_GRID_WIDTH,  j * GRAPH_GRID_WIDTH
 
     def get_edge_distance(self, source_index, destination_index):
 

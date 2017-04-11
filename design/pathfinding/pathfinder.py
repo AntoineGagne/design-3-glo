@@ -136,7 +136,7 @@ class Pathfinder():
         destination_vertex = self.graph.get_grid_element_index_from_position(checkpoint_position)
 
         visited_vertices = []
-        unsolved_vertices = dict(((i, j), math.inf) for i in range(self.graph.matrix_width) for j in range(self.graph.matrix_height) if self.graph.get_weight_of_element((i, j)) != math.inf)
+        unsolved_vertices = dict(((i, j), math.inf) for j in range(self.graph.matrix_height) for i in range(self.graph.matrix_width) if self.graph.get_weight_of_element((i, j)) != math.inf)
         parent_of_vertices = defaultdict(None)
 
         # Initialize weight of source vertex to 0
@@ -144,7 +144,7 @@ class Pathfinder():
         vertices_weights = dict(unsolved_vertices)
 
         # Generate vertices' parents dictionary
-        while current_vertex is not destination_vertex:
+        while current_vertex != destination_vertex:
             current_vertex = min(unsolved_vertices, key=unsolved_vertices.get)
             unsolved_vertices.pop(current_vertex)
             visited_vertices.append(current_vertex)
@@ -157,8 +157,8 @@ class Pathfinder():
                         parent_of_vertices[neighbour] = current_vertex
 
         # Rebuild path
-        while current_vertex is not source_vertex:
-            self.nodes_queue_to_checkpoint.appendleft(self.graph.get_middle_position_from_grid_element_index(current_vertex))
+        while current_vertex != source_vertex:
+            self.nodes_queue_to_checkpoint.appendleft(self.graph.get_position_from_grid_element_index(*current_vertex))
             current_vertex = parent_of_vertices[current_vertex]
 
         self.robot_status.generate_new_translation_vector_towards_new_target(
