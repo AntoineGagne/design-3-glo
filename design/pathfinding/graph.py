@@ -174,7 +174,7 @@ class Graph():
     def get_points_of_discontinuity(self, nodes_queue):
 
         LENGTH_TO_CONSIDER = 5
-        SLOPE_THRESHOLD = 1.75
+        SLOPE_THRESHOLD = 1.4
 
         points_of_discontinuity = deque()
         current_point_index = 0
