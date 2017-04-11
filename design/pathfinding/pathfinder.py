@@ -144,13 +144,15 @@ class Pathfinder():
 
         # Generate vertices' parents dictionary
         while current_vertex is not destination_vertex:
-            print(current_vertex)
+            current_vertex = min(vertices_weights, key=vertices_weights.get)
+            visited_vertices.append(current_vertex)
+            print("Current_vertex = {0}".format(current_vertex))
             for neighbour in self.graph.get_eight_neighbours_indexes_from_element_index(current_vertex):
                 if neighbour not in visited_vertices and vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour) < vertices_weights[neighbour]:
                     vertices_weights[neighbour] = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour)
+                    print("New neighbour weight: {0} at {1}".format(vertices_weights[neighbour], neighbour))
                     parent_of_vertices[neighbour] = current_vertex
-                    visited_vertices.append(current_vertex)
-            current_vertex = min(vertices_weights, key=vertices_weights.get)
+            vertices_weights.pop(current_vertex)
 
         # Rebuild path
         while current_vertex is not source_vertex:
