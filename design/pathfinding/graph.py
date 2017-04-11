@@ -157,3 +157,6 @@ class Graph():
 
     def is_index_inside_matrix(self, index):
         return 0 <= index[0] < self.matrix_width and 0 <= index[1] < self.matrix_height
+
+    def get_weight_of_element(self, element_index):
+        return self.matrix[element_index[0]][element_index[1]]

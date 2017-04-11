@@ -127,30 +127,34 @@ class Pathfinder():
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
 
-        i, j = self.graph.get_grid_element_index_from_position(checkpoint_position)
-        if self.graph.matrix[i][j] == math.inf:
+        checkpoint_i, checkpoint_j = self.graph.get_grid_element_index_from_position(checkpoint_position)
+        if self.graph.matrix[checkpoint_i][checkpoint_j] == math.inf:
             raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
 
         source_vertex = self.graph.get_grid_element_index_from_position(self.robot_status.get_position())
         current_vertex = source_vertex
         destination_vertex = self.graph.get_grid_element_index_from_position(checkpoint_position)
 
-        visited_vertices = [current_vertex]
-        vertices_weights = defaultdict(lambda: math.inf)
+        visited_vertices = []
+        unsolved_vertices = dict(((i, j), math.inf) for i in range(self.graph.matrix_width) for j in range(self.graph.matrix_height) if self.graph.get_weight_of_element((i, j)) != math.inf)
         parent_of_vertices = defaultdict(None)
 
         # Initialize weight of source vertex to 0
-        vertices_weights[current_vertex] = 0
+        unsolved_vertices[current_vertex] = 0
+        vertices_weights = dict(unsolved_vertices)
 
         # Generate vertices' parents dictionary
         while current_vertex is not destination_vertex:
-            print(current_vertex)
+            current_vertex = min(unsolved_vertices, key=unsolved_vertices.get)
+            unsolved_vertices.pop(current_vertex)
+            visited_vertices.append(current_vertex)
             for neighbour in self.graph.get_eight_neighbours_indexes_from_element_index(current_vertex):
-                if neighbour not in visited_vertices and vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour) < vertices_weights[neighbour]:
-                    vertices_weights[neighbour] = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour)
-                    parent_of_vertices[neighbour] = current_vertex
-                    visited_vertices.append(current_vertex)
-            current_vertex = min(vertices_weights, key=vertices_weights.get)
+                if neighbour in unsolved_vertices:
+                    new_weight = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour)
+                    if new_weight < vertices_weights[neighbour]:
+                        vertices_weights[neighbour] = new_weight
+                        unsolved_vertices[neighbour] = new_weight
+                        parent_of_vertices[neighbour] = current_vertex
 
         # Rebuild path
         while current_vertex is not source_vertex:
