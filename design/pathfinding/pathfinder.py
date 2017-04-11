@@ -127,7 +127,8 @@ class Pathfinder():
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
 
-        if self.graph.get_vertex_weight(checkpoint_position) == math.inf:
+        i, j = self.graph.get_grid_element_index_from_position(checkpoint_position)
+        if self.graph.matrix[i][j] == math.inf:
             raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
 
         source_vertex = self.graph.get_grid_element_index_from_position(self.robot_status.get_position())
@@ -143,6 +144,7 @@ class Pathfinder():
 
         # Generate vertices' parents dictionary
         while current_vertex is not destination_vertex:
+            print(current_vertex)
             for neighbour in self.graph.get_eight_neighbours_indexes_from_element_index(current_vertex):
                 if neighbour not in visited_vertices and vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour) < vertices_weights[neighbour]:
                     vertices_weights[neighbour] = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour)

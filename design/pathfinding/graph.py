@@ -1,7 +1,7 @@
 """ This module includes a graph represented by an adjacency matrix. Used for the robot's pathfinding. """
 import math
 from design.pathfinding.constants import GRAPH_GRID_WIDTH, OBSTACLE_RADIUS, ROBOT_SAFETY_MARGIN, \
-    MAXIMUM_GRID_NODE_HEIGHT
+    MAXIMUM_GRID_NODE_HEIGHT, ROBOT_HALF_WIDTH
 
 
 class Graph():
@@ -39,7 +39,7 @@ class Graph():
         self.connect_obstacles_and_walls(obstacle_list)
 
     def add_walls_safety_margin(self):
-        num_square = ROBOT_SAFETY_MARGIN // GRAPH_GRID_WIDTH + 1
+        num_square = ROBOT_HALF_WIDTH // GRAPH_GRID_WIDTH + 1
         for i in range(self.matrix_width):
             for j in range(self.matrix_height):
                 if i <= num_square or i > self.matrix_width - num_square:
