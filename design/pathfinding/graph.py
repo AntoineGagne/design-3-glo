@@ -134,7 +134,13 @@ class Graph():
         source_i, source_j = source_index
         destination_i, destination_j = destination_index
 
-        return MAXIMUM_GRID_NODE_HEIGHT + (self.matrix[destination_i][destination_j] - self.matrix[source_i][source_j])
+        if destination_i == source_i or destination_j == source_j:
+            distance_factor = 1
+        else:
+            distance_factor = 1.4
+
+        weight_difference = self.matrix[destination_i][destination_j] - self.matrix[source_i][source_j]
+        return distance_factor*MAXIMUM_GRID_NODE_HEIGHT + weight_difference
 
     def get_eight_neighbours_indexes_from_element_index(self, element_index):
         # FIXME: this is a bad name because there can be less than 8 neighbours returned, but it shows which neighbours are considered

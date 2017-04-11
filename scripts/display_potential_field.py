@@ -7,7 +7,7 @@ from design.pathfinding.constants import MAXIMUM_GRID_NODE_HEIGHT
 
 if __name__ == "__main__":
     graph = Graph()
-    obstacle_list = [[(14, 125), "N"], [(76, 125), "O"]]
+    obstacle_list = [[(14, 115), "N"], [(90, 115), "S"]]
     graph.initialize_graph_matrix((0, 0), (111, 230), obstacle_list)
     pathfinder = Pathfinder(None)
     robotStatus = RobotStatus((90, 20), 90)
@@ -27,11 +27,14 @@ if __name__ == "__main__":
                 hsv_img[i, j] = (120 - (120 / MAXIMUM_GRID_NODE_HEIGHT) * graph.matrix[i][j], 255, 255)
 
     img = cv2.cvtColor(hsv_img, cv2.COLOR_HSV2BGR)
-    for i in range(len(pathfinder.nodes_queue_to_checkpoint)-1):
-        cv2.circle(img, pathfinder.nodes_queue_to_checkpoint[i], 1, (114, 37, 116), -1)
-        cv2.line(img, pathfinder.nodes_queue_to_checkpoint[i], pathfinder.nodes_queue_to_checkpoint[i+1], (114, 37, 116), 1)
-    cv2.circle(img, pathfinder.nodes_queue_to_checkpoint[-1], 1, (114, 37, 116), -1)
-    resized = cv2.resize(img, None, fx=5, fy=5, interpolation=cv2.INTER_LINEAR)
+    for i in range(len(pathfinder.nodes_queue_to_checkpoint)):
+        print(pathfinder.nodes_queue_to_checkpoint[i])
+        x, y = pathfinder.graph.get_grid_element_index_from_position(pathfinder.nodes_queue_to_checkpoint[i])
+        cv2.circle(img, (y, x), 1, (114, 37, 116), -1)
+        if i < len(pathfinder.nodes_queue_to_checkpoint) - 1:
+            x2, y2 = pathfinder.graph.get_grid_element_index_from_position(pathfinder.nodes_queue_to_checkpoint[i + 1])
+            cv2.line(img, (y, x), (y2, x2), (114, 37, 116), 1)
+    resized = cv2.resize(img, None, fx=7, fy=7, interpolation=cv2.INTER_LINEAR)
     cv2.imshow("Potential field", resized)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
