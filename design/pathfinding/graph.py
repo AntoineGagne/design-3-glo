@@ -57,16 +57,31 @@ class Graph():
     def connect_obstacles_and_walls(self, obstacle_list):
         for obstacle in obstacle_list:
             if obstacle[1] != "O":
-                sign = self.determine_sign()
-                i = obstacle[0][0] + sign * self.obstacle_safe_radius
-                no_infinite_weight = True
-                while no_infinite_weight:
-                    for j in range(obstacle[0][1] - self.obstacle_safe_radius, obstacle[0][1] + self.obstacle_safe_radius):
-                        if self.matrix[i][j] == math.inf:
-                            no_infinite_weight = False
-                        else:
-                            self.matrix[i][j] = math.inf
-                    i = i + sign
+                self.connect_obstacle_to_closest_impassable_zone(obstacle)
+
+    def connect_obstacle_to_closest_impassable_zone(self, obstacle):
+        i = self.determine_starting_row(obstacle)
+        no_infinite_weight_in_row = True
+        while no_infinite_weight_in_row:
+            for j in range(obstacle[0][1] - self.obstacle_safe_radius, obstacle[0][1] + self.obstacle_safe_radius):
+                if self.matrix[i][j] == math.inf:
+                    no_infinite_weight_in_row = False
+                else:
+                    self.matrix[i][j] = math.inf
+            i = self.move_to_next_row(i, obstacle[1])
+
+    def determine_starting_row(self, obstacle):
+        # FIXME: what if i is outside of the walls ?
+        if obstacle[1] == "N":
+            return obstacle[0][0] - self.obstacle_safe_radius - 1
+        else:
+            return obstacle[0][0] + self.obstacle_safe_radius
+
+    def move_to_next_row(self, current_row_index, obstacle_orientation):
+        if obstacle_orientation == "N":
+            return current_row_index - 1
+        else:
+            return current_row_index + 1
 
     def get_grid_element_index_from_position(self, position):
 
