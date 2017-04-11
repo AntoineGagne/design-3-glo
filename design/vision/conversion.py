@@ -4,7 +4,6 @@ import cv2
 import math
 from design.vision.constants import TOP_GAP_FROM_DRAWING_ZONE, LEFT_GAP_FROM_DRAWING_ZONE
 from design.vision.world_utils import convert_to_degrees, calculate_angle
-from design.vision.constants import TABLE_HEIGHT, TABLE_WIDTH
 
 DEFAULT_CALIBRATION_JSON_FILE_PATH = "config/calibration_information_"
 
@@ -66,10 +65,9 @@ class Converter:
         world_coordinate = self.get_world_coordinates(height, u, v)
         return [world_coordinate[0] + self.translation_x, world_coordinate[1] + self.translation_y]
 
-    def get_pixel_coordinates_translated(self, x, y, z, table_angle):
-        angle = -math.radians(table_angle)
-        new_x = ((x - self.translation_x) * math.cos(angle) - (y - self.translation_y) * math.sin(angle))
-        new_y = ((x - self.translation_x) * math.sin(angle) + (y - self.translation_y) * math.cos(angle))
+    def get_pixel_coordinates_translated(self, x, y, z):
+        new_x = x - self.translation_x
+        new_y = y - self.translation_y
         return self.get_pixel_coordinates(new_x, new_y, z)
 
 
@@ -97,15 +95,3 @@ def calculate_extrinsic_matrix(rotation_vector, translation_vector):
 
 def calculate_complete_camera_matrix(extrinsic_matrix, intrinsic_matrix):
     return np.dot(intrinsic_matrix, extrinsic_matrix)
-
-
-def extrapolate_table(top_left_corner_world, table_angle):
-    angle = -math.radians(table_angle)
-    x, y = top_left_corner_world
-    top_right = (x + TABLE_WIDTH * math.cos(angle), y + TABLE_WIDTH * math.sin(angle))
-    bottom_left = (x + TABLE_HEIGHT * math.sin(angle), y + TABLE_HEIGHT * math.cos(angle))
-    px, py = -TABLE_WIDTH, -TABLE_HEIGHT
-    bottom_right = (((x - px) * math.cos(angle) - (y - py) * math.sin(angle)),
-                    ((x - px) * math.sin(angle) + (y - py) * math.cos(angle)))
-
-    return [(x, y), top_right, bottom_right, bottom_left]

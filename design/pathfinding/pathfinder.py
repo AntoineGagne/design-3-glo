@@ -48,11 +48,6 @@ class Pathfinder():
         else:
             self.robot_status = RobotStatus((20, 20), 90)
 
-        obstacles = game_map_data.get("obstacles")
-        if obstacles:
-            pass
-
-
         # table_corners_positions = None
         table_corners_positions = game_map_data.get("table_corners")
         if table_corners_positions:
@@ -61,6 +56,13 @@ class Pathfinder():
                                            table_corners_positions[2], table_corners_positions[3])
         else:
             self.figures.compute_positions((0, 0), (0, 231), (112, 231), (112, 0))
+
+        obstacles = game_map_data.get("obstacles")
+        if obstacles:
+            self.graph = Graph()
+            self.graph.initialize_graph_matrix(table_corners_positions[0], table_corners_positions[2], obstacles)
+        else:
+            self.graph.initialize_graph_matrix((0, 0), (112, 231), [])
 
         # drawing_zone_corners = None
         drawing_zone_corners = game_map_data.get("drawing_zone")
@@ -167,5 +169,4 @@ class Pathfinder():
         self.nodes_queue_to_checkpoint.appendleft(self.robot_status.get_position())
         print("Nodes queue after adding start point: {0}".format(self.nodes_queue_to_checkpoint))
 
-        # self.robot_status.generate_new_translation_vector_towards_new_target(
-        #    self.nodes_queue_to_checkpoint.popleft())
+        self.robot_status.generate_new_translation_vector_towards_new_target(self.nodes_queue_to_checkpoint.popleft())

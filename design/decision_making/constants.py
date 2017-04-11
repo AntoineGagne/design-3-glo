@@ -2,7 +2,6 @@
 
 from enum import Enum
 
-
 NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS = 0.05
 NUMBER_OF_SECONDS_BETWEEN_ROTATION_CHECKS = 0.05
 NUMBER_OF_SECONDS_BETWEEN_SIGNAL_SAMPLES = 0.10
@@ -61,7 +60,7 @@ def next_step(current_step):
 
     try:
         step_to_return = Step(current_step.value + 1)
-    except ValueError as error:
+    except ValueError:
         return Step.STANBY
 
     return step_to_return

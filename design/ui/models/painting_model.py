@@ -1,8 +1,6 @@
 class PaintingModel:
     def __init__(self):
         self.painting_image = None
-        self.painting_vertices = None
-
         self._update_functions = []
 
     def subscribe_update_function(self, function):

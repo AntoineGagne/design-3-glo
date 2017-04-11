@@ -16,7 +16,7 @@ class CaptureRepositioningManager():
         """ Returns a new retry translation vector """
 
         orientation = None
-        if len(self.orientations) >= 0:
+        if len(self.orientations) > 0:
             orientation = self.orientations.popleft()
         else:
             raise OutOfRetriesForCaptureError("Capture Reposition Manager: Out of retries!")

@@ -99,8 +99,10 @@ class CommandDispatcher():
         :returns: Command to execute
         :rtype: `design.decision_making.preparation_commands.Command` """
 
-        if current_step == Step.PREPARE_TO_DRAW:
+        if current_step == Step.DRAWING or current_step == Step.MARKING_ANTENNA_POSITION:
             self.movement_strategy.translation_strategy = TranslationStrategyType.TRUST_MATERIAL_SERVOING
+        else:
+            self.movement_strategy.translation_strategy = TranslationStrategyType.BASIC_WHEEL_SERVOING
 
         command = self.equivalencies.get(current_step)
         if command:

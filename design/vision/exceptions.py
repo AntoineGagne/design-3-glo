@@ -20,3 +20,7 @@ class DrawingZoneNotFound(Exception):
 
 class ObstaclesNotFound(Exception):
     pass
+
+
+class PositionGap(Exception):
+    pass

@@ -2,7 +2,6 @@
 
 from design.decision_making.constants import Step
 from design.decision_making.command_dispatcher import CommandDispatcher
-from design.decision_making.integrity_manager import IntegrityManager
 from design.pathfinding.capture_repositioning_manager import CaptureRepositioningManager
 from design.pathfinding.pathfinder import Pathfinder
 from design.pathfinding.antenna_information import AntennaInformation
@@ -13,7 +12,8 @@ from design.telemetry.packets import PacketType, Packet
 class Brain():
     """Controls decisionmaking of the robot"""
 
-    def __init__(self, telemetry, interfacing_controller, logger, onboard_vision, movement_strategies, translation_lock, rotation_lock):
+    def __init__(self, telemetry, interfacing_controller, logger, onboard_vision, movement_strategies, translation_lock,
+                 rotation_lock):
         """Initializes robot on STANBY mode, waiting for game map objects
         to be transmitted in order to start its routine"""
 
@@ -29,7 +29,6 @@ class Brain():
         to what it recieves."""
 
         main_sequence_has_started = False
-        positional_integrity_verifier = IntegrityManager()
 
         ready_packet = Packet(PacketType.NOTIFICATION,
                               "STANDBY - Robot ready to roll! Cycle start when GAME_MAP is recieved.")
@@ -43,8 +42,6 @@ class Brain():
                     cycle_start_notification = Packet(PacketType.COMMAND, "START_CHRONOGRAPH")
                     self.base_station.put_command(cycle_start_notification)
                     main_sequence_has_started = True
-                elif telemetry_recieved.packet_type == PacketType.POSITION and positional_integrity_verifier.does_telemetry_make_sense(telemetry_recieved.packet_data):
-                    telemetry_recieved = None
 
             if main_sequence_has_started:
 
