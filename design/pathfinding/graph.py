@@ -1,6 +1,7 @@
 """ This module includes a graph represented by an adjacency matrix. Used for the robot's pathfinding. """
 import math
-from design.pathfinding.constants import GRAPH_GRID_WIDTH, OBSTACLE_RADIUS, ROBOT_SAFETY_MARGIN
+from design.pathfinding.constants import GRAPH_GRID_WIDTH, OBSTACLE_RADIUS, ROBOT_SAFETY_MARGIN, \
+    MAXIMUM_GRID_NODE_HEIGHT
 
 
 class Graph():
@@ -51,7 +52,7 @@ class Graph():
         return min_index, max_index
 
     def get_euclidian_distance(self, point1, point2):
-        return math.ceil(math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])))
+        return math.hypot(point2[0] - point1[0], point2[1] - point1[1])
 
     def connect_obstacles_and_walls(self, obstacle_list):
         for obstacle in obstacle_list:
@@ -82,7 +83,7 @@ class Graph():
         source_i, source_j = source_index
         destination_i, destination_j = destination_index
 
-        return self.matrix[destination_i][destination_j] - self.matrix[source_i][source_j]
+        return MAXIMUM_GRID_NODE_HEIGHT + (self.matrix[destination_i][destination_j] - self.matrix[source_i][source_j])
 
     def get_neighbours_indexes_from_element_index(self, index):
 
