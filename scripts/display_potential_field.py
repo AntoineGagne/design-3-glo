@@ -7,10 +7,10 @@ from design.pathfinding.constants import MAXIMUM_GRID_NODE_HEIGHT
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 
 if __name__ == "__main__":
-    starting_point = (40, 25)
+    starting_point = (40, 15)
     destination = (23, 207)
     graph = Graph()
-    obstacle_list = [[(40, 70), "N"], [(90, 120), "S"], [(30, 180), "N"]]
+    obstacle_list = [[(44, 143), "S"], [(99, 143), "O"]]
     print("Initializing potential field")
     graph.initialize_graph_matrix((0, 0), (111, 230), obstacle_list)
 
@@ -33,23 +33,13 @@ if __name__ == "__main__":
     print("Calculating path")
     try:
         pathfinder.generate_path_to_checkpoint(destination)
-        pathfinder.filtered_nodes_queue_to_checkpoint.appendleft(starting_point)
-        pathfinder.filtered_nodes_queue_to_checkpoint.append(destination)
 
         for i in range(len(pathfinder.nodes_queue_to_checkpoint)):
             x, y = pathfinder.graph.get_grid_element_index_from_position(pathfinder.nodes_queue_to_checkpoint[i])
-            cv2.rectangle(img, (y, x), (y + 1, x + 1), (255, 255, 255), 1)
+            cv2.rectangle(img, (y, x), (y + 1, x + 1), (114, 37, 116), 1)
             if i < len(pathfinder.nodes_queue_to_checkpoint) - 1:
                 x2, y2 = pathfinder.graph.get_grid_element_index_from_position(
                     pathfinder.nodes_queue_to_checkpoint[i + 1])
-                cv2.line(img, (y, x), (y2, x2), (255, 255, 255), 1)
-
-        for i in range(len(pathfinder.filtered_nodes_queue_to_checkpoint)):
-            x, y = pathfinder.graph.get_grid_element_index_from_position(pathfinder.filtered_nodes_queue_to_checkpoint[i])
-            cv2.rectangle(img, (y, x), (y + 1, x + 1), (114, 37, 116), 1)
-            if i < len(pathfinder.filtered_nodes_queue_to_checkpoint) - 1:
-                x2, y2 = pathfinder.graph.get_grid_element_index_from_position(
-                    pathfinder.filtered_nodes_queue_to_checkpoint[i + 1])
                 cv2.line(img, (y, x), (y2, x2), (114, 37, 116), 1)
     except CheckpointNotAccessibleError:
         print("Checkpoint is not accessible!")
