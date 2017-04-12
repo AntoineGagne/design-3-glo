@@ -406,6 +406,7 @@ class AcquireInformationFromAntennaCommand(Command):
         elif antenna_data is not None and antenna_data.painting_number is None and antenna_data.zoom is None and antenna_data.orientation is None:
             self.logger.log(
                 "Acquire Information From Antenna: Acquisition has failed. Going back to starting search point and retrying the entire sequence.")
+            self.hardware.antenna.reinitialize()
             return (Step.PREPARE_TRAVEL_TO_ANTENNA_ZONE,
                     Packet(PacketType.NOTIFICATION, "Acquisition has failed. Going back to starting search point."))
         else:
