@@ -148,7 +148,7 @@ class Pathfinder():
             current_vertex = min(unsolved_vertices, key=unsolved_vertices.get)
             unsolved_vertices.pop(current_vertex)
             visited_vertices.append(current_vertex)
-            for neighbour in self.graph.get_eight_neighbours_indexes_from_element_index(current_vertex):
+            for neighbour in self.graph.get_four_neighbours_indexes_from_element_index(current_vertex):
                 if neighbour in unsolved_vertices:
                     new_weight = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour)
                     if new_weight < vertices_weights[neighbour]:
