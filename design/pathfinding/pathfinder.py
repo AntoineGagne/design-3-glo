@@ -127,8 +127,6 @@ class Pathfinder():
         """ Generates shortest path to checkpoint and updates the node queue
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
-        if checkpoint_position in self.graph.list_of_inaccessible_nodes:
-            raise CheckpointNotAccessibleError("Le point d'arrivé est non accessible par le robot")
 
         print("Generate path to checkpoint a to b - checkpoint pos = {0}".format(checkpoint_position))
 

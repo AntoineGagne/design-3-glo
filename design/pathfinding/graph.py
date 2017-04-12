@@ -118,8 +118,8 @@ class Graph():
 
     def get_grid_element_index_from_position(self, position):
 
-        i = position[0] // GRAPH_GRID_WIDTH
-        j = position[1] // GRAPH_GRID_WIDTH
+        i = int(position[0] // GRAPH_GRID_WIDTH)
+        j = int(position[1] // GRAPH_GRID_WIDTH)
 
         return i, j
 

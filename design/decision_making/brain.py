@@ -53,7 +53,8 @@ class Brain():
                     if not self.first_cycle_already_started:
                         self.first_cycle_already_started = True
                     else:
-                        self.reinitialize_for_next_cycle()
+                        pass
+                        # self.reinitialize_for_next_cycle()
 
             if main_sequence_has_started:
 
