@@ -66,7 +66,16 @@ class Pathfinder():
         obstacles = game_map_data.get("obstacles")
         if obstacles:
             self.graph = Graph()
-            self.graph.initialize_graph_matrix(table_corners_positions[0], table_corners_positions[2], obstacles)
+            southeastern_x = int(table_corners_positions[0][0])
+            southeastern_y = int(table_corners_positions[0][1])
+            northwestern_x = int(table_corners_positions[2][0])
+            northwestern_y = int(table_corners_positions[2][1])
+
+            int_obstacles = []
+            for obstacle in obstacles:
+                x, y = obstacle[0]
+                int_obstacles.append([(int(x), int(y)), obstacle[1]])
+            self.graph.initialize_graph_matrix((southeastern_x, southeastern_y), (northwestern_x, northwestern_y), int_obstacles)
         else:
             self.graph.initialize_graph_matrix((0, 0), (112, 231), [])
 
