@@ -36,6 +36,11 @@ class Pathfinder():
 
         self.nodes_queue_to_checkpoint = deque()  # in cm
 
+    def reinitialize(self):
+
+        self.robot_status.reinitialize()
+        self.nodes_queue_to_checkpoint = deque()
+
     def set_game_map(self, game_map_data):
         """ Sets game map elements like corners, objectives and
         obstacles """
