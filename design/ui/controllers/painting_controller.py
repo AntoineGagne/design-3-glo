@@ -9,7 +9,3 @@ class PaintingController:
     def update_world_image(self, image: numpy.ndarray):
         self.model.painting_image = image
         self.model.announce_update()
-
-    def update_path(self, path):
-        self.model.painting_vertices = path
-        self.model.announce_update()

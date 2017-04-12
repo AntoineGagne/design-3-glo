@@ -29,4 +29,5 @@ class MovementStrategy():
         if self.rotation_strategy == RotationStrategyType.BASIC_WHEEL_SERVOING:
             return RotationCheckCommand(current_step, interfacing_controller, pathfinder, logger, servo_wheels_manager)
         elif self.rotation_strategy == RotationStrategyType.TRUST_MATERIAL_SERVOING:
-            return TrustingRotationCheckCommand(current_step, interfacing_controller, pathfinder, logger, servo_wheels_manager)
+            return TrustingRotationCheckCommand(current_step, interfacing_controller, pathfinder, logger,
+                                                servo_wheels_manager)

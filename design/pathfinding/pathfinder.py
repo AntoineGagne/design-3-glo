@@ -5,6 +5,8 @@ from enum import Enum
 
 import math
 
+from statsmodels.compat import scipy
+
 from design.pathfinding.game_map import GameMap
 from design.pathfinding.figures_information import FiguresInformation
 from design.pathfinding.robot_status import RobotStatus
@@ -48,11 +50,6 @@ class Pathfinder():
         else:
             self.robot_status = RobotStatus((20, 20), 90)
 
-        obstacles = game_map_data.get("obstacles")
-        if obstacles:
-            pass
-
-
         # table_corners_positions = None
         table_corners_positions = game_map_data.get("table_corners")
         if table_corners_positions:
@@ -61,6 +58,13 @@ class Pathfinder():
                                            table_corners_positions[2], table_corners_positions[3])
         else:
             self.figures.compute_positions((0, 0), (0, 231), (112, 231), (112, 0))
+
+        obstacles = game_map_data.get("obstacles")
+        if obstacles:
+            self.graph = Graph()
+            self.graph.initialize_graph_matrix(table_corners_positions[0], table_corners_positions[2], obstacles)
+        else:
+            self.graph.initialize_graph_matrix((0, 0), (112, 231), [])
 
         # drawing_zone_corners = None
         drawing_zone_corners = game_map_data.get("drawing_zone")
@@ -127,6 +131,8 @@ class Pathfinder():
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
 
+        self.nodes_queue_to_checkpoint.clear()
+
         checkpoint_i, checkpoint_j = self.graph.get_grid_element_index_from_position(checkpoint_position)
         if self.graph.matrix[checkpoint_i][checkpoint_j] == math.inf:
             raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
@@ -161,5 +167,14 @@ class Pathfinder():
             self.nodes_queue_to_checkpoint.appendleft(self.graph.get_position_from_grid_element_index(*current_vertex))
             current_vertex = parent_of_vertices[current_vertex]
 
-        self.robot_status.generate_new_translation_vector_towards_new_target(
-            self.nodes_queue_to_checkpoint.popleft())
+        # Remove superflous nodes
+        self.nodes_queue_to_checkpoint = self.graph.get_points_of_discontinuity(self.nodes_queue_to_checkpoint)
+
+        self.robot_status.generate_new_translation_vector_towards_new_target(self.nodes_queue_to_checkpoint.popleft())
+
+    def is_checkpoint_accessible(self, checkpoint_position):
+        checkpoint_i, checkpoint_j = self.graph.get_grid_element_index_from_position(checkpoint_position)
+        if self.graph.matrix[checkpoint_i][checkpoint_j] == math.inf:
+            return False
+        else:
+            return True

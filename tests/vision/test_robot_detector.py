@@ -36,3 +36,15 @@ def test_that_given_images_with_robot_when_find_robot_position_then_robot_positi
             expected_robot_position=robot_position
         )
     image_assertion_helper.assert_below_threshold()
+
+
+def test_that_given_circles_coordinates_when_keep_valid_coordinates_then_valid_coordinates_are_kept():
+    robot_detector = RobotDetector()
+    robot_detector.circles_coordinates = [(296, 798),
+                                          (245, 741),
+                                          (290, 790),
+                                          (291, 723),
+                                          (578, 612),
+                                          (478, 212)]
+    robot_detector.keep_valid_coordinates()
+    assert [(296, 798), (245, 741), (291, 723)] == robot_detector.circles_coordinates

@@ -33,13 +33,16 @@ class TranslationCheckCommand(Command):
             if not self.servo_wheels_manager.is_current_translation_movement_done(self.hardware.wheels):
                 return (self.current_step, None)
             else:
-                self.servo_wheels_manager.translating_start_heading_correction(orientation, self.pathfinder.robot_status, self.hardware.wheels)
+                self.servo_wheels_manager.translating_start_heading_correction(orientation,
+                                                                               self.pathfinder.robot_status,
+                                                                               self.hardware.wheels)
                 return (self.current_step, None)
         elif self.servo_wheels_manager.translation_status == TranslationStatus.CORRECTING_HEADING:
             if not self.servo_wheels_manager.is_current_rotation_movement_done(self.hardware.wheels):
                 return (self.current_step, None)
             else:
-                self.servo_wheels_manager.translating_start_position_correction(position, self.pathfinder.robot_status, self.hardware.wheels)
+                self.servo_wheels_manager.translating_start_position_correction(position, self.pathfinder.robot_status,
+                                                                                self.hardware.wheels)
                 return (self.current_step, None)
         elif self.servo_wheels_manager.translation_status == TranslationStatus.CORRECTING_POSITION:
             if not self.servo_wheels_manager.is_current_translation_movement_done(self.hardware.wheels):
@@ -53,7 +56,9 @@ class TranslationCheckCommand(Command):
                     self.hardware.wheels.move(new_vector)
                     return (self.current_step, None)
                 else:
-                    self.servo_wheels_manager.translating_start_position_correction(position, self.pathfinder.robot_status, self.hardware.wheels)
+                    self.servo_wheels_manager.translating_start_position_correction(position,
+                                                                                    self.pathfinder.robot_status,
+                                                                                    self.hardware.wheels)
                     return (self.current_step, None)
 
 
@@ -78,7 +83,8 @@ class TranslationCheckWithoutTelemetryCommand(Command):
                 return (self.current_step, None)
             else:
                 self.pathfinder.robot_status.set_position(self.pathfinder.robot_status.target_position)
-                path_status, new_vector = self.pathfinder.get_vector_to_next_node(self.pathfinder.robot_status.get_position())
+                path_status, new_vector = self.pathfinder.get_vector_to_next_node(
+                    self.pathfinder.robot_status.get_position())
                 if path_status == PathStatus.CHECKPOINT_REACHED:
                     return (next_step(self.current_step), None)
                 elif path_status == PathStatus.INTERMEDIATE_NODE_REACHED:

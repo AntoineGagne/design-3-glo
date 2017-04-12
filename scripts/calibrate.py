@@ -165,9 +165,10 @@ def write_json_file(table_number, intrinsic_matrix, rotation_vector, translation
 
 
 if __name__ == '__main__':
-    _, matrix_camera, coefficients_distorsion, rotation_vectors, translation_vectors = calibrate(
-        './camera_dt2/photo*.png')
-    write_json_file(2,
+    rms, matrix_camera, _, rotation_vectors, translation_vectors = calibrate(
+        './camera_data4/photo*.png')
+    print("The root mean square is {}\nIt should be between 0.1 and 1.0 pixels in a good calibration".format(rms))
+    write_json_file(4,
                     matrix_camera.tolist(),
                     rotation_vectors[0].tolist(),
                     translation_vectors[0].tolist())

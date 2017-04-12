@@ -42,9 +42,9 @@ def eliminate_close_points_in_list(list_of_points, minimum_distance):
     keep = np.ones(array.shape, dtype=bool)
     for i, point_a in enumerate(array):
         x1, y1 = point_a
-        for j, point_b in enumerate(array):
+        for j in range(i, len(array)):
             if i != j:
-                x2, y2 = point_b
+                x2, y2 = array[j]
                 if calculate_norm(x1, y1, x2, y2) < minimum_distance:
                     keep[j] = False
     array = array[keep]
@@ -83,56 +83,6 @@ def check_if_both_information_are_similar(information1, information2):
             return are_drawing_zone_information_similar(information1, information2)
         if type(information1[1]) == float:
             return are_robot_information_similar(information1, information2)
-
-
-def are_robot_information_similar(information1, information2):
-    (x1, y1), orientation1 = information1
-    (x2, y2), orientation2 = information2
-    if abs(orientation1 - orientation2) > MAXIMUM_ANGLE_BETWEEN_SIMILAR_ANGLES:
-        return False
-    if calculate_norm(x1, y1, x2, y2) > MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES:
-        return False
-    return True
-
-
-def are_drawing_zone_information_similar(information1, information2):
-    similar_information = {}
-    eliminated_information = []
-    if len(information1) != len(information2):
-        return False
-    else:
-        for i, point_a in enumerate(information1):
-            x1, y1 = point_a
-            for j, point_b in enumerate(information2):
-                if j not in eliminated_information:
-                    x2, y2 = point_b
-                    if calculate_norm(x1, y1, x2, y2) < MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES:
-                        similar_information[i] = j
-                        eliminated_information.append(j)
-                        break
-        return len(similar_information) == len(information1)
-
-
-def are_obstacles_information_similar(information1, information2):
-    similar_informations = {}
-    eliminated_information = []
-    if not len(information1) == len(information2):
-        return False
-    else:
-        for i, point_a in enumerate(information1):
-            x1, y1 = point_a[0]
-            orientation1 = point_a[1]
-            for j, point_b in enumerate(information2):
-                if j not in eliminated_information:
-                    x2, y2 = point_b[0]
-                    orientation2 = point_b[1]
-                    if orientation1 != orientation2:
-                        continue
-                    if calculate_norm(x1, y1, x2, y2) < MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES:
-                        similar_informations[i] = j
-                        eliminated_information.append(j)
-                        break
-        return len(similar_informations) == len(information1)
 
 
 def undistort_image(image, camera_matrix, distortion_coefficients):
@@ -189,3 +139,67 @@ def calculate_minimal_box_area(contour):
 
 def convert_to_degrees(angle_in_radians):
     return (math.degrees(angle_in_radians) + 360) % 360
+
+
+def are_robot_information_similar(information1, information2):
+    x1 = information1[0][0]
+    y1 = information1[0][1]
+    orientation1 = information1[1]
+    x2 = information2[0][0]
+    y2 = information2[0][1]
+    orientation2 = information2[1]
+    if abs(orientation1 - orientation2) >= MAXIMUM_ANGLE_BETWEEN_SIMILAR_ANGLES:
+        return False
+    if calculate_norm(x1, y1, x2, y2) >= MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES:
+        return False
+    return True
+
+
+def are_drawing_zone_information_similar(information1, information2):
+    answer = False
+    similar_information = {}
+    eliminated_information = []
+    if len(information1) != len(information2):
+        return False
+    else:
+        for i in range(len(information1)):
+            x1 = information1[i][0]
+            y1 = information1[i][1]
+            for j in range(i, len(information2)):
+                if j not in eliminated_information:
+                    x2 = information2[j][0]
+                    y2 = information2[j][1]
+                    if calculate_norm(x1, y1, x2, y2) <= MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES:
+                        similar_information[i] = j
+                        eliminated_information.append(j)
+                        break
+        if len(similar_information) == len(information1):
+            answer = True
+    return answer
+
+
+def are_obstacles_information_similar(information1, information2):
+    answer = False
+    similar_informations = {}
+    eliminated_information = []
+    if len(information1) != len(information2):
+        return False
+    else:
+        for i in range(len(information1)):
+            x1 = information1[i][0][0]
+            y1 = information1[i][0][1]
+            orientation1 = information1[i][1]
+            for j in range(i, len(information2)):
+                if j not in eliminated_information:
+                    x2 = information2[j][0][0]
+                    y2 = information2[j][0][1]
+                    orientation2 = information2[j][1]
+                    if orientation1 != orientation2:
+                        continue
+                    if calculate_norm(x1, y1, x2, y2) <= MAXIMUM_DISTANCE_BETWEEN_SIMILAR_COORDINATES:
+                        similar_informations[i] = j
+                        eliminated_information.append(j)
+                        break
+        if len(similar_informations) == len(information1):
+            answer = True
+    return answer

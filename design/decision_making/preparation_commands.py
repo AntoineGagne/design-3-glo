@@ -8,7 +8,7 @@ from design.decision_making.constants import (Step,
                                               next_step)
 from design.pathfinding.exceptions import CheckpointNotAccessibleError, OutOfRetriesForCaptureError
 from design.pathfinding.constants import (PointOfInterest,
-                                          STANDARD_HEADING)
+                                          STANDARD_HEADING, PEN_TO_ANTENNA_OFFSET)
 from design.telemetry.packets import (Packet, PacketType)
 from design.vision.exceptions import PaintingFrameNotFound, VerticesNotFound
 
@@ -72,11 +72,15 @@ class PrepareTravelToAntennaAreaCommand(Command):
     def execute(self, data):
         """ Executes preparation of travel to antenna command """
 
+        if not self.is_positional_telemetry_recieved(data):
+            return (self.current_step, None)
+
         self.logger.log("Prepare Travel to Antenna Area: Execution.")
 
         self.pathfinder.generate_path_to_checkpoint_a_to_b(self.pathfinder.get_point_of_interest(
             PointOfInterest.ANTENNA_START_SEARCH_POINT))
 
+        self.pathfinder.robot_status.set_position(data[0])
         new_vector = (self.pathfinder.robot_status.
                       generate_new_translation_vector_towards_current_target(
                           self.pathfinder.robot_status.get_position()))
@@ -101,11 +105,15 @@ class TravelToPaintingsAreaCommand(Command):
     def execute(self, telemetry_data):
         """ Sets trajectory of the robot to paintings area """
 
+        if not self.is_positional_telemetry_recieved(telemetry_data):
+            return (self.current_step, None)
+
         self.logger.log("Prepare Travel to Painting: Execution.")
 
         self.hardware.pen.raise_pen()
 
-        self.logger.log("Prepare Travel to Painting: painting_nb = {0}".format(self.antenna_information.painting_number))
+        self.logger.log(
+            "Prepare Travel to Painting: painting_nb = {0}".format(self.antenna_information.painting_number))
         figure_position = self.pathfinder.figures.get_position_to_take_figure_from(
             self.antenna_information.painting_number)
 
@@ -114,9 +122,10 @@ class TravelToPaintingsAreaCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        self.logger.log("Prepare Travel to Painting: Sending {0} vector to robot at position {1} towards target {2}".format(
-            self.hardware.wheels.last_vector_given, self.pathfinder.robot_status.get_position(),
-            self.pathfinder.robot_status.target_position))
+        self.logger.log(
+            "Prepare Travel to Painting: Sending {0} vector to robot at position {1} towards target {2}".format(
+                self.hardware.wheels.last_vector_given, self.pathfinder.robot_status.get_position(),
+                self.pathfinder.robot_status.target_position))
 
         return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
@@ -178,13 +187,11 @@ class PrepareExitOfDrawingAreaCommand(Command):
         possible_exit_locations = self.pathfinder.get_point_of_interest(PointOfInterest.EXIT_DRAWING_ZONE_AFTER_CYCLE)
 
         for exit_location in possible_exit_locations:
-            try:
+            if self.pathfinder.is_checkpoint_accessible(exit_location):
                 self.pathfinder.generate_path_to_checkpoint(exit_location)
                 break
-            except CheckpointNotAccessibleError:
-                pass
 
-        self.logger.log("Prepare Exit of Drawing Area: Sortie location at position = {0}".format(
+        self.logger.log("Prepare Exit of Drawing Area: Exit location at position = {0}".format(
             self.pathfinder.robot_status.target_position))
 
         self.hardware.wheels.move(
@@ -231,7 +238,8 @@ class SearchForAntennaPositionCommand(Command):
 
     st_last_execution = datetime.datetime.now()
 
-    def __init__(self, movement_strategy, step, interfacing_controller, pathfinder, logger, antenna_information, servo_wheels_manager):
+    def __init__(self, movement_strategy, step, interfacing_controller, pathfinder, logger, antenna_information,
+                 servo_wheels_manager):
         super(SearchForAntennaPositionCommand, self).__init__(
             step, interfacing_controller, pathfinder, logger)
         self.logger = logger
@@ -242,6 +250,9 @@ class SearchForAntennaPositionCommand(Command):
     def execute(self, robot_position_from_telemetry):
         """ Executes search for antenna command """
 
+        if not self.is_positional_telemetry_recieved(robot_position_from_telemetry):
+            return (self.current_step, None)
+
         self.logger.log("Search For Antenna Position: Execution.")
 
         # Executes normal routine check
@@ -249,20 +260,22 @@ class SearchForAntennaPositionCommand(Command):
             self.current_step, self.hardware, self.pathfinder, self.logger, self.servo_wheels_manager)
         step, exit_telemetry = normal_routine_check.execute(
             robot_position_from_telemetry)
-
-        if (datetime.datetime.now() - SearchForAntennaPositionCommand.st_last_execution).total_seconds() <= NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS:
-            return(step, None)
+        if (datetime.datetime.now() - SearchForAntennaPositionCommand.st_last_execution).total_seconds() \
+                <= NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS:
+            return (step, None)
 
         SearchForAntennaPositionCommand.st_last_execution = datetime.datetime.now()
 
         current_signal_amplitude = self.hardware.antenna.get_signal_strength()
         if current_signal_amplitude is not None:
-            self.logger.log("Search For Antenna Position: Obtaining value = {0}".format(current_signal_amplitude))
-            self.antenna_information.strength_curve[self.pathfinder.robot_status.get_position()] = current_signal_amplitude
+            self.logger.log("Search For Antenna Position: Obtaining value = {0} at position {1}".format(current_signal_amplitude,
+                                                                                                        self.pathfinder.robot_status.get_position()))
+            self.antenna_information.strength_curve[robot_position_from_telemetry[0]] = current_signal_amplitude
 
         return_telemetry = None
         if step != self.current_step:
-            return_telemetry = Packet(PacketType.NOTIFICATION, "Antenna search completed. Building curve and finding max...")
+            return_telemetry = Packet(PacketType.NOTIFICATION,
+                                      "Antenna search completed. Building curve and finding max...")
 
         return (step, return_telemetry)
 
@@ -284,21 +297,24 @@ class PrepareMovingToAntennaPositionCommand(Command):
             position_x, position_y = max(self.antenna_information.strength_curve,
                                          key=self.antenna_information.strength_curve.get)
 
-            self.logger.log("Prepare Moving to Antenna Position: Calculated position of max signal amplitude = {0}".format(
-                (position_x, position_y)))
+            self.logger.log(
+                "Prepare Moving to Antenna Position: Calculated position of max signal amplitude = {0}".format(
+                    (position_x, position_y)))
 
             self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
             self.hardware.wheels.move(
                 self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                     self.pathfinder.robot_status.get_position()))
 
-            self.logger.log("Prepare Moving to Antenna Position: Sending vector = {0} to robot at position = {1} to target = {2}".format(
-                self.hardware.wheels.last_vector_given, self.pathfinder.robot_status.get_position(),
-                self.pathfinder.robot_status.target_position))
+            self.logger.log(
+                "Prepare Moving to Antenna Position: Sending vector = {0} to robot at position = {1} to target = {2}".format(
+                    self.hardware.wheels.last_vector_given, self.pathfinder.robot_status.get_position(),
+                    self.pathfinder.robot_status.target_position))
 
             return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
         except ValueError:
-            return (Step.COMPUTE_PAINTINGS_AREA, Packet(PacketType.NOTIFICATION, "Antenna position has not been found! Aborting search."))
+            return (Step.COMPUTE_PAINTINGS_AREA,
+                    Packet(PacketType.NOTIFICATION, "Antenna position has not been found! Aborting search."))
 
 
 class PrepareMarkingAntennaCommand(Command):
@@ -318,6 +334,7 @@ class PrepareMarkingAntennaCommand(Command):
 
         position_x, position_y = self.pathfinder.robot_status.get_position()
         position_x = position_x - 4
+        position_y = position_y + PEN_TO_ANTENNA_OFFSET
         self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
 
         self.hardware.wheels.move(
@@ -359,9 +376,10 @@ class PrepareTravelToDrawingAreaCommand(Command):
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
                 self.pathfinder.robot_status.get_position()))
 
-        self.logger.log("Prepare Travel to Drawing Area: Sending vector = {0} to robot at position = {1} to target = {2}".format(
-            self.hardware.wheels.last_vector_given, self.pathfinder.robot_status.get_position(),
-            self.pathfinder.robot_status.target_position))
+        self.logger.log(
+            "Prepare Travel to Drawing Area: Sending vector = {0} to robot at position = {1} to target = {2}".format(
+                self.hardware.wheels.last_vector_given, self.pathfinder.robot_status.get_position(),
+                self.pathfinder.robot_status.target_position))
 
         return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
 
@@ -386,8 +404,10 @@ class AcquireInformationFromAntennaCommand(Command):
             self.logger.log("Acquire Information From Antenna: Not acquired yet.")
             return (self.current_step, None)
         elif antenna_data is not None and antenna_data.painting_number is None and antenna_data.zoom is None and antenna_data.orientation is None:
-            self.logger.log("Acquire Information From Antenna: Acquisition has failed. Going back to starting search point and retrying the entire sequence.")
-            return (Step.PREPARE_TRAVEL_TO_ANTENNA_ZONE, Packet(PacketType.NOTIFICATION, "Acquisition has failed. Going back to starting search point."))
+            self.logger.log(
+                "Acquire Information From Antenna: Acquisition has failed. Going back to starting search point and retrying the entire sequence.")
+            return (Step.PREPARE_TRAVEL_TO_ANTENNA_ZONE,
+                    Packet(PacketType.NOTIFICATION, "Acquisition has failed. Going back to starting search point."))
         else:
             self.logger.log("Acquire Information From Antenna: Acquired! PNB = {0} - ZOOM = {1} - ORI = {2}".format(
                 int(antenna_data.painting_number), int(antenna_data.zoom), int(antenna_data.orientation)))
@@ -417,8 +437,9 @@ class FaceRelevantFigureForCaptureCommand(Command):
         rotation_angle = (self.pathfinder.robot_status.
                           set_target_heading_and_get_angular_difference(orientation))
 
-        self.logger.log("Face Relevant Figure for Capture: Requested heading = {0} deg - Rotation angle = {0} deg".format(
-            self.pathfinder.robot_status.target_position, rotation_angle))
+        self.logger.log(
+            "Face Relevant Figure for Capture: Requested heading = {0} deg - Rotation angle = {0} deg".format(
+                self.pathfinder.robot_status.target_position, rotation_angle))
 
         self.hardware.wheels.rotate(rotation_angle)
 
@@ -436,8 +457,9 @@ class CaptureFigureCommand(Command):
     def execute(self, data):
         """ Executes capture command """
 
-        self.logger.log("Capture Figure: Execution with zoom = {0} and orientation = {1}".format(self.antenna_information.zoom,
-                                                                                                 self.antenna_information.orientation))
+        self.logger.log(
+            "Capture Figure: Execution with zoom = {0} and orientation = {1}".format(self.antenna_information.zoom,
+                                                                                     self.antenna_information.orientation))
 
         try:
             self.vision.capture()
@@ -456,8 +478,7 @@ class CaptureFigureCommand(Command):
 
             self.vision.pixel_coordinates.append(self.vision.pixel_coordinates[0])
 
-            return (next_step(self.current_step), [Packet(PacketType.FIGURE_VERTICES, self.vision.pixel_coordinates),
-                                                   Packet(PacketType.FIGURE_IMAGE, self.vision.last_capture)])
+            return (next_step(self.current_step), Packet(PacketType.FIGURE_VERTICES, self.vision.pixel_coordinates))
         except PaintingFrameNotFound:
             self.logger.log("Capture Figure: Failure - Painting Frame Not Found")
             return (Step.REPOSITION_FOR_CAPTURE_RETRY, None)
