@@ -1,8 +1,5 @@
 """ This module includes a graph represented by an adjacency matrix. Used for the robot's pathfinding. """
 import math
-from collections import deque
-
-from copy import deepcopy
 
 from design.pathfinding.constants import GRAPH_GRID_WIDTH, OBSTACLE_RADIUS, ROBOT_SAFETY_MARGIN, \
     MAXIMUM_GRID_NODE_HEIGHT, ROBOT_HALF_WIDTH
@@ -89,7 +86,7 @@ class Graph():
         if obstacle[1] == "N":
             return max(obstacle[0][0] - self.obstacle_safe_radius - 1, 1)
         else:
-            return min(obstacle[0][0] + self.obstacle_safe_radius, self.matrix_width-1)
+            return min(obstacle[0][0] + self.obstacle_safe_radius, self.matrix_width - 1)
 
     def move_to_next_row(self, current_row_index, obstacle_orientation):
         if obstacle_orientation == "N":
@@ -127,7 +124,7 @@ class Graph():
         return i, j
 
     def get_position_from_grid_element_index(self, i, j):
-        return i * GRAPH_GRID_WIDTH,  j * GRAPH_GRID_WIDTH
+        return i * GRAPH_GRID_WIDTH, j * GRAPH_GRID_WIDTH
 
     def get_edge_distance(self, source_index, destination_index):
 
@@ -140,7 +137,6 @@ class Graph():
         return self.matrix[destination_i][destination_j] + weight_difference + distance
 
     def get_eight_neighbours_indexes_from_element_index(self, element_index):
-        # FIXME: this is a bad name because there can be less than 8 neighbours returned, but it shows which neighbours are considered
         element_i, element_j = element_index
         neighbours = []
 
@@ -152,9 +148,8 @@ class Graph():
         return neighbours
 
     def get_four_neighbours_indexes_from_element_index(self, element_index):
-        # FIXME: this is a bad name because there can be less than 4 neighbours returned, but it shows which neighbours are considered
         i, j = element_index
-        neighbours = [(i, j-1), (i, j+1), (i-1, j), (i+1, j)]
+        neighbours = [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)]
 
         for neighbour in neighbours:
             if not self.is_index_inside_matrix(neighbour):
@@ -167,35 +162,3 @@ class Graph():
 
     def get_weight_of_element(self, element_index):
         return self.matrix[element_index[0]][element_index[1]]
-
-    def get_points_of_discontinuity(self, nodes_queue):
-
-        LENGTH_TO_CONSIDER = 10
-        SLOPE_THRESHOLD = 0.01
-
-        points_of_discontinuity = deque()
-        current_point_index = 0
-        slope = self.compute_slope(nodes_queue, current_point_index, LENGTH_TO_CONSIDER)
-
-        while current_point_index < len(nodes_queue):
-            current_point_index += 1
-            try:
-                new_slope = self.compute_slope(nodes_queue, current_point_index, LENGTH_TO_CONSIDER)
-            except IndexError:
-                break
-            if math.fabs(new_slope - slope) >= SLOPE_THRESHOLD:
-                try:
-                    points_of_discontinuity.append(nodes_queue[current_point_index + LENGTH_TO_CONSIDER])
-                except IndexError:
-                    points_of_discontinuity.append(nodes_queue[-1])
-                    break
-                current_point_index = current_point_index + LENGTH_TO_CONSIDER + 1
-
-        return points_of_discontinuity
-
-    def compute_slope(self, nodes_queue, start_index, length_to_consider):
-        try:
-            slope = (nodes_queue[start_index + length_to_consider - 1][0] - nodes_queue[start_index][0]) / (nodes_queue[start_index + length_to_consider - 1][1] - nodes_queue[start_index][1])
-        except ZeroDivisionError:
-            slope = math.inf
-        return slope

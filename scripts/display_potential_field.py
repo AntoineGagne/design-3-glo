@@ -30,19 +30,26 @@ if __name__ == "__main__":
     robotStatus = RobotStatus(starting_point, 90)
     pathfinder.graph = graph
     pathfinder.robot_status = robotStatus
-    pathfinder.nodes_queue_to_checkpoint.clear()
     print("Calculating path")
     try:
         pathfinder.generate_path_to_checkpoint(destination)
-        pathfinder.nodes_queue_to_checkpoint.appendleft(starting_point)
-        pathfinder.nodes_queue_to_checkpoint.append(destination)
+        pathfinder.filtered_nodes_queue_to_checkpoint.appendleft(starting_point)
+        pathfinder.filtered_nodes_queue_to_checkpoint.append(destination)
 
         for i in range(len(pathfinder.nodes_queue_to_checkpoint)):
             x, y = pathfinder.graph.get_grid_element_index_from_position(pathfinder.nodes_queue_to_checkpoint[i])
-            cv2.rectangle(img, (y, x), (y + 1, x + 1), (114, 37, 116), 1)
+            cv2.rectangle(img, (y, x), (y + 1, x + 1), (255, 255, 255), 1)
             if i < len(pathfinder.nodes_queue_to_checkpoint) - 1:
                 x2, y2 = pathfinder.graph.get_grid_element_index_from_position(
                     pathfinder.nodes_queue_to_checkpoint[i + 1])
+                cv2.line(img, (y, x), (y2, x2), (255, 255, 255), 1)
+
+        for i in range(len(pathfinder.filtered_nodes_queue_to_checkpoint)):
+            x, y = pathfinder.graph.get_grid_element_index_from_position(pathfinder.filtered_nodes_queue_to_checkpoint[i])
+            cv2.rectangle(img, (y, x), (y + 1, x + 1), (114, 37, 116), 1)
+            if i < len(pathfinder.filtered_nodes_queue_to_checkpoint) - 1:
+                x2, y2 = pathfinder.graph.get_grid_element_index_from_position(
+                    pathfinder.filtered_nodes_queue_to_checkpoint[i + 1])
                 cv2.line(img, (y, x), (y2, x2), (114, 37, 116), 1)
     except CheckpointNotAccessibleError:
         print("Checkpoint is not accessible!")

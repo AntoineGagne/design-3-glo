@@ -1,17 +1,13 @@
 """ This module allows mocking of pathfinder object """
-from collections import defaultdict
-from collections import deque
+from collections import defaultdict, deque
 from enum import Enum
-
 import math
-
-from statsmodels.compat import scipy
 
 from design.pathfinding.game_map import GameMap
 from design.pathfinding.figures_information import FiguresInformation
 from design.pathfinding.robot_status import RobotStatus
 from design.pathfinding.graph import Graph
-from design.pathfinding.priority_queue import PriorityQueue
+from design.pathfinding.constants import PATH_FILTER_WIDTH, PATH_SLOPE_THRESHOLD
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 
 
@@ -37,6 +33,7 @@ class Pathfinder():
         self.graph = None
 
         self.nodes_queue_to_checkpoint = deque()  # in cm
+        self.filtered_nodes_queue_to_checkpoint = deque()  # TODO: remove this
 
     def reinitialize(self):
 
@@ -94,13 +91,13 @@ class Pathfinder():
             if self.nodes_queue_to_checkpoint:
                 new_vector = self.robot_status.generate_new_translation_vector_towards_new_target(
                     self.nodes_queue_to_checkpoint.popleft())
-                return (PathStatus.INTERMEDIATE_NODE_REACHED, new_vector)
+                return PathStatus.INTERMEDIATE_NODE_REACHED, new_vector
             else:
                 self.robot_status.generate_new_translation_vector_towards_new_target(
                     self.robot_status.get_position())
-                return (PathStatus.CHECKPOINT_REACHED, None)
+                return PathStatus.CHECKPOINT_REACHED, None
         else:
-            return (PathStatus.MOVING_TOWARDS_TARGET, None)
+            return PathStatus.MOVING_TOWARDS_TARGET, None
 
     def get_point_of_interest(self, point_of_interest):
         """ Returns any data about the specified point of interest within
@@ -150,8 +147,11 @@ class Pathfinder():
         destination_vertex = self.graph.get_grid_element_index_from_position(checkpoint_position)
 
         visited_vertices = []
-        unsolved_vertices = dict(((i, j), math.inf) for j in range(self.graph.matrix_height) for i in range(self.graph.matrix_width) if self.graph.get_weight_of_element((i, j)) != math.inf)
-        parent_of_vertices = defaultdict(None)
+        unsolved_vertices = dict(((i, j), math.inf)
+                                 for j in range(self.graph.matrix_height)
+                                 for i in range(self.graph.matrix_width)
+                                 if self.graph.get_weight_of_element((i, j)) != math.inf)
+        parent_of_vertices = defaultdict()
 
         # Initialize weight of source vertex to 0
         unsolved_vertices[current_vertex] = 0
@@ -164,7 +164,8 @@ class Pathfinder():
             visited_vertices.append(current_vertex)
             for neighbour in self.graph.get_four_neighbours_indexes_from_element_index(current_vertex):
                 if neighbour in unsolved_vertices:
-                    new_weight = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex, neighbour)
+                    new_weight = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex,
+                                                                                                 neighbour)
                     if new_weight < vertices_weights[neighbour]:
                         vertices_weights[neighbour] = new_weight
                         unsolved_vertices[neighbour] = new_weight
@@ -178,8 +179,8 @@ class Pathfinder():
             self.nodes_queue_to_checkpoint.appendleft(self.graph.get_position_from_grid_element_index(*current_vertex))
             current_vertex = parent_of_vertices[current_vertex]
 
-        # Remove superflous nodes
-        self.nodes_queue_to_checkpoint = self.graph.get_points_of_discontinuity(self.nodes_queue_to_checkpoint)
+        # Remove superfluous nodes
+        self.filtered_nodes_queue_to_checkpoint = self.filter_path(self.nodes_queue_to_checkpoint)
 
         self.robot_status.generate_new_translation_vector_towards_new_target(self.nodes_queue_to_checkpoint.popleft())
 
@@ -189,3 +190,29 @@ class Pathfinder():
             return False
         else:
             return True
+
+    def filter_path(self, nodes_queue):
+        points_of_discontinuity = deque([nodes_queue[0]])
+        current_point_index = 0
+        slope = self.compute_slope(nodes_queue, current_point_index, PATH_FILTER_WIDTH)
+
+        while current_point_index < (len(nodes_queue) - PATH_FILTER_WIDTH):
+            current_point_index += 1
+            new_slope = self.compute_slope(nodes_queue, current_point_index, PATH_FILTER_WIDTH)
+
+            if math.fabs(new_slope - slope) >= PATH_SLOPE_THRESHOLD:
+                points_of_discontinuity.append(nodes_queue[current_point_index + PATH_FILTER_WIDTH - 2])
+                current_point_index = current_point_index + PATH_FILTER_WIDTH - 2
+                slope = new_slope
+
+        points_of_discontinuity.append(nodes_queue[-1])
+        return points_of_discontinuity
+
+    def compute_slope(self, nodes_queue, start_index, length_to_consider):
+        try:
+            dx = nodes_queue[start_index + length_to_consider - 1][0] - nodes_queue[start_index][0]
+            dy = nodes_queue[start_index + length_to_consider - 1][1] - nodes_queue[start_index][1]
+            slope = dy / dx
+        except ZeroDivisionError:
+            slope = math.inf
+        return slope
