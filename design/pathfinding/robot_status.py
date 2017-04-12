@@ -25,6 +25,9 @@ class RobotStatus():
         print("Robot Status initialized with position = {0} and heading = {1}".format(
             self.get_position(), self.heading))
 
+    def reinitialize(self, position, heading):
+        self.__init__(position, heading)
+
     def get_translation_vector(self):
         """ Returns the current translation movement vector """
         return (self.target_position[0] - self.origin_of_movement_vector[0],

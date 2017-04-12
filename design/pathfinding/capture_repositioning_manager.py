@@ -12,6 +12,9 @@ class CaptureRepositioningManager():
         self.origin = None
         self.orientations = deque([0, 90, 180, 270])
 
+    def reinitialize(self):
+        self.orientations = deque([0, 90, 180, 270])
+
     def get_new_retry_vector(self, heading):
         """ Returns a new retry translation vector """
 
