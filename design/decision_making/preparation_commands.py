@@ -350,7 +350,7 @@ class PrepareMarkingAntennaCommand(Command):
         self.hardware.pen.lower_pen()
 
         position_x, position_y = self.pathfinder.robot_status.get_position()
-        position_x = position_x - 1.5
+        position_x = position_x - 0.8
 
         self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
 

@@ -25,7 +25,7 @@ class PaintingFrameFinder:
         with StdErrOutputDisplayManager():
             try:
                 return self._find_frame_coordinates(image)
-            except cv2.error:
+            except:
                 raise PaintingFrameNotFound('There was an error while searching'
                                             'for the painting\'s frame '
                                             'coordinates.')

@@ -131,7 +131,9 @@ class WheelsController(HardwareObserver):
                 "Wheels Controller - Translating {0}, length = {1}".format(vector, math.hypot(vector[0], vector[1])))
             dx, dy = vector
             self.stm32_driver.translate_robot(int(dx * 10), int(dy * 10))
+            self.translation_lock.acquire()
             self.translation_done = False
+            self.translation_lock.release()
         else:
             self.logger.log(
                 "Wheels Controller - Recieved very small vector. Discarding and notifying translation as finished.")
@@ -144,7 +146,9 @@ class WheelsController(HardwareObserver):
             self.last_degrees_of_rotation_given = amount
             self.logger.log("Wheels Controller - Rotating {0} degrees".format(amount))
             self.stm32_driver.rotate_robot(math.radians(amount) * -1)
+            self.rotation_lock.acquire()
             self.rotation_done = False
+            self.rotation_lock.release()
         else:
             self.notify(Response.ROTATION_FINISHED)
 

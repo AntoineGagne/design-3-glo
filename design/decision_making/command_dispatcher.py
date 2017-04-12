@@ -1,7 +1,7 @@
 """ Allows easy and modular computing for the execution
 of each step """
 
-from design.decision_making.constants import Step, TranslationStrategyType
+from design.decision_making.constants import Step, TranslationStrategyType, RotationStrategyType
 from design.decision_making.preparation_commands import (BuildGameMapCommand,
                                                          FinishCycleCommand,
                                                          TravelToPaintingsAreaCommand,
@@ -38,8 +38,10 @@ class CommandDispatcher():
                                      Step.ROTATE_TO_FACE_PAINTING,
                                      Step.ROTATE_TO_STANDARD_HEADING]
 
-        self.steps_using_material_servo_management = [Step.DRAWING, Step.MARKING_ANTENNA_POSITION, Step.TRAVEL_TO_DRAWING_ZONE,
-                                                      Step.TRAVEL_TO_PAINTINGS_AREA, Step.SEARCH_FOR_ANTENNA, Step.EXITING_DRAWING_ZONE]
+        self.steps_using_translation_material_servo_management = [Step.DRAWING, Step.MARKING_ANTENNA_POSITION, Step.TRAVEL_TO_DRAWING_ZONE,
+                                                                  Step.TRAVEL_TO_PAINTINGS_AREA, Step.SEARCH_FOR_ANTENNA, Step.EXITING_DRAWING_ZONE]
+
+        self.steps_using_rotation_material_servo_management = [Step.ROTATE_TO_FACE_PAINTING, Step.ROTATE_BACK_AFTER_CAPTURE]
 
         self.equivalencies = {Step.STANBY:
                               BuildGameMapCommand(
@@ -115,10 +117,15 @@ class CommandDispatcher():
         :returns: Command to execute
         :rtype: `design.decision_making.preparation_commands.Command` """
 
-        if current_step in self.steps_using_material_servo_management:
+        if current_step in self.steps_using_translation_material_servo_management:
             self.movement_strategy.translation_strategy = TranslationStrategyType.TRUST_MATERIAL_SERVOING
         else:
             self.movement_strategy.translation_strategy = TranslationStrategyType.BASIC_WHEEL_SERVOING
+
+        if current_step in self.steps_using_rotation_material_servo_management:
+            self.movement_strategy.rotation_strategy = RotationStrategyType.TRUST_MATERIAL_SERVOING
+        else:
+            self.movement_strategy.rotation_strategy = RotationStrategyType.BASIC_WHEEL_SERVOING
 
         command = self.equivalencies.get(current_step)
         if command:

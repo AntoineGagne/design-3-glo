@@ -40,7 +40,7 @@ class Graph():
         self.connect_obstacles_and_walls(obstacle_list)
 
     def add_walls_safety_margin(self):
-        num_square = ROBOT_HALF_WIDTH // GRAPH_GRID_WIDTH + 1
+        num_square = ROBOT_SAFETY_MARGIN // GRAPH_GRID_WIDTH + 1
         for i in range(self.matrix_width):
             for j in range(self.matrix_height):
                 if i <= num_square or i > self.matrix_width - num_square:

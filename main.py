@@ -181,7 +181,7 @@ def create_interfacing_controller(logger, translation_lock, rotation_lock) -> In
     signal_data_lock = Lock()
     return InterfacingController(
         WheelsController(microcontroller_driver, translation_lock, rotation_lock, logger),
-        SimulatedAntennaController(),
+        AntennaController(microcontroller_driver, signal_strength_lock, signal_data_lock, logger),
         PenController(prehensor_driver, logger),
         LightsController(microcontroller_driver, logger)
     )

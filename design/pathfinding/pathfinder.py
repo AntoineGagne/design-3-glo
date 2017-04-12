@@ -65,6 +65,9 @@ class Pathfinder():
 
         obstacles = game_map_data.get("obstacles")
         if obstacles:
+
+            self.logger.log("Pathfinder - Assigning obstacles: {0}".format(obstacles))
+
             self.graph = Graph()
             southeastern_x = int(table_corners_positions[0][0])
             southeastern_y = int(table_corners_positions[0][1])
