@@ -2,12 +2,10 @@
 Last modified: February 24th, 2017
 
 Unit tests for pathfinder"""
-import pytest
 
 from design.pathfinding.pathfinder import (Pathfinder,
                                            PathStatus)
 from design.pathfinding.robot_status import RobotStatus
-from design.pathfinding.graph import Graph
 from design.utils.execution_logger import ExecutionLogger
 
 

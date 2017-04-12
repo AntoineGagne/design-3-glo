@@ -1,1 +1,0 @@
-07:05:00|GAME_MAP|builds_the_game_map_from_data_within_the_telemetry_mock
