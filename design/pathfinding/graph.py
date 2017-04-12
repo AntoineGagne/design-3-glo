@@ -174,7 +174,7 @@ class Graph():
     def get_points_of_discontinuity(self, nodes_queue):
 
         LENGTH_TO_CONSIDER = 10
-        SLOPE_THRESHOLD = 1.2
+        SLOPE_THRESHOLD = 0.5
 
         points_of_discontinuity = deque()
         current_point_index = 0
@@ -197,5 +197,8 @@ class Graph():
         return points_of_discontinuity
 
     def compute_slope(self, nodes_queue, start_index, length_to_consider):
-
-        return (nodes_queue[start_index + length_to_consider - 1][0] - nodes_queue[start_index][0]) / (nodes_queue[start_index + length_to_consider - 1][1] - nodes_queue[start_index][1])
+        try:
+            slope = (nodes_queue[start_index + length_to_consider - 1][0] - nodes_queue[start_index][0]) / (nodes_queue[start_index + length_to_consider - 1][1] - nodes_queue[start_index][1])
+        except ZeroDivisionError:
+            slope = math.inf
+        return slope

@@ -7,16 +7,16 @@ from design.pathfinding.constants import MAXIMUM_GRID_NODE_HEIGHT
 
 if __name__ == "__main__":
     graph = Graph()
-    obstacle_list = [[(14, 115), "N"], [(90, 115), "S"], [(35, 160), "N"]]
+    obstacle_list = [[(40, 70), "O"], [(90, 170), "S"]]
     graph.initialize_graph_matrix((0, 0), (111, 230), obstacle_list)
     pathfinder = Pathfinder(None)
     robotStatus = RobotStatus((90, 20), 90)
     pathfinder.graph = graph
     pathfinder.robot_status = robotStatus
     pathfinder.nodes_queue_to_checkpoint.clear()
-    pathfinder.generate_path_to_checkpoint((90, 200))
+    pathfinder.generate_path_to_checkpoint((25, 200))
     pathfinder.nodes_queue_to_checkpoint.appendleft((90, 20))
-    pathfinder.nodes_queue_to_checkpoint.append((90, 200))
+    pathfinder.nodes_queue_to_checkpoint.append((25, 200))
 
     hsv_img = np.zeros((graph.matrix_width, graph.matrix_height, 3), np.uint8)
     hsv_img[:, :] = (255, 255, 255)
