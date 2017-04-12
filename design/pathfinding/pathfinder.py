@@ -55,7 +55,6 @@ class Pathfinder():
         else:
             self.robot_status = RobotStatus((20, 20), 90)
 
-        # table_corners_positions = None
         table_corners_positions = game_map_data.get("table_corners")
         if table_corners_positions:
             self.logger.log("Pathfinding - Assigning table corner positions: {0}".format(table_corners_positions))
@@ -71,7 +70,6 @@ class Pathfinder():
         else:
             self.graph.initialize_graph_matrix((0, 0), (112, 231), [])
 
-        # drawing_zone_corners = None
         drawing_zone_corners = game_map_data.get("drawing_zone")
         if drawing_zone_corners:
             self.logger.log("Pathfinding - Assigning drawing zone corners: {0}".format(drawing_zone_corners))
@@ -187,10 +185,7 @@ class Pathfinder():
 
     def is_checkpoint_accessible(self, checkpoint_position):
         checkpoint_i, checkpoint_j = self.graph.get_grid_element_index_from_position(checkpoint_position)
-        if self.graph.matrix[checkpoint_i][checkpoint_j] == math.inf:
-            return False
-        else:
-            return True
+        return not self.graph.matrix[checkpoint_i][checkpoint_j] == math.inf
 
     def filter_path(self, nodes_queue, filter_width):
         points_of_discontinuity = deque([nodes_queue[0]])
