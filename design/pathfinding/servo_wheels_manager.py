@@ -28,6 +28,7 @@ class ServoWheelsManager():
         self.translation_lock.acquire()
         translation_is_done = False
         if wheels_controller.translation_done:
+            self.logger.log("Servo Wheels Manager - Translation done!")
             translation_is_done = True
         self.translation_lock.release()
         return translation_is_done
@@ -40,6 +41,7 @@ class ServoWheelsManager():
         self.rotation_lock.acquire()
         rotation_is_done = False
         if wheels_controller.rotation_done:
+            self.logger.log("Servo Wheels Manager - Rotation done!")
             rotation_is_done = True
         self.rotation_lock.release()
         return rotation_is_done
