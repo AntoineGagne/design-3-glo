@@ -33,6 +33,15 @@ class Pathfinder():
         self.graph = None
 
         self.nodes_queue_to_checkpoint = deque()  # in cm
+        self.filtered_nodes_queue_to_checkpoint = deque()  # TODO: remove this
+
+    def reinitialize(self):
+
+        self.robot_status.reinitialize()
+        self.graph = None
+        self.nodes_queue_to_checkpoint = deque()
+        self.figures.compute_positions((0, 0), (0, 231), (112, 231), (112, 0))
+        self.game_map = GameMap()
 
     def reinitialize(self):
 
