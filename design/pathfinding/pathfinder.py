@@ -5,13 +5,10 @@ from enum import Enum
 
 import math
 
-from statsmodels.compat import scipy
-
 from design.pathfinding.game_map import GameMap
 from design.pathfinding.figures_information import FiguresInformation
 from design.pathfinding.robot_status import RobotStatus
 from design.pathfinding.graph import Graph
-from design.pathfinding.priority_queue import PriorityQueue
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 
 
