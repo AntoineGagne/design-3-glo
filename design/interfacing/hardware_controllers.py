@@ -31,6 +31,11 @@ class AntennaController(HardwareObserver):
 
         self.stm32_driver.register_hardware_observer(self)
 
+    def reinitialize(self):
+        self.decode_routine_called = False
+        self.new_signal_strength_value_available = False
+        self.signal_data_available = False
+
     def notify(self, response_type):
         """ According to response, notify that new values for the signal's data and amplitude are available. """
         if response_type == Response.SIGNAL_STRENGTH:
@@ -98,6 +103,12 @@ class WheelsController(HardwareObserver):
         self.rotation_lock = rotation_lock
 
         self.stm32_driver.register_hardware_observer(self)
+
+    def reinitialize(self):
+        self.translation_done = True
+        self.rotation_done = True
+        self.last_vector_given = None
+        self.last_degrees_of_rotation_given = None
 
     def notify(self, response_type):
         """ Notifies the controller of the completion of a translation or rotation
