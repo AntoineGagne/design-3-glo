@@ -16,9 +16,9 @@ if __name__ == "__main__":
     pathfinder.robot_status = robotStatus
     pathfinder.nodes_queue_to_checkpoint.clear()
     print("Calculating path")
-    pathfinder.generate_path_to_checkpoint((25, 200))
+    pathfinder.generate_path_to_checkpoint((90, 200))
     pathfinder.nodes_queue_to_checkpoint.appendleft((90, 20))
-    pathfinder.nodes_queue_to_checkpoint.append((25, 200))
+    pathfinder.nodes_queue_to_checkpoint.append((90, 200))
 
     hsv_img = np.zeros((graph.matrix_width, graph.matrix_height, 3), np.uint8)
     hsv_img[:, :] = (255, 255, 255)
