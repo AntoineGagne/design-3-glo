@@ -108,7 +108,7 @@ class Graph():
         for i in range(self.matrix_width):
             for j in range(self.matrix_height):
                 if self.matrix[i][j] == weight:
-                    for neighbour_index in self.get_four_neighbours_indexes_from_element_index((i, j)):
+                    for neighbour_index in self.get_eight_neighbours_indexes_from_element_index((i, j)):
                         if self.matrix[neighbour_index[0]][neighbour_index[1]] < next_weight:
                             self.matrix[neighbour_index[0]][neighbour_index[1]] = next_weight
 

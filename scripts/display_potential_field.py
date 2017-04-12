@@ -7,8 +7,10 @@ from design.pathfinding.constants import MAXIMUM_GRID_NODE_HEIGHT
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 
 if __name__ == "__main__":
+    starting_point = (40, 40)
+    destination = (23, 207)
     graph = Graph()
-    obstacle_list = [[(75, 50), "O"], [(40, 120), "N"]]
+    obstacle_list = [[(40, 100), "N"], [(90, 180), "S"]]
     print("Initializing potential field")
     graph.initialize_graph_matrix((0, 0), (111, 230), obstacle_list)
 
@@ -25,15 +27,15 @@ if __name__ == "__main__":
     img = cv2.cvtColor(hsv_img, cv2.COLOR_HSV2BGR)
 
     pathfinder = Pathfinder(None)
-    robotStatus = RobotStatus((95, 20), 90)
+    robotStatus = RobotStatus(starting_point, 90)
     pathfinder.graph = graph
     pathfinder.robot_status = robotStatus
     pathfinder.nodes_queue_to_checkpoint.clear()
     print("Calculating path")
     try:
-        pathfinder.generate_path_to_checkpoint((95, 200))
-        pathfinder.nodes_queue_to_checkpoint.appendleft((95, 20))
-        pathfinder.nodes_queue_to_checkpoint.append((95, 200))
+        pathfinder.generate_path_to_checkpoint(destination)
+        pathfinder.nodes_queue_to_checkpoint.appendleft(starting_point)
+        pathfinder.nodes_queue_to_checkpoint.append(destination)
 
         for i in range(len(pathfinder.nodes_queue_to_checkpoint)):
             x, y = pathfinder.graph.get_grid_element_index_from_position(pathfinder.nodes_queue_to_checkpoint[i])
