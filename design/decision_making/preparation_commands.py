@@ -6,7 +6,7 @@ import time
 from design.decision_making.constants import (Step,
                                               NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS,
                                               next_step)
-from design.pathfinding.exceptions import CheckpointNotAccessibleError, OutOfRetriesForCaptureError
+from design.pathfinding.exceptions import OutOfRetriesForCaptureError
 from design.pathfinding.constants import (PointOfInterest,
                                           STANDARD_HEADING, PEN_TO_ANTENNA_OFFSET)
 from design.telemetry.packets import (Packet, PacketType)
