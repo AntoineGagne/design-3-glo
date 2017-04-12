@@ -18,7 +18,8 @@ from design.decision_making.preparation_commands import (BuildGameMapCommand,
                                                          PrepareMovingToAntennaPositionCommand,
                                                          RepositionForCaptureRetryCommand,
                                                          PrepareMovingOfAntennaOffsetCommand,
-                                                         PrepareAlignWithCaptureCommand)
+                                                         PrepareAlignWithCaptureCommand,
+                                                         PrepareRealignWithFirstVertexDrawnCommand)
 
 
 class CommandDispatcher():
@@ -36,6 +37,9 @@ class CommandDispatcher():
         self.steps_using_rotation = [Step.ROTATE_BACK_AFTER_CAPTURE,
                                      Step.ROTATE_TO_FACE_PAINTING,
                                      Step.ROTATE_TO_STANDARD_HEADING]
+
+        self.steps_using_material_servo_management = [Step.DRAWING, Step.MARKING_ANTENNA_POSITION, Step.TRAVEL_TO_DRAWING_ZONE,
+                                                      Step.TRAVEL_TO_PAINTINGS_AREA, Step.SEARCH_FOR_ANTENNA, Step.EXITING_DRAWING_ZONE]
 
         self.equivalencies = {Step.STANBY:
                               BuildGameMapCommand(
@@ -98,7 +102,11 @@ class CommandDispatcher():
                                                                   pathfinder, logger),
                               Step.PREPARE_ALIGN_WITH_CAPTURE:
                               PrepareAlignWithCaptureCommand(Step.PREPARE_ALIGN_WITH_CAPTURE, interfacing_controller,
-                                                             pathfinder, logger, antenna_information)}
+                                                             pathfinder, logger, antenna_information),
+                              Step.PREPARE_REALIGN_WITH_FIRST_VERTEX_DRAWN:
+                              PrepareRealignWithFirstVertexDrawnCommand(Step.PREPARE_REALIGN_WITH_FIRST_VERTEX_DRAWN,
+                                                                        interfacing_controller, pathfinder, logger,
+                                                                        onboard_vision, antenna_information)}
 
     def get_relevant_command(self, current_step):
         """ Obtains the relevant command according to the current step of the robot
@@ -107,7 +115,7 @@ class CommandDispatcher():
         :returns: Command to execute
         :rtype: `design.decision_making.preparation_commands.Command` """
 
-        if current_step == Step.DRAWING or current_step == Step.MARKING_ANTENNA_POSITION or current_step == Step.ALIGN_WITH_CAPTURE:
+        if current_step in self.steps_using_material_servo_management:
             self.movement_strategy.translation_strategy = TranslationStrategyType.TRUST_MATERIAL_SERVOING
         else:
             self.movement_strategy.translation_strategy = TranslationStrategyType.BASIC_WHEEL_SERVOING

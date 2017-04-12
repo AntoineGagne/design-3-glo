@@ -539,7 +539,7 @@ class RepositionForCaptureRetryCommand(Command):
 class PrepareAlignWithCaptureCommand(Command):
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information):
-        super(TravelToPaintingsAreaCommand, self).__init__(
+        super(PrepareAlignWithCaptureCommand, self).__init__(
             step, interfacing_controller, pathfinder, logger)
         self.antenna_information = antenna_information
 
@@ -553,6 +553,42 @@ class PrepareAlignWithCaptureCommand(Command):
             self.antenna_information.painting_number)
 
         self.pathfinder.generate_path_to_checkpoint_a_to_b(figure_position)
+        self.hardware.wheels.move(
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(telemetry_data[0]))
+
+        return (next_step(self.current_step), self.pathfinder.get_current_path())
+
+
+class PrepareRealignWithFirstVertexDrawnCommand(Command):
+
+    def __init__(self, step, interfacing_controller, pathfinder, logger, onboard_vision,
+                 antenna_information):
+        super(PrepareRealignWithFirstVertexDrawnCommand, self).__init__(
+            step, interfacing_controller, pathfinder, logger)
+        self.vision = onboard_vision
+        self.antenna_information = antenna_information
+
+    def execute(self, telemetry_data):
+
+        if not self.is_positional_telemetry_recieved(telemetry_data):
+            return (self.current_step, None)
+
+        self.logger.log("Prepare Realign With First Vertex Drawn: Execution.")
+
+        drawing_zone_origin_x, drawing_zone_origin_y = self.pathfinder.get_point_of_interest(
+            PointOfInterest.DRAWING_ZONE)
+
+        first_vertex_x, first_vertex_y = self.vision.get_captured_vertices(
+            self.antenna_information.zoom, self.antenna_information.orientation)[0]
+
+        position_x = drawing_zone_origin_x + first_vertex_x
+        position_y = drawing_zone_origin_y + first_vertex_y
+
+        self.logger.log("Prepare Realign With First Vertex Drawn: Moving towards first vertex at position = {0}".format(
+            (position_x, position_y)))
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
+
         self.hardware.wheels.move(
             self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(telemetry_data[0]))
 
