@@ -119,6 +119,14 @@ def _create_robot_parser(subparser, parent_parser):
         parents=[parent_parser],
         formatter_class=ArgumentDefaultsHelpFormatter
     )
+    robot_parser.add_argument('-r',
+                              '--approximation-ratio',
+                              default=0.008,
+                              type=float,
+                              metavar='RATIO',
+                              dest='approximation_ratio',
+                              help='The approximation ratio used for '
+                                   '`approxPolyDP`')
     robot_parser.set_defaults(function=start_robot)
     return robot_parser
 
@@ -146,7 +154,8 @@ def start_robot(arguments):
         arguments.ports,
         ServerSelectorFactory
     )
-    onboard_vision = create_onboard_vision(arguments.camera_port)
+    onboard_vision = create_onboard_vision(arguments.camera_port,
+                                           arguments.approximation_ratio)
     logger = ExecutionLogger()
     translation_lock = Lock()
     rotation_lock = Lock()
@@ -196,9 +205,10 @@ def create_command_handler(host: str,
     return CommandHandler(selector, consumer, producer)
 
 
-def create_onboard_vision(camera_port: int) -> OnboardVision:
+def create_onboard_vision(camera_port: int,
+                          approximation_ratio: float) -> OnboardVision:
     camera = Camera(camera_port, CameraSettings())
-    vertices_finder = VerticesFinder(HighFrequencyFilter())
+    vertices_finder = VerticesFinder(HighFrequencyFilter(), approximation_ratio)
     return OnboardVision(vertices_finder, camera)
 
 
