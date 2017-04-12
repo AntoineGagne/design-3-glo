@@ -7,7 +7,7 @@ from design.pathfinding.game_map import GameMap
 from design.pathfinding.figures_information import FiguresInformation
 from design.pathfinding.robot_status import RobotStatus
 from design.pathfinding.graph import Graph
-from design.pathfinding.constants import PATH_FILTER_WIDTH, PATH_SLOPE_THRESHOLD
+from design.pathfinding.constants import PATH_SLOPE_THRESHOLD, PATH_FILTER_WIDTH
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 
 
@@ -180,7 +180,8 @@ class Pathfinder():
             current_vertex = parent_of_vertices[current_vertex]
 
         # Remove superfluous nodes
-        self.filtered_nodes_queue_to_checkpoint = self.filter_path(self.nodes_queue_to_checkpoint)
+        self.filtered_nodes_queue_to_checkpoint = self.filter_path(self.nodes_queue_to_checkpoint, PATH_FILTER_WIDTH)
+        self.filtered_nodes_queue_to_checkpoint = self.filter_path(self.filtered_nodes_queue_to_checkpoint, 2)
 
         self.robot_status.generate_new_translation_vector_towards_new_target(self.nodes_queue_to_checkpoint.popleft())
 
@@ -191,18 +192,18 @@ class Pathfinder():
         else:
             return True
 
-    def filter_path(self, nodes_queue):
+    def filter_path(self, nodes_queue, filter_width):
         points_of_discontinuity = deque([nodes_queue[0]])
         current_point_index = 0
-        slope = self.compute_slope(nodes_queue, current_point_index, PATH_FILTER_WIDTH)
+        slope = self.compute_slope(nodes_queue, current_point_index, filter_width)
 
-        while current_point_index < (len(nodes_queue) - PATH_FILTER_WIDTH):
+        while current_point_index < (len(nodes_queue) - filter_width):
             current_point_index += 1
-            new_slope = self.compute_slope(nodes_queue, current_point_index, PATH_FILTER_WIDTH)
+            new_slope = self.compute_slope(nodes_queue, current_point_index, filter_width)
 
             if math.fabs(new_slope - slope) >= PATH_SLOPE_THRESHOLD:
-                points_of_discontinuity.append(nodes_queue[current_point_index + PATH_FILTER_WIDTH - 2])
-                current_point_index = current_point_index + PATH_FILTER_WIDTH - 2
+                points_of_discontinuity.append(nodes_queue[current_point_index + filter_width - 2])
+                current_point_index = current_point_index + filter_width - 2
                 slope = new_slope
 
         points_of_discontinuity.append(nodes_queue[-1])
