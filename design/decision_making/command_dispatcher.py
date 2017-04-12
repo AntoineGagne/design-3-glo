@@ -16,7 +16,9 @@ from design.decision_making.preparation_commands import (BuildGameMapCommand,
                                                          CaptureFigureCommand,
                                                          PrepareTravelToAntennaAreaCommand,
                                                          PrepareMovingToAntennaPositionCommand,
-                                                         RepositionForCaptureRetryCommand)
+                                                         RepositionForCaptureRetryCommand,
+                                                         PrepareMovingOfAntennaOffsetCommand,
+                                                         PrepareAlignWithCaptureCommand)
 
 
 class CommandDispatcher():
@@ -90,7 +92,13 @@ class CommandDispatcher():
                                   pathfinder, logger, antenna_information, onboard_vision),
                               Step.REPOSITION_FOR_CAPTURE_RETRY:
                               RepositionForCaptureRetryCommand(Step.REPOSITION_FOR_CAPTURE_RETRY, interfacing_controller,
-                                                               pathfinder, logger, capture_repositioning_manager)}
+                                                               pathfinder, logger, capture_repositioning_manager),
+                              Step.PREPARE_MOVING_TO_OFFSET:
+                              PrepareMovingOfAntennaOffsetCommand(Step.PREPARE_MOVING_TO_OFFSET, interfacing_controller,
+                                                                  pathfinder, logger),
+                              Step.PREPARE_ALIGN_WITH_CAPTURE:
+                              PrepareAlignWithCaptureCommand(Step.PREPARE_ALIGN_WITH_CAPTURE, interfacing_controller,
+                                                             pathfinder, logger, antenna_information)}
 
     def get_relevant_command(self, current_step):
         """ Obtains the relevant command according to the current step of the robot
@@ -99,7 +107,7 @@ class CommandDispatcher():
         :returns: Command to execute
         :rtype: `design.decision_making.preparation_commands.Command` """
 
-        if current_step == Step.DRAWING or current_step == Step.MARKING_ANTENNA_POSITION:
+        if current_step == Step.DRAWING or current_step == Step.MARKING_ANTENNA_POSITION or current_step == Step.ALIGN_WITH_CAPTURE:
             self.movement_strategy.translation_strategy = TranslationStrategyType.TRUST_MATERIAL_SERVOING
         else:
             self.movement_strategy.translation_strategy = TranslationStrategyType.BASIC_WHEEL_SERVOING

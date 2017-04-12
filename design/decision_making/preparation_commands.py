@@ -316,6 +316,23 @@ class PrepareMovingToAntennaPositionCommand(Command):
             return (Step.COMPUTE_PAINTINGS_AREA,
                     Packet(PacketType.NOTIFICATION, "Antenna position has not been found! Aborting search."))
 
+class PrepareMovingOfAntennaOffsetCommand(Command):
+
+    def execute(self, data):
+
+        self.logger.log("Prepare Moving of Antenna Offset: Execution.")
+
+        position_x, position_y = self.pathfinder.robot_status.get_position()
+        position_y = position_y + PEN_TO_ANTENNA_OFFSET
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
+
+        self.hardware.wheels.move(
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
+                self.pathfinder.robot_status.get_position()))
+
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
+
 
 class PrepareMarkingAntennaCommand(Command):
     """ Prepares movement in order to mark the antenna's position. """
@@ -333,8 +350,11 @@ class PrepareMarkingAntennaCommand(Command):
         self.hardware.pen.lower_pen()
 
         position_x, position_y = self.pathfinder.robot_status.get_position()
-        position_x = position_x - 4
+        position_x = position_y - 2
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
         position_y = position_y + PEN_TO_ANTENNA_OFFSET
+        time.sleep(4)
         self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
 
         self.hardware.wheels.move(
@@ -514,3 +534,26 @@ class RepositionForCaptureRetryCommand(Command):
         except OutOfRetriesForCaptureError:
             self.logger.log("Reposition For Capture Retry: Out of retries! Aborting cycle.")
             return (Step.STANBY, Packet(PacketType.NOTIFICATION, "Out of capture retry attempts. Aborting cycle."))
+
+
+class PrepareAlignWithCaptureCommand(Command):
+
+    def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information):
+        super(TravelToPaintingsAreaCommand, self).__init__(
+            step, interfacing_controller, pathfinder, logger)
+        self.antenna_information = antenna_information
+
+    def execute(self, telemetry_data):
+
+        if not self.is_positional_telemetry_recieved(telemetry_data):
+            return (self.current_step, None)
+
+        self.logger.log("Prepare Align With Capture Command: Execution")
+        figure_position = self.pathfinder.figures.get_position_to_take_figure_from(
+            self.antenna_information.painting_number)
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b(figure_position)
+        self.hardware.wheels.move(
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(telemetry_data[0]))
+
+        return (next_step(self.current_step), self.pathfinder.get_current_path())
