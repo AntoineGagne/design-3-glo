@@ -37,7 +37,7 @@ class Pathfinder():
 
     def reinitialize(self):
 
-        self.robot_status.reinitialize()
+        self.robot_status = None
         self.graph = None
         self.nodes_queue_to_checkpoint = deque()
         self.figures.compute_positions((0, 0), (0, 231), (112, 231), (112, 0))
