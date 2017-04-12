@@ -1,12 +1,13 @@
 """ This module allows mocking of pathfinder object """
-
-from collections import deque
+from collections import defaultdict, deque
 from enum import Enum
+import math
+
 from design.pathfinding.game_map import GameMap
 from design.pathfinding.figures_information import FiguresInformation
 from design.pathfinding.robot_status import RobotStatus
 from design.pathfinding.graph import Graph
-from design.pathfinding.priority_queue import PriorityQueue
+from design.pathfinding.constants import PATH_SLOPE_THRESHOLD, PATH_FILTER_WIDTH
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 
 
@@ -28,9 +29,19 @@ class Pathfinder():
         self.game_map = GameMap()
         self.figures = FiguresInformation()
         self.robot_status = None
+
         self.graph = None
 
         self.nodes_queue_to_checkpoint = deque()  # in cm
+        self.filtered_nodes_queue_to_checkpoint = deque()  # TODO: remove this
+
+    def reinitialize(self):
+
+        self.robot_status.reinitialize()
+        self.graph = None
+        self.nodes_queue_to_checkpoint = deque()
+        self.figures.compute_positions((0, 0), (0, 231), (112, 231), (112, 0))
+        self.game_map = GameMap()
 
     def set_game_map(self, game_map_data):
         """ Sets game map elements like corners, objectives and
@@ -44,17 +55,6 @@ class Pathfinder():
         else:
             self.robot_status = RobotStatus((20, 20), 90)
 
-        obstacles = game_map_data.get("obstacles")
-        if obstacles:
-            self.logger.log("Pathfinder - Assigning obstacles: {0}".format(obstacles))
-            self.graph = Graph(obstacles)
-        else:
-            self.graph = Graph([])
-
-        self.graph.generate_nodes_of_graph()
-        self.graph.generate_graph()
-
-        # table_corners_positions = None
         table_corners_positions = game_map_data.get("table_corners")
         if table_corners_positions:
             self.logger.log("Pathfinding - Assigning table corner positions: {0}".format(table_corners_positions))
@@ -63,7 +63,13 @@ class Pathfinder():
         else:
             self.figures.compute_positions((0, 0), (0, 231), (112, 231), (112, 0))
 
-        # drawing_zone_corners = None
+        obstacles = game_map_data.get("obstacles")
+        if obstacles:
+            self.graph = Graph()
+            self.graph.initialize_graph_matrix(table_corners_positions[0], table_corners_positions[2], obstacles)
+        else:
+            self.graph.initialize_graph_matrix((0, 0), (112, 231), [])
+
         drawing_zone_corners = game_map_data.get("drawing_zone")
         if drawing_zone_corners:
             self.logger.log("Pathfinding - Assigning drawing zone corners: {0}".format(drawing_zone_corners))
@@ -83,13 +89,13 @@ class Pathfinder():
             if self.nodes_queue_to_checkpoint:
                 new_vector = self.robot_status.generate_new_translation_vector_towards_new_target(
                     self.nodes_queue_to_checkpoint.popleft())
-                return (PathStatus.INTERMEDIATE_NODE_REACHED, new_vector)
+                return PathStatus.INTERMEDIATE_NODE_REACHED, new_vector
             else:
                 self.robot_status.generate_new_translation_vector_towards_new_target(
                     self.robot_status.get_position())
-                return (PathStatus.CHECKPOINT_REACHED, None)
+                return PathStatus.CHECKPOINT_REACHED, None
         else:
-            return (PathStatus.MOVING_TOWARDS_TARGET, None)
+            return PathStatus.MOVING_TOWARDS_TARGET, None
 
     def get_point_of_interest(self, point_of_interest):
         """ Returns any data about the specified point of interest within
@@ -128,49 +134,81 @@ class Pathfinder():
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
 
-        print("Generating path with A star. Checkpoint position = {0}".format(checkpoint_position))
+        self.nodes_queue_to_checkpoint.clear()
 
-        if checkpoint_position in self.graph.list_of_inaccessible_nodes:
-            raise CheckpointNotAccessibleError("Le point d'arrivé est non accessible par le robot")
-        else:
-            self.nodes_queue_to_checkpoint.clear()
-            start_node = self.robot_status.get_position()
-            print("Generating path with A star. start position = {0}".format(start_node))
-            self.graph.add_start_end_node(start_node, checkpoint_position)
-            priority_queue = PriorityQueue()
-            priority_queue.put(start_node, 0)
-            came_from = {}
-            cost_so_far = {}
-            came_from[start_node] = None
-            cost_so_far[start_node] = 0
+        checkpoint_i, checkpoint_j = self.graph.get_grid_element_index_from_position(checkpoint_position)
+        if self.graph.matrix[checkpoint_i][checkpoint_j] == math.inf:
+            raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
 
-            while not priority_queue.empty():
-                current = priority_queue.get()
-                if current == checkpoint_position:
-                    break
-                if (self.graph.get_position_minimum_of_graph() > checkpoint_position[1]) \
-                        and (self.graph.get_position_minimum_of_graph() > current[1]):
-                    came_from[checkpoint_position] = current
-                    break
-                for next_node in self.graph.graph_dict[current]:
-                    new_cost = cost_so_far[current] + self.graph.estimate_distance(current, next_node)
-                    if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
-                        cost_so_far[next_node] = new_cost
-                        priority = new_cost + self.graph.estimate_distance(next_node, checkpoint_position)
-                        priority_queue.put(next_node, priority)
-                        came_from[next_node] = current
+        source_vertex = self.graph.get_grid_element_index_from_position(self.robot_status.get_position())
+        current_vertex = source_vertex
+        destination_vertex = self.graph.get_grid_element_index_from_position(checkpoint_position)
 
-            self.graph.graph_dict[self.graph.graph_dict.get(start_node)[0]].remove(start_node)
-            self.graph.graph_dict[self.graph.graph_dict.get(checkpoint_position)[0]].remove(checkpoint_position)
-            del self.graph.graph_dict[start_node]
-            del self.graph.graph_dict[checkpoint_position]
+        visited_vertices = []
+        unsolved_vertices = dict(((i, j), math.inf)
+                                 for j in range(self.graph.matrix_height)
+                                 for i in range(self.graph.matrix_width)
+                                 if self.graph.get_weight_of_element((i, j)) != math.inf)
+        parent_of_vertices = defaultdict()
 
-            current = checkpoint_position
-            while current != start_node:
-                self.nodes_queue_to_checkpoint.append(current)
-                current = came_from.get(current)
+        # Initialize weight of source vertex to 0
+        unsolved_vertices[current_vertex] = 0
+        vertices_weights = dict(unsolved_vertices)
 
-            self.nodes_queue_to_checkpoint.reverse()
+        # Generate vertices' parents dictionary
+        while current_vertex != destination_vertex:
+            current_vertex = min(unsolved_vertices, key=unsolved_vertices.get)
+            unsolved_vertices.pop(current_vertex)
+            visited_vertices.append(current_vertex)
+            for neighbour in self.graph.get_four_neighbours_indexes_from_element_index(current_vertex):
+                if neighbour in unsolved_vertices:
+                    new_weight = vertices_weights[current_vertex] + self.graph.get_edge_distance(current_vertex,
+                                                                                                 neighbour)
+                    if new_weight < vertices_weights[neighbour]:
+                        vertices_weights[neighbour] = new_weight
+                        unsolved_vertices[neighbour] = new_weight
+                        parent_of_vertices[neighbour] = current_vertex
 
-            self.robot_status.generate_new_translation_vector_towards_new_target(
-                self.nodes_queue_to_checkpoint.popleft())
+        if vertices_weights[destination_vertex] == math.inf:
+            raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
+
+        # Rebuild path
+        while current_vertex != source_vertex:
+            self.nodes_queue_to_checkpoint.appendleft(self.graph.get_position_from_grid_element_index(*current_vertex))
+            current_vertex = parent_of_vertices[current_vertex]
+
+        # Remove superfluous nodes
+        self.filtered_nodes_queue_to_checkpoint = self.filter_path(self.nodes_queue_to_checkpoint, PATH_FILTER_WIDTH)
+        self.filtered_nodes_queue_to_checkpoint = self.filter_path(self.filtered_nodes_queue_to_checkpoint, 2)
+
+        self.robot_status.generate_new_translation_vector_towards_new_target(self.nodes_queue_to_checkpoint.popleft())
+
+    def is_checkpoint_accessible(self, checkpoint_position):
+        checkpoint_i, checkpoint_j = self.graph.get_grid_element_index_from_position(checkpoint_position)
+        return not self.graph.matrix[checkpoint_i][checkpoint_j] == math.inf
+
+    def filter_path(self, nodes_queue, filter_width):
+        points_of_discontinuity = deque([nodes_queue[0]])
+        current_point_index = 0
+        slope = self.compute_slope(nodes_queue, current_point_index, filter_width)
+
+        while current_point_index < (len(nodes_queue) - filter_width):
+            current_point_index += 1
+            new_slope = self.compute_slope(nodes_queue, current_point_index, filter_width)
+
+            if math.fabs(new_slope - slope) >= PATH_SLOPE_THRESHOLD:
+                points_of_discontinuity.append(nodes_queue[current_point_index + filter_width - 2])
+                current_point_index = current_point_index + filter_width - 2
+                slope = new_slope
+
+        points_of_discontinuity.append(nodes_queue[-1])
+        return points_of_discontinuity
+
+    def compute_slope(self, nodes_queue, start_index, length_to_consider):
+        try:
+            dx = nodes_queue[start_index + length_to_consider - 1][0] - nodes_queue[start_index][0]
+            dy = nodes_queue[start_index + length_to_consider - 1][1] - nodes_queue[start_index][1]
+            slope = dy / dx
+        except ZeroDivisionError:
+            slope = math.inf
+        return slope

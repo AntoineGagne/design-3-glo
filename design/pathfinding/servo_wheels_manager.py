@@ -16,6 +16,10 @@ class ServoWheelsManager():
         self.rotation_status = RotationStatus.ROTATING
         self.logger = logger
 
+    def reinitialize(self):
+        self.translation_status = TranslationStatus.MOVING
+        self.rotation_status = RotationStatus.MOVING
+
     def is_current_translation_movement_done(self, wheels_controller):
         """ Returns true if the current translation order of the robot is completed, otherwise
         returns false.

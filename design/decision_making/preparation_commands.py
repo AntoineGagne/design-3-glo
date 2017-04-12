@@ -6,9 +6,9 @@ import time
 from design.decision_making.constants import (Step,
                                               NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS,
                                               next_step)
-from design.pathfinding.exceptions import CheckpointNotAccessibleError, OutOfRetriesForCaptureError
+from design.pathfinding.exceptions import OutOfRetriesForCaptureError
 from design.pathfinding.constants import (PointOfInterest,
-                                          STANDARD_HEADING)
+                                          STANDARD_HEADING, PEN_TO_ANTENNA_OFFSET)
 from design.telemetry.packets import (Packet, PacketType)
 from design.vision.exceptions import PaintingFrameNotFound, VerticesNotFound
 
@@ -187,13 +187,11 @@ class PrepareExitOfDrawingAreaCommand(Command):
         possible_exit_locations = self.pathfinder.get_point_of_interest(PointOfInterest.EXIT_DRAWING_ZONE_AFTER_CYCLE)
 
         for exit_location in possible_exit_locations:
-            try:
+            if self.pathfinder.is_checkpoint_accessible(exit_location):
                 self.pathfinder.generate_path_to_checkpoint(exit_location)
                 break
-            except CheckpointNotAccessibleError:
-                pass
 
-        self.logger.log("Prepare Exit of Drawing Area: Sortie location at position = {0}".format(
+        self.logger.log("Prepare Exit of Drawing Area: Exit location at position = {0}".format(
             self.pathfinder.robot_status.target_position))
 
         self.hardware.wheels.move(
@@ -336,6 +334,7 @@ class PrepareMarkingAntennaCommand(Command):
 
         position_x, position_y = self.pathfinder.robot_status.get_position()
         position_x = position_x - 4
+        position_y = position_y + PEN_TO_ANTENNA_OFFSET
         self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
 
         self.hardware.wheels.move(
@@ -407,6 +406,7 @@ class AcquireInformationFromAntennaCommand(Command):
         elif antenna_data is not None and antenna_data.painting_number is None and antenna_data.zoom is None and antenna_data.orientation is None:
             self.logger.log(
                 "Acquire Information From Antenna: Acquisition has failed. Going back to starting search point and retrying the entire sequence.")
+            self.hardware.antenna.reinitialize()
             return (Step.PREPARE_TRAVEL_TO_ANTENNA_ZONE,
                     Packet(PacketType.NOTIFICATION, "Acquisition has failed. Going back to starting search point."))
         else:

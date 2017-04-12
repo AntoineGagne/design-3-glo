@@ -17,12 +17,20 @@ class Brain():
         """Initializes robot on STANBY mode, waiting for game map objects
         to be transmitted in order to start its routine"""
 
+        self.pathfinder = Pathfinder(logger)
+        self.antenna_information = AntennaInformation()
         self.current_status = Step.STANBY
         self.base_station = telemetry
+        self.servo_wheels_manager = ServoWheelsManager(translation_lock, rotation_lock, logger)
+        self.capture_repositioning_manager = CaptureRepositioningManager()
+        self.interfacing_controller = interfacing_controller
+
         self.dispatcher = CommandDispatcher(
-            movement_strategies, interfacing_controller, Pathfinder(logger), logger,
-            onboard_vision, AntennaInformation(), ServoWheelsManager(translation_lock, rotation_lock, logger),
-            CaptureRepositioningManager())
+            movement_strategies, self.interfacing_controller, self.pathfinder, logger,
+            onboard_vision, self.antenna_information, self.servo_wheels_manager,
+            self.capture_repositioning_manager)
+
+        self.first_cycle_already_started = False
 
     def main(self):
         """Main loop of the robot. Polls on telemetry and acts according
@@ -42,6 +50,10 @@ class Brain():
                     cycle_start_notification = Packet(PacketType.COMMAND, "START_CHRONOGRAPH")
                     self.base_station.put_command(cycle_start_notification)
                     main_sequence_has_started = True
+                    if not self.first_cycle_already_started:
+                        self.first_cycle_already_started = True
+                    else:
+                        self.reinitialize_for_next_cycle()
 
             if main_sequence_has_started:
 
@@ -64,3 +76,11 @@ class Brain():
                 if self.current_status == Step.STANBY:
                     self.base_station.put_command(ready_packet)
                     main_sequence_has_started = False
+
+    def reinitialize_for_next_cycle(self):
+        self.pathfinder.reinitialize()
+        self.servo_wheels_manager.reinitialize()
+        self.interfacing_controller.antenna.reinitialize()
+        self.interfacing_controller.wheels.reinitialize()
+        self.capture_repositioning_manager.reinitialize()
+        self.antenna_information = AntennaInformation()

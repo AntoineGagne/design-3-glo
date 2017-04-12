@@ -1,186 +1,164 @@
-""" Generate the graph """
-
-from design.pathfinding.constants import ROBOT_SAFETY_MARGIN
-from design.pathfinding.constants import OBSTACLE_RADIUS
-from design.pathfinding.constants import TABLE_X
-from design.pathfinding.constants import TABLE_Y
-import operator
+""" This module includes a graph represented by an adjacency matrix. Used for the robot's pathfinding. """
 import math
 
+from design.pathfinding.constants import GRAPH_GRID_WIDTH, OBSTACLE_RADIUS, ROBOT_SAFETY_MARGIN, \
+    MAXIMUM_GRID_NODE_HEIGHT, ROBOT_HALF_WIDTH
 
-class Graph:
-    def __init__(self, obstacles_list):
-        """Initialize new graph """
-        self.obstacles_list = obstacles_list
-        self.graph_dict = {}
-        self.list_of_inaccessible_nodes = []
 
-    def generate_graph(self):
-        """ Generate all connections between the nodes"""
+class Graph():
 
-        if len(self.obstacles_list) > 1:
-            node_dict_sorted = sorted(self.graph_dict)
-            node_dict_sorted = sorted(node_dict_sorted, key=operator.itemgetter(1))
-            i = 0
-            while i <= (len(node_dict_sorted) - 4):
-                node1 = node_dict_sorted[i]
-                i += 1
-                node2 = node_dict_sorted[i]
-                i += 1
-                node3 = node_dict_sorted[i]
-                i += 1
-                node4 = node_dict_sorted[i]
-                i += 1
-                if (node1[1] < node2[1]) and (node3[1] == node4[1]):
-                    self.add_edge_of_graph(node2, node3)
-                    self.add_edge_of_graph(node2, node4)
-                if (node1[1] != node2[1]) and (node1[1] != node3[1]):
-                    self.add_edge_of_graph(node2, node3)
-                if (node1[1] == node2[1]) and (node3[1] == node4[1]) and (i <= (len(node_dict_sorted) - 2)):
-                    i -= 2
-                    node1 = node_dict_sorted[i]
-                    i += 1
-                    node2 = node_dict_sorted[i]
-                    i += 1
-                    node3 = node_dict_sorted[i]
-                    i += 1
-                    node4 = node_dict_sorted[i]
-                    i += 1
-                    if node3[1] != node4[1]:
-                        self.add_edge_of_graph(node1, node3)
-                        self.add_edge_of_graph(node2, node3)
-                    if node3[1] == node4[1]:
-                        self.add_edge_of_graph(node1, node3)
-                        self.add_edge_of_graph(node2, node3)
-                        self.add_edge_of_graph(node1, node4)
-                        self.add_edge_of_graph(node2, node4)
-                i -= 2
+    def __init__(self):
+        self.matrix = None
+        self.matrix_width = 0
+        self.matrix_height = 0
+        self.obstacle_safe_radius = (OBSTACLE_RADIUS + ROBOT_SAFETY_MARGIN) // GRAPH_GRID_WIDTH
 
-    def generate_nodes_of_graph(self):
-        """ Generating the list of nodes of the graph"""
-        for obstacle in self.obstacles_list:
-            self.generate_nodes_of_graph_with_obstacle(obstacle)
+    def initialize_graph_matrix(self, southeastern_corner, northwestern_corner, obstacle_list):
 
-    def generate_nodes_of_graph_with_obstacle(self, obstacle):
-        """ Generating the list of nodes of the graph associated with the obstacle"""
+        table_width = northwestern_corner[0] - southeastern_corner[0]
+        table_height = northwestern_corner[1] - southeastern_corner[1]
 
-        if obstacle[1] == "O":
-            node1 = (
-                ((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            node2 = (
-                ((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] + (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            node3 = (((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS),
-                     (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            node4 = (((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS),
-                     (obstacle[0][1] + (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            self.add_node_in_graph_dict(node1)
-            self.add_node_in_graph_dict(node2)
-            self.add_node_in_graph_dict(node3)
-            self.add_node_in_graph_dict(node4)
-            self.add_edge_of_graph(node1, node2)
-            self.add_edge_of_graph(node3, node4)
+        self.convert_obstacle_position_to_index(obstacle_list)
+
+        self.matrix_width = table_width // GRAPH_GRID_WIDTH
+        self.matrix_height = table_height // GRAPH_GRID_WIDTH
+
+        self.matrix = [[0 for y in range(self.matrix_height)] for x in range(self.matrix_width)]
+        self.generate_potential_field_in_graph_matrix(obstacle_list)
+
+    def convert_obstacle_position_to_index(self, obstacle_list):
+        for obstacle in obstacle_list:
+            obstacle[0] = self.get_grid_element_index_from_position(obstacle[0])
+
+    def generate_potential_field_in_graph_matrix(self, obstacle_list):
+        self.generate_impassable_zones_in_graph_matrix(obstacle_list)
+        self.add_weight_in_graph_matrix()
+
+    def generate_impassable_zones_in_graph_matrix(self, obstacle_list):
+        self.add_walls_safety_margin()
+        self.place_obstacles_in_matrix(obstacle_list)
+        self.connect_obstacles_and_walls(obstacle_list)
+
+    def add_walls_safety_margin(self):
+        num_square = ROBOT_HALF_WIDTH // GRAPH_GRID_WIDTH + 1
+        for i in range(self.matrix_width):
+            for j in range(self.matrix_height):
+                if i <= num_square or i > self.matrix_width - num_square:
+                    self.matrix[i][j] = math.inf
+                elif j <= num_square or j > self.matrix_height - num_square:
+                    self.matrix[i][j] = math.inf
+
+    def place_obstacles_in_matrix(self, obstacle_list):
+        for obstacle in obstacle_list:
+            self.place_obstacle_in_matrix(obstacle)
+
+    def place_obstacle_in_matrix(self, obstacle):
+        for i in range(*self.get_index_range(obstacle[0][0], self.matrix_width - 1)):
+            for j in range(*self.get_index_range(obstacle[0][1], self.matrix_height - 1)):
+                if self.get_euclidian_distance((i, j), obstacle[0]) <= self.obstacle_safe_radius:
+                    self.matrix[i][j] = math.inf
+
+    def get_index_range(self, coordinate, maximum_value):
+        min_index = max(0, coordinate - self.obstacle_safe_radius)
+        max_index = min(coordinate + self.obstacle_safe_radius, maximum_value)
+        return min_index, max_index
+
+    def get_euclidian_distance(self, point1, point2):
+        return math.hypot(point2[0] - point1[0], point2[1] - point1[1])
+
+    def connect_obstacles_and_walls(self, obstacle_list):
+        for obstacle in obstacle_list:
+            if obstacle[1] != "O":
+                self.connect_obstacle_to_closest_impassable_zone(obstacle)
+
+    def connect_obstacle_to_closest_impassable_zone(self, obstacle):
+        i = self.determine_starting_row(obstacle)
+        no_infinite_weight_in_row = True
+        while no_infinite_weight_in_row:
+            for j in range(*self.get_index_range(obstacle[0][1], self.matrix_height - 1)):
+                if self.matrix[i][j] == math.inf:
+                    no_infinite_weight_in_row = False
+                else:
+                    self.matrix[i][j] = math.inf
+            i = self.move_to_next_row(i, obstacle[1])
+
+    def determine_starting_row(self, obstacle):
         if obstacle[1] == "N":
-            node1 = (
-                (
-                    ((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) +
-                    (obstacle[0][0] + OBSTACLE_RADIUS)),
-                (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS))
-            )
-            node2 = (
-                (
-                    ((TABLE_X - (obstacle[0][0] + OBSTACLE_RADIUS)) / 2) + (obstacle[0][0] + OBSTACLE_RADIUS)
-                ),
-                ((obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)) +
-                 (2 * (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS))
-                 )
-            )
-            self.add_node_in_graph_dict(node1)
-            self.add_node_in_graph_dict(node2)
-            self.add_edge_of_graph(node1, node2)
-        if obstacle[1] == "S":
-            node1 = (
-                ((obstacle[0][0] - OBSTACLE_RADIUS) / 2), (obstacle[0][1] - (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS)))
-            node2 = (
-                (
-                    (obstacle[0][0] - OBSTACLE_RADIUS) / 2),
-                (
-                    obstacle[0][1] -
-                    (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS) + (2 * (ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS))
-                )
-            )
-            self.add_node_in_graph_dict(node1)
-            self.add_node_in_graph_dict(node2)
-            self.add_edge_of_graph(node1, node2)
+            return max(obstacle[0][0] - self.obstacle_safe_radius - 1, 1)
+        else:
+            return min(obstacle[0][0] + self.obstacle_safe_radius, self.matrix_width - 1)
 
-    def set_zone_of_obstacles(self):
-        """ Draw the area not accessible for all obstacles """
-        for node in self.obstacles_list:
-            self.draw_zone_obstacle(node)
+    def move_to_next_row(self, current_row_index, obstacle_orientation):
+        if obstacle_orientation == "N":
+            return current_row_index - 1
+        else:
+            return current_row_index + 1
 
-    def draw_zone_obstacle(self, obstacle):
-        """ Draw obstacle zone """
-        total = ROBOT_SAFETY_MARGIN + OBSTACLE_RADIUS
-        if obstacle[1] == "O":
-            for x in range(obstacle[0][0] - total, obstacle[0][0] + total + 1):
-                for y in range(obstacle[0][1] - total, obstacle[0][1] + total + 1):
-                    self.list_of_inaccessible_nodes.append((x, y))
-        if obstacle[1] == "S":
-            for x in range(obstacle[0][0] - total, TABLE_X):
-                for y in range(obstacle[0][1] - total, obstacle[0][1] + total + 1):
-                    self.list_of_inaccessible_nodes.append((x, y))
-        if obstacle[1] == "N":
-            for x in range(0, obstacle[0][0] + total + 1):
-                for y in range(obstacle[0][1] - total, obstacle[0][1] + total + 1):
-                    self.list_of_inaccessible_nodes.append((x, y))
+    def add_weight_in_graph_matrix(self):
+        weight = math.inf
+        while weight > GRAPH_GRID_WIDTH:
+            self.propagate(weight)
+            weight = self.decrement_weight(weight)
 
-    def draw_wall(self):
-        """ Draw the safety zone for the walls"""
-        for x in range(TABLE_X):
-            for y in range(TABLE_Y):
-                if (x <= ROBOT_SAFETY_MARGIN
-                    ) or (x >= (TABLE_X - ROBOT_SAFETY_MARGIN)
-                          ) or (y <= ROBOT_SAFETY_MARGIN
-                                ) or (y >= (TABLE_Y - ROBOT_SAFETY_MARGIN)
-                                      ):
-                    self.list_of_inaccessible_nodes.append((x, y))
+    def propagate(self, weight):
+        next_weight = self.decrement_weight(weight)
+        for i in range(self.matrix_width):
+            for j in range(self.matrix_height):
+                if self.matrix[i][j] == weight:
+                    for neighbour_index in self.get_eight_neighbours_indexes_from_element_index((i, j)):
+                        if self.matrix[neighbour_index[0]][neighbour_index[1]] < next_weight:
+                            self.matrix[neighbour_index[0]][neighbour_index[1]] = next_weight
 
-    def add_node_in_graph_dict(self, node):
-        """ Add node in the dict nodes of graph """
-        self.graph_dict[node] = []
+    def decrement_weight(self, weight):
+        assert(weight > 0)
+        if weight == math.inf:
+            return MAXIMUM_GRID_NODE_HEIGHT
+        else:
+            return weight - GRAPH_GRID_WIDTH
 
-    def add_edge_of_graph(self, node1, node2):
-        """ connect two nodes """
-        for node in self.graph_dict.keys():
-            if node == node1:
-                self.graph_dict[node1].append(node2)
-            if node == node2:
-                self.graph_dict[node2].append(node1)
+    def get_grid_element_index_from_position(self, position):
 
-    def add_start_end_node(self, start_node, checkpoint_node):
-        self.add_node_in_graph_dict(start_node)
-        self.add_node_in_graph_dict(checkpoint_node)
-        self.add_edge_of_graph(start_node, self.search_nearest_node(start_node))
-        self.add_edge_of_graph(checkpoint_node, self.search_nearest_node(checkpoint_node))
+        i = position[0] // GRAPH_GRID_WIDTH
+        j = position[1] // GRAPH_GRID_WIDTH
 
-    def search_nearest_node(self, node):
-        """" search """
-        distance_min = 280
-        nearest_node = (0, 0)
-        for node_of_graph in self.graph_dict.keys():
-            if (self.estimate_distance(node, node_of_graph) < distance_min) and (node_of_graph != node):
-                nearest_node = node_of_graph
-                distance_min = self.estimate_distance(node, node_of_graph)
-        return nearest_node
+        return i, j
 
-    def estimate_distance(self, current_position, next_position):
-        """ Calculate distance estimate """
-        return math.sqrt(
-            ((next_position[0] - current_position[0]) ** 2) + ((next_position[1] - current_position[1]) ** 2))
+    def get_position_from_grid_element_index(self, i, j):
+        return i * GRAPH_GRID_WIDTH, j * GRAPH_GRID_WIDTH
 
-    def get_position_minimum_of_graph(self):
-        """ """
-        min = 230
-        for node in self.graph_dict.keys():
-            if node[1] < min:
-                min = node[1]
-        return min
+    def get_edge_distance(self, source_index, destination_index):
+
+        source_i, source_j = source_index
+        destination_i, destination_j = destination_index
+
+        distance = self.get_euclidian_distance(source_index, destination_index)
+
+        weight_difference = self.matrix[destination_i][destination_j] - self.matrix[source_i][source_j]
+        return self.matrix[destination_i][destination_j] + weight_difference + distance
+
+    def get_eight_neighbours_indexes_from_element_index(self, element_index):
+        element_i, element_j = element_index
+        neighbours = []
+
+        for i in range(element_i - 1, element_i + 2):
+            for j in range(element_j - 1, element_j + 2):
+                if i != element_i and j != element_j and self.is_index_inside_matrix((i, j)):
+                    neighbours.append((i, j))
+
+        return neighbours
+
+    def get_four_neighbours_indexes_from_element_index(self, element_index):
+        i, j = element_index
+        neighbours = [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)]
+
+        for neighbour in neighbours:
+            if not self.is_index_inside_matrix(neighbour):
+                neighbours.remove(neighbour)
+
+        return neighbours
+
+    def is_index_inside_matrix(self, index):
+        return 0 <= index[0] < self.matrix_width and 0 <= index[1] < self.matrix_height
+
+    def get_weight_of_element(self, element_index):
+        return self.matrix[element_index[0]][element_index[1]]
