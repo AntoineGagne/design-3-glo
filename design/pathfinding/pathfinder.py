@@ -162,6 +162,9 @@ class Pathfinder():
                         unsolved_vertices[neighbour] = new_weight
                         parent_of_vertices[neighbour] = current_vertex
 
+        if vertices_weights[destination_vertex] == math.inf:
+            raise CheckpointNotAccessibleError("This checkpoint is not accessible.")
+
         # Rebuild path
         while current_vertex != source_vertex:
             self.nodes_queue_to_checkpoint.appendleft(self.graph.get_position_from_grid_element_index(*current_vertex))
