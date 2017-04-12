@@ -19,7 +19,7 @@ GRAPH_GRID_WIDTH = 1    # Should be between 1 and 3 cm
 MAXIMUM_GRID_NODE_HEIGHT = 30
 
 PATH_FILTER_WIDTH = 10
-PATH_SLOPE_THRESHOLD = 0.5
+PATH_SLOPE_THRESHOLD = 0.4
 
 
 class TranslationStatus(Enum):

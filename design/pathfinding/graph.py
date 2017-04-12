@@ -131,10 +131,14 @@ class Graph():
         source_i, source_j = source_index
         destination_i, destination_j = destination_index
 
-        distance = self.get_euclidian_distance(source_index, destination_index)
-
+        if self.matrix[destination_i][destination_j] >= 27:
+            destination_weight_factor = 3
+        elif self.matrix[destination_i][destination_j] >= 20:
+            destination_weight_factor = 2
+        else:
+            destination_weight_factor = 1
         weight_difference = self.matrix[destination_i][destination_j] - self.matrix[source_i][source_j]
-        return self.matrix[destination_i][destination_j] + weight_difference + distance
+        return destination_weight_factor * self.matrix[destination_i][destination_j] + weight_difference + 1
 
     def get_eight_neighbours_indexes_from_element_index(self, element_index):
         element_i, element_j = element_index

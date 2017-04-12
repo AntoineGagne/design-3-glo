@@ -33,7 +33,6 @@ class Pathfinder():
         self.graph = None
 
         self.nodes_queue_to_checkpoint = deque()  # in cm
-        self.filtered_nodes_queue_to_checkpoint = deque()  # TODO: remove this
 
     def reinitialize(self):
 
@@ -178,8 +177,8 @@ class Pathfinder():
             current_vertex = parent_of_vertices[current_vertex]
 
         # Remove superfluous nodes
-        self.filtered_nodes_queue_to_checkpoint = self.filter_path(self.nodes_queue_to_checkpoint, PATH_FILTER_WIDTH)
-        self.filtered_nodes_queue_to_checkpoint = self.filter_path(self.filtered_nodes_queue_to_checkpoint, 2)
+        self.nodes_queue_to_checkpoint = self.filter_path(self.nodes_queue_to_checkpoint, PATH_FILTER_WIDTH)
+        self.nodes_queue_to_checkpoint = self.filter_path(self.nodes_queue_to_checkpoint, 2)
 
         self.robot_status.generate_new_translation_vector_towards_new_target(self.nodes_queue_to_checkpoint.popleft())
 
