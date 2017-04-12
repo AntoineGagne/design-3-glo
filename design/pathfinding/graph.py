@@ -78,7 +78,7 @@ class Graph():
         i = self.determine_starting_row(obstacle)
         no_infinite_weight_in_row = True
         while no_infinite_weight_in_row:
-            for j in range(obstacle[0][1] - self.obstacle_safe_radius, obstacle[0][1] + self.obstacle_safe_radius):
+            for j in range(*self.get_index_range(obstacle[0][1], self.matrix_height - 1)):
                 if self.matrix[i][j] == math.inf:
                     no_infinite_weight_in_row = False
                 else:
