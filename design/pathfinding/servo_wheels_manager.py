@@ -38,12 +38,14 @@ class ServoWheelsManager():
         returns false.
         :param wheels_controller: Wheels controller, used to communicate with the wheels
         :returns: A boolean indicating if the order is completed """
+        self.logger.log("Servo Wheels Manager - AYY LMAO")
         self.rotation_lock.acquire()
         rotation_is_done = False
         if wheels_controller.rotation_done:
             self.logger.log("Servo Wheels Manager - Rotation done!")
             rotation_is_done = True
         self.rotation_lock.release()
+        self.logger.log("Servo Wheels Manager - Is Current Rotation Movement Done - {0}".format(rotation_is_done))
         return rotation_is_done
 
     def translating_start_heading_correction(self, current_heading, robot_status, wheels_controller):

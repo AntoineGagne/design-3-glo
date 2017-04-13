@@ -6,6 +6,7 @@ import time
 from design.decision_making.constants import (Step,
                                               NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS,
                                               next_step)
+from design.pathfinding.antenna_information import AntennaInformation
 from design.pathfinding.exceptions import OutOfRetriesForCaptureError
 from design.pathfinding.constants import (PointOfInterest,
                                           STANDARD_HEADING, PEN_TO_ANTENNA_OFFSET)
@@ -424,6 +425,7 @@ class AcquireInformationFromAntennaCommand(Command):
             self.logger.log(
                 "Acquire Information From Antenna: Acquisition has failed. Going back to starting search point and retrying the entire sequence.")
             self.hardware.antenna.reinitialize()
+            self.antenna_information = AntennaInformation()
             return (Step.PREPARE_TRAVEL_TO_ANTENNA_ZONE,
                     Packet(PacketType.NOTIFICATION, "Acquisition has failed. Going back to starting search point."))
         else:

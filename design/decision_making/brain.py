@@ -30,8 +30,6 @@ class Brain():
             onboard_vision, self.antenna_information, self.servo_wheels_manager,
             self.capture_repositioning_manager)
 
-        self.first_cycle_already_started = False
-
     def main(self):
         """Main loop of the robot. Polls on telemetry and acts according
         to what it recieves."""
@@ -50,11 +48,6 @@ class Brain():
                     cycle_start_notification = Packet(PacketType.COMMAND, "START_CHRONOGRAPH")
                     self.base_station.put_command(cycle_start_notification)
                     main_sequence_has_started = True
-                    if not self.first_cycle_already_started:
-                        self.first_cycle_already_started = True
-                    else:
-                        pass
-                        # self.reinitialize_for_next_cycle()
 
             if main_sequence_has_started:
 
@@ -77,6 +70,7 @@ class Brain():
                 if self.current_status == Step.STANBY:
                     self.base_station.put_command(ready_packet)
                     main_sequence_has_started = False
+                    self.reinitialize_for_next_cycle()
 
     def reinitialize_for_next_cycle(self):
         self.pathfinder.reinitialize()

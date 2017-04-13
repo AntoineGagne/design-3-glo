@@ -54,8 +54,10 @@ class TrustingRotationCheckCommand(Command):
         self.logger.log("Trusting Rotation Check: Execution. Step = {0}".format(self.current_step))
 
         if self.servo_wheels_manager.rotation_status == RotationStatus.ROTATING:
-            if not self.servo_wheels_manager.is_current_rotation_movement_done:
+            if not self.servo_wheels_manager.is_current_rotation_movement_done(self.hardware.wheels):
+                self.logger.log("Trusting Rotation Check in progress")
                 return (self.current_step, None)
             else:
+                self.logger.log("Trusting Rotation check DONE")
                 self.pathfinder.robot_status.heading = self.pathfinder.robot_status.target_heading
                 return (next_step(self.current_step), None)
