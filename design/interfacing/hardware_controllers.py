@@ -66,6 +66,7 @@ class AntennaController(HardwareObserver):
         :returns: A tuple containing information about the drawing task at hand
         :rtype: `design.utils.AntennaInformation`"""
         if not self.decode_routine_called:
+            self.logger.log("Antenna Controller - Signal data acquire sequence sent to STM32")
             self.stm32_driver.decode_manchester()
             self.decode_routine_called = True
 

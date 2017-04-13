@@ -425,7 +425,6 @@ class AcquireInformationFromAntennaCommand(Command):
             self.logger.log(
                 "Acquire Information From Antenna: Acquisition has failed. Going back to starting search point and retrying the entire sequence.")
             self.hardware.antenna.reinitialize()
-            self.antenna_information = AntennaInformation()
             return (Step.PREPARE_TRAVEL_TO_ANTENNA_ZONE,
                     Packet(PacketType.NOTIFICATION, "Acquisition has failed. Going back to starting search point."))
         else:
