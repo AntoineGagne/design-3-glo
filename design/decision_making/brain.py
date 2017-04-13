@@ -17,6 +17,7 @@ class Brain():
         """Initializes robot on STANBY mode, waiting for game map objects
         to be transmitted in order to start its routine"""
 
+        self.logger = logger
         self.pathfinder = Pathfinder(logger)
         self.antenna_information = AntennaInformation()
         self.current_status = Step.STANBY
@@ -73,6 +74,7 @@ class Brain():
                     self.reinitialize_for_next_cycle()
 
     def reinitialize_for_next_cycle(self):
+        self.logger.log("Reinitializing for next cycle")
         self.pathfinder.reinitialize()
         self.servo_wheels_manager.reinitialize()
         self.interfacing_controller.antenna.reinitialize()

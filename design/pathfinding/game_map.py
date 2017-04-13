@@ -33,9 +33,9 @@ class GameMap():
     def set_antenna_search_points(self, northeastern_corner):
         """ Sets the antenna's start of search point """
         self.points_of_interest[PointOfInterest.ANTENNA_START_SEARCH_POINT] = (
-            northeastern_corner[0] - ROBOT_SAFETY_MARGIN - 1.5, northeastern_corner[1] + ANTENNA_SLIDER_START_OFFSET_OF_MAP_CORNER)
+            northeastern_corner[0] - ROBOT_SAFETY_MARGIN + 2, northeastern_corner[1] + ANTENNA_SLIDER_START_OFFSET_OF_MAP_CORNER)
         self.points_of_interest[PointOfInterest.ANTENNA_STOP_SEARCH_POINT] = (
-            northeastern_corner[0] - ROBOT_SAFETY_MARGIN - 1.5, northeastern_corner[1] + ANTENNA_SLIDER_START_OFFSET_OF_MAP_CORNER + ANTENNA_SLIDER_LENGTH)
+            northeastern_corner[0] - ROBOT_SAFETY_MARGIN + 2, northeastern_corner[1] + ANTENNA_SLIDER_START_OFFSET_OF_MAP_CORNER + ANTENNA_SLIDER_LENGTH)
 
     def get_point_of_interest(self, point_of_interest_type):
         """ Returns antenna zone/point """
