@@ -38,10 +38,10 @@ class OnboardVision:
                               zoom: float,
                               orientation: float) -> List[List[float]]:
 
-        if int(zoom) == 90:
-            zoom = 180
-        elif int(zoom) == 180:
-            zoom = 90
+        #if int(zoom) == 90:
+        #    zoom = 180
+        #elif int(zoom) == 180:
+        #    zoom = 90
 
         figures = list(map(self._find_vertices, self._captures))
         figure, index = find_best_figure(

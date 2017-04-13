@@ -216,5 +216,9 @@ def create_onboard_vision(camera_port: int,
 
 
 if __name__ == '__main__':
+
+    sys.stderr = open('/home/stderr.txt', 'w')
+    sys.stdout = open('/home/stdout.txt', 'w')
+
     arguments = parse_arguments()
     arguments.function(arguments)
