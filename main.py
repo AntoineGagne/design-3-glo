@@ -171,7 +171,10 @@ def start_robot(arguments):
         translation_lock,
         rotation_lock
     )
-    brain.main()
+    try:
+        brain.main()
+    except Exception as exception:
+        logger.log("Main - Exception raised all the way. Message: {0}".format(exception))
 
 
 def create_interfacing_controller(logger, translation_lock, rotation_lock) -> InterfacingController:
