@@ -2,7 +2,7 @@
 import math
 
 from design.pathfinding.constants import GRAPH_GRID_WIDTH, OBSTACLE_RADIUS, ROBOT_SAFETY_MARGIN, \
-    MAXIMUM_GRID_NODE_HEIGHT
+    MAXIMUM_GRID_NODE_HEIGHT, ROBOT_HALF_WIDTH
 
 
 class Graph():
@@ -12,7 +12,7 @@ class Graph():
         self.matrix_width = 0
         self.matrix_height = 0
         self.obstacle_safe_radius = (OBSTACLE_RADIUS + ROBOT_SAFETY_MARGIN) // GRAPH_GRID_WIDTH
-        self.wall_thickness = ROBOT_SAFETY_MARGIN // GRAPH_GRID_WIDTH + 1
+        self.wall_thickness = ROBOT_HALF_WIDTH // GRAPH_GRID_WIDTH + 1
 
     def initialize_graph_matrix(self, southeastern_corner, northwestern_corner, obstacle_list):
 
