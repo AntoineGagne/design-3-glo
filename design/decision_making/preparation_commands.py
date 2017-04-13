@@ -6,6 +6,7 @@ import time
 from design.decision_making.constants import (Step,
                                               NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS,
                                               next_step)
+from design.pathfinding.antenna_information import AntennaInformation
 from design.pathfinding.exceptions import OutOfRetriesForCaptureError
 from design.pathfinding.constants import (PointOfInterest,
                                           STANDARD_HEADING, PEN_TO_ANTENNA_OFFSET)
@@ -316,6 +317,23 @@ class PrepareMovingToAntennaPositionCommand(Command):
             return (Step.COMPUTE_PAINTINGS_AREA,
                     Packet(PacketType.NOTIFICATION, "Antenna position has not been found! Aborting search."))
 
+class PrepareMovingOfAntennaOffsetCommand(Command):
+
+    def execute(self, data):
+
+        self.logger.log("Prepare Moving of Antenna Offset: Execution.")
+
+        position_x, position_y = self.pathfinder.robot_status.get_position()
+        position_y = position_y + PEN_TO_ANTENNA_OFFSET
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
+
+        self.hardware.wheels.move(
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
+                self.pathfinder.robot_status.get_position()))
+
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
+
 
 class PrepareMarkingAntennaCommand(Command):
     """ Prepares movement in order to mark the antenna's position. """
@@ -333,8 +351,8 @@ class PrepareMarkingAntennaCommand(Command):
         self.hardware.pen.lower_pen()
 
         position_x, position_y = self.pathfinder.robot_status.get_position()
-        position_x = position_x - 4
-        position_y = position_y + PEN_TO_ANTENNA_OFFSET
+        position_x = position_x - 0.8
+
         self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
 
         self.hardware.wheels.move(
@@ -407,6 +425,7 @@ class AcquireInformationFromAntennaCommand(Command):
             self.logger.log(
                 "Acquire Information From Antenna: Acquisition has failed. Going back to starting search point and retrying the entire sequence.")
             self.hardware.antenna.reinitialize()
+            self.antenna_information = AntennaInformation()
             return (Step.PREPARE_TRAVEL_TO_ANTENNA_ZONE,
                     Packet(PacketType.NOTIFICATION, "Acquisition has failed. Going back to starting search point."))
         else:
@@ -479,7 +498,8 @@ class CaptureFigureCommand(Command):
 
             self.vision.pixel_coordinates.append(self.vision.pixel_coordinates[0])
 
-            return (next_step(self.current_step), Packet(PacketType.FIGURE_VERTICES, self.vision.pixel_coordinates))
+            return (next_step(self.current_step), [Packet(PacketType.FIGURE_VERTICES, self.vision.pixel_coordinates),
+                                                   Packet(PacketType.FIGURE_IMAGE, self.vision.last_capture)])
         except PaintingFrameNotFound:
             self.logger.log("Capture Figure: Failure - Painting Frame Not Found")
             return (Step.REPOSITION_FOR_CAPTURE_RETRY, None)
@@ -513,3 +533,62 @@ class RepositionForCaptureRetryCommand(Command):
         except OutOfRetriesForCaptureError:
             self.logger.log("Reposition For Capture Retry: Out of retries! Aborting cycle.")
             return (Step.STANBY, Packet(PacketType.NOTIFICATION, "Out of capture retry attempts. Aborting cycle."))
+
+
+class PrepareAlignWithCaptureCommand(Command):
+
+    def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information):
+        super(PrepareAlignWithCaptureCommand, self).__init__(
+            step, interfacing_controller, pathfinder, logger)
+        self.antenna_information = antenna_information
+
+    def execute(self, telemetry_data):
+
+        if not self.is_positional_telemetry_recieved(telemetry_data):
+            return (self.current_step, None)
+
+        self.logger.log("Prepare Align With Capture Command: Execution")
+        figure_position = self.pathfinder.figures.get_position_to_take_figure_from(
+            self.antenna_information.painting_number)
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b(figure_position)
+        self.hardware.wheels.move(
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(telemetry_data[0]))
+
+        return (next_step(self.current_step), self.pathfinder.get_current_path())
+
+
+class PrepareRealignWithFirstVertexDrawnCommand(Command):
+
+    def __init__(self, step, interfacing_controller, pathfinder, logger, onboard_vision,
+                 antenna_information):
+        super(PrepareRealignWithFirstVertexDrawnCommand, self).__init__(
+            step, interfacing_controller, pathfinder, logger)
+        self.vision = onboard_vision
+        self.antenna_information = antenna_information
+
+    def execute(self, telemetry_data):
+
+        if not self.is_positional_telemetry_recieved(telemetry_data):
+            return (self.current_step, None)
+
+        self.logger.log("Prepare Realign With First Vertex Drawn: Execution.")
+
+        drawing_zone_origin_x, drawing_zone_origin_y = self.pathfinder.get_point_of_interest(
+            PointOfInterest.DRAWING_ZONE)
+
+        first_vertex_x, first_vertex_y = self.vision.get_captured_vertices(
+            self.antenna_information.zoom, self.antenna_information.orientation)[0]
+
+        position_x = drawing_zone_origin_x + first_vertex_x
+        position_y = drawing_zone_origin_y + first_vertex_y
+
+        self.logger.log("Prepare Realign With First Vertex Drawn: Moving towards first vertex at position = {0}".format(
+            (position_x, position_y)))
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
+
+        self.hardware.wheels.move(
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(telemetry_data[0]))
+
+        return (next_step(self.current_step), self.pathfinder.get_current_path())

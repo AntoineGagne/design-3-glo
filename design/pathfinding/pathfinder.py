@@ -33,10 +33,11 @@ class Pathfinder():
         self.graph = None
 
         self.nodes_queue_to_checkpoint = deque()  # in cm
+        self.filtered_nodes_queue_to_checkpoint = deque()  # TODO: remove this
 
     def reinitialize(self):
 
-        self.robot_status.reinitialize()
+        self.robot_status = None
         self.graph = None
         self.nodes_queue_to_checkpoint = deque()
         self.figures.compute_positions((0, 0), (0, 231), (112, 231), (112, 0))
@@ -64,8 +65,20 @@ class Pathfinder():
 
         obstacles = game_map_data.get("obstacles")
         if obstacles:
+
+            self.logger.log("Pathfinder - Assigning obstacles: {0}".format(obstacles))
+
             self.graph = Graph()
-            self.graph.initialize_graph_matrix(table_corners_positions[0], table_corners_positions[2], obstacles)
+            southeastern_x = int(table_corners_positions[0][0])
+            southeastern_y = int(table_corners_positions[0][1])
+            northwestern_x = int(table_corners_positions[2][0])
+            northwestern_y = int(table_corners_positions[2][1])
+
+            int_obstacles = []
+            for obstacle in obstacles:
+                x, y = obstacle[0]
+                int_obstacles.append([(int(x), int(y)), obstacle[1]])
+            self.graph.initialize_graph_matrix((southeastern_x, southeastern_y), (northwestern_x, northwestern_y), int_obstacles)
         else:
             self.graph.initialize_graph_matrix((0, 0), (112, 231), [])
 
@@ -117,8 +130,6 @@ class Pathfinder():
         """ Generates shortest path to checkpoint and updates the node queue
         accordingly.
         :raise: CheckpointNotAccessibleException if the checkpoint_position is not accessible"""
-        if checkpoint_position in self.graph.list_of_inaccessible_nodes:
-            raise CheckpointNotAccessibleError("Le point d'arrivé est non accessible par le robot")
 
         print("Generate path to checkpoint a to b - checkpoint pos = {0}".format(checkpoint_position))
 

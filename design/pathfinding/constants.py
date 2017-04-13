@@ -3,7 +3,7 @@
 from enum import Enum
 
 
-TRANSLATION_THRESHOLD = 1.5  # cm
+TRANSLATION_THRESHOLD = 3  # cm
 ROTATION_THRESHOLD = 0.25  # degree(s)
 TRANSLATION_SPEED = 5  # cm/s
 ROTATION_SPEED = 3  # degree(s) per second
