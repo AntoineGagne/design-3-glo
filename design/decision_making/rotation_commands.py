@@ -5,7 +5,6 @@ from design.pathfinding.constants import RotationStatus
 
 
 class RotationCheckCommand(Command):
-    """ Basic verification of a rotation's step progress. """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, servo_wheels_manager):
         super(RotationCheckCommand, self).__init__(
@@ -13,7 +12,6 @@ class RotationCheckCommand(Command):
         self.servo_wheels_manager = servo_wheels_manager
 
     def execute(self, telemetry_data):
-        """ Executes the rotation check """
         if not self.is_positional_telemetry_recieved(telemetry_data):
             return (self.current_step, None)
 
@@ -41,7 +39,6 @@ class RotationCheckCommand(Command):
 
 
 class TrustingRotationCheckCommand(Command):
-    """ Basic verification of rotation's progress, but without using telemetry. """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, servo_wheels_manager):
         super(TrustingRotationCheckCommand, self).__init__(
@@ -49,13 +46,14 @@ class TrustingRotationCheckCommand(Command):
         self.servo_wheels_manager = servo_wheels_manager
 
     def execute(self, telemetry_data):
-        """ Executes the rotation check """
 
         self.logger.log("Trusting Rotation Check: Execution. Step = {0}".format(self.current_step))
 
         if self.servo_wheels_manager.rotation_status == RotationStatus.ROTATING:
-            if not self.servo_wheels_manager.is_current_rotation_movement_done:
+            if not self.servo_wheels_manager.is_current_rotation_movement_done(self.hardware.wheels):
+                self.logger.log("Trusting Rotation Check in progress")
                 return (self.current_step, None)
             else:
+                self.logger.log("Trusting Rotation check DONE")
                 self.pathfinder.robot_status.heading = self.pathfinder.robot_status.target_heading
                 return (next_step(self.current_step), None)

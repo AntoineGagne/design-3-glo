@@ -2,6 +2,7 @@
 
 import datetime
 import time
+from collections import defaultdict
 
 from design.decision_making.constants import (Step,
                                               NUMBER_OF_SECONDS_BETWEEN_ROUTINE_CHECKS,
@@ -14,8 +15,6 @@ from design.vision.exceptions import PaintingFrameNotFound, VerticesNotFound
 
 
 class Command():
-    """ Allows execution of any command without the brain knowing the internals
-    of said command """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger):
         self.current_step = step
@@ -24,12 +23,7 @@ class Command():
         self.logger = logger
 
     def is_positional_telemetry_recieved(self, telemetry_data):
-        """ Verifies if data recieved from telemetry is a POSITION packet. If
-        not, it sleeps for an arbitrary amount of time and returns false. If it is
-        a position packet, returns true immediately.
-        :param telemetry_data: Data recieved by telemetry
-        :returns: A boolean indicating if said telemetry is recieved and is a position packet
-        :rtype: boolean """
+
         if telemetry_data is None:
             return False
         elif not isinstance(telemetry_data, list):
@@ -38,18 +32,12 @@ class Command():
             return True
 
     def execute(self, data):
-        """ Executes the command and returns the new step the robot should be in,
-        as well as any message that must be sent towards the base station through
-        telemetry """
         raise NotImplementedError("execute() must be implemented!")
 
 
 class BuildGameMapCommand(Command):
-    """ Command that builds the game map according to corners, obstacles and
-    points of interest """
 
     def execute(self, game_map_data):
-        """ Builds game map """
 
         self.logger.log("Build Game Map: Execution.")
 
@@ -66,11 +54,8 @@ class BuildGameMapCommand(Command):
 
 
 class PrepareTravelToAntennaAreaCommand(Command):
-    """ Commands that sets the trajectory of the robot to go towards
-    the antenna's general area """
 
     def execute(self, data):
-        """ Executes preparation of travel to antenna command """
 
         if not self.is_positional_telemetry_recieved(data):
             return (self.current_step, None)
@@ -94,8 +79,6 @@ class PrepareTravelToAntennaAreaCommand(Command):
 
 
 class TravelToPaintingsAreaCommand(Command):
-    """ Commands that sets the trajectory of the robot to the paintings
-    section """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information):
         super(TravelToPaintingsAreaCommand, self).__init__(
@@ -103,7 +86,6 @@ class TravelToPaintingsAreaCommand(Command):
         self.antenna_information = antenna_information
 
     def execute(self, telemetry_data):
-        """ Sets trajectory of the robot to paintings area """
 
         if not self.is_positional_telemetry_recieved(telemetry_data):
             return (self.current_step, None)
@@ -131,7 +113,6 @@ class TravelToPaintingsAreaCommand(Command):
 
 
 class PrepareToDrawCommand(Command):
-    """ Commands that lowers the pen and gives vectors list to draw """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, onboard_vision,
                  antenna_information):
@@ -141,7 +122,6 @@ class PrepareToDrawCommand(Command):
         self.antenna_information = antenna_information
 
     def execute(self, data):
-        """ Starts drawing """
 
         self.logger.log("Prepare to Draw: Execution.")
 
@@ -175,10 +155,8 @@ class PrepareToDrawCommand(Command):
 
 
 class PrepareExitOfDrawingAreaCommand(Command):
-    """ Prepares the robot to leave the drawing zone """
 
     def execute(self, data):
-        """ Executes exit of drawing area command """
 
         self.logger.log("Prepare Exit of Drawing Area: Execution.")
 
@@ -202,21 +180,16 @@ class PrepareExitOfDrawingAreaCommand(Command):
 
 
 class FinishCycleCommand(Command):
-    """ Command that stops the current cycle and notifies the base station """
 
     def execute(self, data):
-        """ Stops current cycle """
         self.logger.log("Cycle finished. Currently at position {0}".format(self.pathfinder.robot_status.get_position()))
         self.hardware.lights.turn_on_red_led()
         return (Step.STANBY, Packet(PacketType.COMMAND, "STOP_CHRONOGRAPH"))
 
 
 class PrepareSearchForAntennaPositionCommand(Command):
-    """ Starts sampling for antenna signal and gives movement vector along the
-    wall so it can find the antenna's position easily """
 
     def execute(self, data):
-        """ Starts search for antenna """
 
         print("prepare search for antenna position command")
 
@@ -233,8 +206,6 @@ class PrepareSearchForAntennaPositionCommand(Command):
 
 
 class SearchForAntennaPositionCommand(Command):
-    """ Does mostly the same thing as RoutineCheckCommand but starts sampling the signal's strength
-    in order to build a curve, used to find the maximum value and thus, the antenna's position."""
 
     st_last_execution = datetime.datetime.now()
 
@@ -248,14 +219,12 @@ class SearchForAntennaPositionCommand(Command):
         self.antenna_information = antenna_information
 
     def execute(self, robot_position_from_telemetry):
-        """ Executes search for antenna command """
 
         if not self.is_positional_telemetry_recieved(robot_position_from_telemetry):
             return (self.current_step, None)
 
         self.logger.log("Search For Antenna Position: Execution.")
 
-        # Executes normal routine check
         normal_routine_check = self.movement_strategy.get_translation_command(
             self.current_step, self.hardware, self.pathfinder, self.logger, self.servo_wheels_manager)
         step, exit_telemetry = normal_routine_check.execute(
@@ -281,7 +250,6 @@ class SearchForAntennaPositionCommand(Command):
 
 
 class PrepareMovingToAntennaPositionCommand(Command):
-    """ Generates a vector used by the robot to move right in front of the antenna's location. """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information):
         super(PrepareMovingToAntennaPositionCommand, self).__init__(
@@ -317,8 +285,25 @@ class PrepareMovingToAntennaPositionCommand(Command):
                     Packet(PacketType.NOTIFICATION, "Antenna position has not been found! Aborting search."))
 
 
+class PrepareMovingOfAntennaOffsetCommand(Command):
+
+    def execute(self, data):
+
+        self.logger.log("Prepare Moving of Antenna Offset: Execution.")
+
+        position_x, position_y = self.pathfinder.robot_status.get_position()
+        position_y = position_y + PEN_TO_ANTENNA_OFFSET
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
+
+        self.hardware.wheels.move(
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(
+                self.pathfinder.robot_status.get_position()))
+
+        return (next_step(self.current_step), Packet(PacketType.PATH, self.pathfinder.get_current_path()))
+
+
 class PrepareMarkingAntennaCommand(Command):
-    """ Prepares movement in order to mark the antenna's position. """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information):
         super(PrepareMarkingAntennaCommand, self).__init__(
@@ -326,15 +311,14 @@ class PrepareMarkingAntennaCommand(Command):
         self.antenna_information = antenna_information
 
     def execute(self, data):
-        """ Executes marking antenna preparation command """
 
         self.logger.log("Prepare Marking Antenna: Execution.")
 
         self.hardware.pen.lower_pen()
 
         position_x, position_y = self.pathfinder.robot_status.get_position()
-        position_x = position_x - 4
-        position_y = position_y + PEN_TO_ANTENNA_OFFSET
+        position_x = position_x - 0.8
+
         self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
 
         self.hardware.wheels.move(
@@ -345,7 +329,6 @@ class PrepareMarkingAntennaCommand(Command):
 
 
 class PrepareTravelToDrawingAreaCommand(Command):
-    """ Prepares movement vector to travel to the center of the drawing zone """
 
     def __init__(self, current_step, interfacing_controller, pathfinder, logger, vision, antenna_information):
         super(PrepareTravelToDrawingAreaCommand, self).__init__(current_step,
@@ -354,7 +337,6 @@ class PrepareTravelToDrawingAreaCommand(Command):
         self.antenna_information = antenna_information
 
     def execute(self, data):
-        """ Executes travel to drawing area command """
 
         self.logger.log("Prepare Travel to Drawing Area: Execution.")
 
@@ -385,8 +367,6 @@ class PrepareTravelToDrawingAreaCommand(Command):
 
 
 class AcquireInformationFromAntennaCommand(Command):
-    """ Allows acquisition and safeguarding of the information
-    emitted by the antenna """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information):
         super(AcquireInformationFromAntennaCommand, self).__init__(
@@ -394,7 +374,6 @@ class AcquireInformationFromAntennaCommand(Command):
         self.antenna_information = antenna_information
 
     def execute(self, data):
-        """ Executes acquisition command """
         self.logger.log("Acquire Information From Antenna: Execution.")
 
         antenna_data = None
@@ -407,6 +386,7 @@ class AcquireInformationFromAntennaCommand(Command):
             self.logger.log(
                 "Acquire Information From Antenna: Acquisition has failed. Going back to starting search point and retrying the entire sequence.")
             self.hardware.antenna.reinitialize()
+            self.antenna_information.strength_curve = defaultdict(lambda: 0)
             return (Step.PREPARE_TRAVEL_TO_ANTENNA_ZONE,
                     Packet(PacketType.NOTIFICATION, "Acquisition has failed. Going back to starting search point."))
         else:
@@ -419,8 +399,6 @@ class AcquireInformationFromAntennaCommand(Command):
 
 
 class FaceRelevantFigureForCaptureCommand(Command):
-    """ Allows the robot to start its rotation towards a FOV zone where it can
-    capture the relevant figure """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information):
         super(FaceRelevantFigureForCaptureCommand, self).__init__(
@@ -428,7 +406,6 @@ class FaceRelevantFigureForCaptureCommand(Command):
         self.antenna_information = antenna_information
 
     def execute(self, data):
-        """ Executes face relevant figure for capture command """
 
         self.logger.log("Face Relevant Figure for Capture: Execution.")
 
@@ -448,7 +425,6 @@ class FaceRelevantFigureForCaptureCommand(Command):
 
 
 class CaptureFigureCommand(Command):
-    """ Allows the robot to capture the relevant figure """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information, onboard_vision):
         super(CaptureFigureCommand, self).__init__(step, interfacing_controller, pathfinder, logger)
@@ -456,7 +432,6 @@ class CaptureFigureCommand(Command):
         self.antenna_information = antenna_information
 
     def execute(self, data):
-        """ Executes capture command """
 
         self.logger.log(
             "Capture Figure: Execution with zoom = {0} and orientation = {1}".format(self.antenna_information.zoom,
@@ -479,7 +454,8 @@ class CaptureFigureCommand(Command):
 
             self.vision.pixel_coordinates.append(self.vision.pixel_coordinates[0])
 
-            return (next_step(self.current_step), Packet(PacketType.FIGURE_VERTICES, self.vision.pixel_coordinates))
+            return (next_step(self.current_step), [Packet(PacketType.FIGURE_VERTICES, self.vision.pixel_coordinates),
+                                                   Packet(PacketType.FIGURE_IMAGE, self.vision.last_capture)])
         except PaintingFrameNotFound:
             self.logger.log("Capture Figure: Failure - Painting Frame Not Found")
             return (Step.REPOSITION_FOR_CAPTURE_RETRY, None)
@@ -496,7 +472,6 @@ class RepositionForCaptureRetryCommand(Command):
         self.capture_repositioning_manager = capture_repositioning_manager
 
     def execute(self, telemetry_data):
-        """ Executes the repositioning command """
 
         if not self.is_positional_telemetry_recieved(telemetry_data):
             return (self.current_step, None)
@@ -513,3 +488,62 @@ class RepositionForCaptureRetryCommand(Command):
         except OutOfRetriesForCaptureError:
             self.logger.log("Reposition For Capture Retry: Out of retries! Aborting cycle.")
             return (Step.STANBY, Packet(PacketType.NOTIFICATION, "Out of capture retry attempts. Aborting cycle."))
+
+
+class PrepareAlignWithCaptureCommand(Command):
+
+    def __init__(self, step, interfacing_controller, pathfinder, logger, antenna_information):
+        super(PrepareAlignWithCaptureCommand, self).__init__(
+            step, interfacing_controller, pathfinder, logger)
+        self.antenna_information = antenna_information
+
+    def execute(self, telemetry_data):
+
+        if not self.is_positional_telemetry_recieved(telemetry_data):
+            return (self.current_step, None)
+
+        self.logger.log("Prepare Align With Capture Command: Execution")
+        figure_position = self.pathfinder.figures.get_position_to_take_figure_from(
+            self.antenna_information.painting_number)
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b(figure_position)
+        self.hardware.wheels.move(
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(telemetry_data[0]))
+
+        return (next_step(self.current_step), self.pathfinder.get_current_path())
+
+
+class PrepareRealignWithFirstVertexDrawnCommand(Command):
+
+    def __init__(self, step, interfacing_controller, pathfinder, logger, onboard_vision,
+                 antenna_information):
+        super(PrepareRealignWithFirstVertexDrawnCommand, self).__init__(
+            step, interfacing_controller, pathfinder, logger)
+        self.vision = onboard_vision
+        self.antenna_information = antenna_information
+
+    def execute(self, telemetry_data):
+
+        if not self.is_positional_telemetry_recieved(telemetry_data):
+            return (self.current_step, None)
+
+        self.logger.log("Prepare Realign With First Vertex Drawn: Execution.")
+
+        drawing_zone_origin_x, drawing_zone_origin_y = self.pathfinder.get_point_of_interest(
+            PointOfInterest.DRAWING_ZONE)
+
+        first_vertex_x, first_vertex_y = self.vision.get_captured_vertices(
+            self.antenna_information.zoom, self.antenna_information.orientation)[0]
+
+        position_x = drawing_zone_origin_x + first_vertex_x
+        position_y = drawing_zone_origin_y + first_vertex_y
+
+        self.logger.log("Prepare Realign With First Vertex Drawn: Moving towards first vertex at position = {0}".format(
+            (position_x, position_y)))
+
+        self.pathfinder.generate_path_to_checkpoint_a_to_b((position_x, position_y))
+
+        self.hardware.wheels.move(
+            self.pathfinder.robot_status.generate_new_translation_vector_towards_current_target(telemetry_data[0]))
+
+        return (next_step(self.current_step), self.pathfinder.get_current_path())

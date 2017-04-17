@@ -2,7 +2,6 @@
 
 
 class InterfacingController():
-    """ Bundles all interfacing in a easy to inject bundle """
 
     def __init__(self, wheels, antenna, pen, lights):
         self.wheels = wheels

@@ -8,8 +8,6 @@ from design.decision_making.translation_commands import TranslationCheckCommand,
 
 
 class MovementStrategy():
-    """ Allows injection of a correct movement strategy
-    for various test and integration cases much more easily """
 
     def __init__(self, translation_strategy_type, rotation_strategy_type):
         self.translation_strategy = translation_strategy_type

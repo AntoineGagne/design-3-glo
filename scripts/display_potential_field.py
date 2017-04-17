@@ -7,10 +7,11 @@ from design.pathfinding.constants import MAXIMUM_GRID_NODE_HEIGHT
 from design.pathfinding.exceptions import CheckpointNotAccessibleError
 
 if __name__ == "__main__":
-    starting_point = (40, 15)
-    destination = (23, 207)
+    starting_point = (90, 40)
+    destination = (40, 200)
     graph = Graph()
-    obstacle_list = [[(44, 143), "S"], [(99, 143), "O"]]
+    obstacle_list = [[(45, 80), "N"], [(85, 130), "S"], [(45, 170), "N"]]
+
     print("Initializing potential field")
     graph.initialize_graph_matrix((0, 0), (111, 230), obstacle_list)
 

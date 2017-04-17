@@ -12,6 +12,7 @@ class Graph():
         self.matrix_width = 0
         self.matrix_height = 0
         self.obstacle_safe_radius = (OBSTACLE_RADIUS + ROBOT_SAFETY_MARGIN) // GRAPH_GRID_WIDTH
+        self.wall_thickness = ROBOT_HALF_WIDTH // GRAPH_GRID_WIDTH + 1
 
     def initialize_graph_matrix(self, southeastern_corner, northwestern_corner, obstacle_list):
 
@@ -40,12 +41,11 @@ class Graph():
         self.connect_obstacles_and_walls(obstacle_list)
 
     def add_walls_safety_margin(self):
-        num_square = ROBOT_HALF_WIDTH // GRAPH_GRID_WIDTH + 1
         for i in range(self.matrix_width):
             for j in range(self.matrix_height):
-                if i <= num_square or i > self.matrix_width - num_square:
+                if i < self.wall_thickness or i >= self.matrix_width - self.wall_thickness:
                     self.matrix[i][j] = math.inf
-                elif j <= num_square or j > self.matrix_height - num_square:
+                elif j < self.wall_thickness or j >= self.matrix_height - self.wall_thickness:
                     self.matrix[i][j] = math.inf
 
     def place_obstacles_in_matrix(self, obstacle_list):
@@ -69,24 +69,27 @@ class Graph():
     def connect_obstacles_and_walls(self, obstacle_list):
         for obstacle in obstacle_list:
             if obstacle[1] != "O":
-                self.connect_obstacle_to_closest_impassable_zone(obstacle)
+                self.connect_obstacle_to_opposing_wall(obstacle)
 
-    def connect_obstacle_to_closest_impassable_zone(self, obstacle):
-        i = self.determine_starting_row(obstacle)
-        no_infinite_weight_in_row = True
-        while no_infinite_weight_in_row:
-            for j in range(*self.get_index_range(obstacle[0][1], self.matrix_height - 1)):
-                if self.matrix[i][j] == math.inf:
-                    no_infinite_weight_in_row = False
-                else:
-                    self.matrix[i][j] = math.inf
+    def connect_obstacle_to_opposing_wall(self, obstacle):
+        i = self.determine_connection_starting_row(obstacle)
+        ending_row = self.determine_connection_ending_row(obstacle)
+        j = obstacle[0][1]
+        while i != ending_row:
+            self.matrix[i][j] = math.inf
             i = self.move_to_next_row(i, obstacle[1])
 
-    def determine_starting_row(self, obstacle):
+    def determine_connection_starting_row(self, obstacle):
         if obstacle[1] == "N":
-            return max(obstacle[0][0] - self.obstacle_safe_radius - 1, 1)
+            return max(obstacle[0][0] - self.obstacle_safe_radius - 1, self.wall_thickness - 1)
         else:
-            return min(obstacle[0][0] + self.obstacle_safe_radius, self.matrix_width - 1)
+            return min(obstacle[0][0] + self.obstacle_safe_radius, self.matrix_width - self.wall_thickness)
+
+    def determine_connection_ending_row(self, obstacle):
+        if obstacle[1] == "N":
+            return self.wall_thickness - 1
+        else:
+            return self.matrix_width - self.wall_thickness
 
     def move_to_next_row(self, current_row_index, obstacle_orientation):
         if obstacle_orientation == "N":
@@ -118,8 +121,8 @@ class Graph():
 
     def get_grid_element_index_from_position(self, position):
 
-        i = position[0] // GRAPH_GRID_WIDTH
-        j = position[1] // GRAPH_GRID_WIDTH
+        i = int(position[0] // GRAPH_GRID_WIDTH)
+        j = int(position[1] // GRAPH_GRID_WIDTH)
 
         return i, j
 

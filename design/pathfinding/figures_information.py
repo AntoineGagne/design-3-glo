@@ -10,7 +10,6 @@ DISTANCE_FROM_SIDE_TO_ROBOT = 23
 
 
 class FiguresInformation():
-    """ Contains position and orientation to take the capture from """
 
     def __init__(self):
         self.figures = {}
@@ -56,8 +55,6 @@ class FiguresInformation():
 
     def compute_positions(self, southeast_corner, southwest_corner,
                           northwest_corner, northeast_corner):
-        """ Executes final computation of figure positions """
-
         self.southeast_corner = southeast_corner
         self.southwest_corner = southwest_corner
         self.northwest_corner = northwest_corner
@@ -66,11 +63,7 @@ class FiguresInformation():
         print("Figures: {0}".format(self.figures))
 
     def get_position_to_take_figure_from(self, figure_index):
-        """ Returns the position of which the robot must attempt to travel
-        towards to take the picture """
         return self.figures[figure_index][0]
 
     def get_orientation_to_take_figure_from(self, figure_index):
-        """ Returns the orientation of which the robot must head towards
-        in order to take the picture """
         return self.figures[figure_index][1]

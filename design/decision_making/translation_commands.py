@@ -7,10 +7,6 @@ from design.pathfinding.pathfinder import PathStatus
 
 
 class TranslationCheckCommand(Command):
-    """ Command that performs a routine check. Checks if robot is not
-        deviating, otherwise corrects trajectory, and switches to new
-        movement vector if the robot is within threshold if it's next
-        node in the graph. """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, servo_wheels_manager):
         super(TranslationCheckCommand, self).__init__(
@@ -18,7 +14,6 @@ class TranslationCheckCommand(Command):
         self.servo_wheels_manager = servo_wheels_manager
 
     def execute(self, telemetry_data):
-        """ Performs the routine check command """
 
         if not self.is_positional_telemetry_recieved(telemetry_data):
             return (self.current_step, None)
@@ -63,10 +58,6 @@ class TranslationCheckCommand(Command):
 
 
 class TranslationCheckWithoutTelemetryCommand(Command):
-    """ Command that performs a routine check. Checks if robot is not
-        deviating, otherwise corrects trajectory, and switches to new
-        movement vector if the robot is within threshold if it's next
-        node in the graph. """
 
     def __init__(self, step, interfacing_controller, pathfinder, logger, servo_wheels_manager):
         super(TranslationCheckWithoutTelemetryCommand, self).__init__(
@@ -74,7 +65,6 @@ class TranslationCheckWithoutTelemetryCommand(Command):
         self.servo_wheels_manager = servo_wheels_manager
 
     def execute(self, telemetry_data):
-        """ Performs the routine check command """
 
         self.logger.log("Translation Check Without Telemetry: Step = {0}".format(self.current_step))
 

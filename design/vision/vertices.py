@@ -29,7 +29,7 @@ class VerticesFinder:
         with StdErrOutputDisplayManager():
             try:
                 return self._find_vertices(image)
-            except cv2.error:
+            except:
                 raise VerticesNotFound('There was a problem when trying to '
                                        'find the vertices of the given image')
 

@@ -6,7 +6,6 @@ from design.pathfinding.exceptions import OutOfRetriesForCaptureError
 
 
 class CaptureRepositioningManager():
-    """ Allows safeguarding of recapture attempts by the robot. """
 
     def __init__(self):
         self.origin = None
@@ -16,7 +15,6 @@ class CaptureRepositioningManager():
         self.orientations = deque([0, 90, 180, 270])
 
     def get_new_retry_vector(self, heading):
-        """ Returns a new retry translation vector """
 
         orientation = None
         if len(self.orientations) > 0:
@@ -43,8 +41,4 @@ class CaptureRepositioningManager():
         return (retry_vector_x, retry_vector_y)
 
     def get_vector_to_capture_origin(self, position):
-        """ Returns a translation vector towards the original position of the robot before
-        any retry attempts.
-        :param position: Telemetry position
-        :returns: A vector (dx, dy)"""
         return (position[0] - self.origin[0], position[1] - self.origin[1])

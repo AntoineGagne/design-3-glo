@@ -1,13 +1,5 @@
 import logging
 
-LOGGER = logging.getLogger("interfacing_logger")
-LOGGER.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler('execution.log', 'w')
-file_handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(message)s')
-file_handler.setFormatter(formatter)
-LOGGER.addHandler(file_handler)
-
 
 class ExecutionLogger():
 

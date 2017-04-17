@@ -10,13 +10,11 @@ from design.telemetry.packets import PacketType, Packet
 
 
 class Brain():
-    """Controls decisionmaking of the robot"""
 
     def __init__(self, telemetry, interfacing_controller, logger, onboard_vision, movement_strategies, translation_lock,
                  rotation_lock):
-        """Initializes robot on STANBY mode, waiting for game map objects
-        to be transmitted in order to start its routine"""
 
+        self.logger = logger
         self.pathfinder = Pathfinder(logger)
         self.antenna_information = AntennaInformation()
         self.current_status = Step.STANBY
@@ -30,11 +28,7 @@ class Brain():
             onboard_vision, self.antenna_information, self.servo_wheels_manager,
             self.capture_repositioning_manager)
 
-        self.first_cycle_already_started = False
-
     def main(self):
-        """Main loop of the robot. Polls on telemetry and acts according
-        to what it recieves."""
 
         main_sequence_has_started = False
 
@@ -50,10 +44,6 @@ class Brain():
                     cycle_start_notification = Packet(PacketType.COMMAND, "START_CHRONOGRAPH")
                     self.base_station.put_command(cycle_start_notification)
                     main_sequence_has_started = True
-                    if not self.first_cycle_already_started:
-                        self.first_cycle_already_started = True
-                    else:
-                        self.reinitialize_for_next_cycle()
 
             if main_sequence_has_started:
 
@@ -76,8 +66,10 @@ class Brain():
                 if self.current_status == Step.STANBY:
                     self.base_station.put_command(ready_packet)
                     main_sequence_has_started = False
+                    self.reinitialize_for_next_cycle()
 
     def reinitialize_for_next_cycle(self):
+        self.logger.log("Reinitializing for next cycle")
         self.pathfinder.reinitialize()
         self.servo_wheels_manager.reinitialize()
         self.interfacing_controller.antenna.reinitialize()

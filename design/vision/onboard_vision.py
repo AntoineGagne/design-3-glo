@@ -37,6 +37,7 @@ class OnboardVision:
     def get_captured_vertices(self,
                               zoom: float,
                               orientation: float) -> List[List[float]]:
+
         figures = list(map(self._find_vertices, self._captures))
         figure, index = find_best_figure(
             figures,

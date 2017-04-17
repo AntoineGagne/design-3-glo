@@ -149,6 +149,8 @@ def start_main_station(arguments):
 
 
 def start_robot(arguments):
+
+    logger = ExecutionLogger()
     command_handler = create_command_handler(
         netifaces.ifaddresses('wlp4s0')[2][0]['addr'],
         arguments.ports,
@@ -156,11 +158,12 @@ def start_robot(arguments):
     )
     onboard_vision = create_onboard_vision(arguments.camera_port,
                                            arguments.approximation_ratio)
-    logger = ExecutionLogger()
+
     translation_lock = Lock()
     rotation_lock = Lock()
     interfacing_controller = create_interfacing_controller(logger, translation_lock, rotation_lock)
     movement_strategy = create_movement_strategy()
+
 
     brain = Brain(
         command_handler,
@@ -171,6 +174,7 @@ def start_robot(arguments):
         translation_lock,
         rotation_lock
     )
+
     brain.main()
 
 
@@ -213,5 +217,6 @@ def create_onboard_vision(camera_port: int,
 
 
 if __name__ == '__main__':
+
     arguments = parse_arguments()
     arguments.function(arguments)

@@ -1,7 +1,7 @@
 """ Allows easy and modular computing for the execution
 of each step """
 
-from design.decision_making.constants import Step, TranslationStrategyType
+from design.decision_making.constants import Step, TranslationStrategyType, RotationStrategyType
 from design.decision_making.preparation_commands import (BuildGameMapCommand,
                                                          FinishCycleCommand,
                                                          TravelToPaintingsAreaCommand,
@@ -16,11 +16,13 @@ from design.decision_making.preparation_commands import (BuildGameMapCommand,
                                                          CaptureFigureCommand,
                                                          PrepareTravelToAntennaAreaCommand,
                                                          PrepareMovingToAntennaPositionCommand,
-                                                         RepositionForCaptureRetryCommand)
+                                                         RepositionForCaptureRetryCommand,
+                                                         PrepareMovingOfAntennaOffsetCommand,
+                                                         PrepareAlignWithCaptureCommand,
+                                                         PrepareRealignWithFirstVertexDrawnCommand)
 
 
 class CommandDispatcher():
-    """ Allows easy dispatching and computing of commands for the Brain """
 
     def __init__(self, movement_strategies, interfacing_controller, pathfinder, logger,
                  onboard_vision, antenna_information, servo_wheels_manager, capture_repositioning_manager):
@@ -34,6 +36,11 @@ class CommandDispatcher():
         self.steps_using_rotation = [Step.ROTATE_BACK_AFTER_CAPTURE,
                                      Step.ROTATE_TO_FACE_PAINTING,
                                      Step.ROTATE_TO_STANDARD_HEADING]
+
+        self.steps_using_translation_material_servo_management = [Step.DRAWING, Step.MARKING_ANTENNA_POSITION, Step.TRAVEL_TO_DRAWING_ZONE,
+                                                                  Step.TRAVEL_TO_PAINTINGS_AREA, Step.SEARCH_FOR_ANTENNA, Step.EXITING_DRAWING_ZONE]
+
+        self.steps_using_rotation_material_servo_management = [Step.ROTATE_TO_FACE_PAINTING, Step.ROTATE_BACK_AFTER_CAPTURE]
 
         self.equivalencies = {Step.STANBY:
                               BuildGameMapCommand(
@@ -90,19 +97,29 @@ class CommandDispatcher():
                                   pathfinder, logger, antenna_information, onboard_vision),
                               Step.REPOSITION_FOR_CAPTURE_RETRY:
                               RepositionForCaptureRetryCommand(Step.REPOSITION_FOR_CAPTURE_RETRY, interfacing_controller,
-                                                               pathfinder, logger, capture_repositioning_manager)}
+                                                               pathfinder, logger, capture_repositioning_manager),
+                              Step.PREPARE_MOVING_TO_OFFSET:
+                              PrepareMovingOfAntennaOffsetCommand(Step.PREPARE_MOVING_TO_OFFSET, interfacing_controller,
+                                                                  pathfinder, logger),
+                              Step.PREPARE_ALIGN_WITH_CAPTURE:
+                              PrepareAlignWithCaptureCommand(Step.PREPARE_ALIGN_WITH_CAPTURE, interfacing_controller,
+                                                             pathfinder, logger, antenna_information),
+                              Step.PREPARE_REALIGN_WITH_FIRST_VERTEX_DRAWN:
+                              PrepareRealignWithFirstVertexDrawnCommand(Step.PREPARE_REALIGN_WITH_FIRST_VERTEX_DRAWN,
+                                                                        interfacing_controller, pathfinder, logger,
+                                                                        onboard_vision, antenna_information)}
 
     def get_relevant_command(self, current_step):
-        """ Obtains the relevant command according to the current step of the robot
 
-        :param current_step: Current step of the robot
-        :returns: Command to execute
-        :rtype: `design.decision_making.preparation_commands.Command` """
-
-        if current_step == Step.DRAWING or current_step == Step.MARKING_ANTENNA_POSITION:
+        if current_step in self.steps_using_translation_material_servo_management:
             self.movement_strategy.translation_strategy = TranslationStrategyType.TRUST_MATERIAL_SERVOING
         else:
             self.movement_strategy.translation_strategy = TranslationStrategyType.BASIC_WHEEL_SERVOING
+
+        if current_step in self.steps_using_rotation_material_servo_management:
+            self.movement_strategy.rotation_strategy = RotationStrategyType.TRUST_MATERIAL_SERVOING
+        else:
+            self.movement_strategy.rotation_strategy = RotationStrategyType.BASIC_WHEEL_SERVOING
 
         command = self.equivalencies.get(current_step)
         if command:

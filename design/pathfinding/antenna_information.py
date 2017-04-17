@@ -4,8 +4,6 @@ from collections import defaultdict
 
 
 class AntennaInformation():
-    """ Allows stockage of recieved info from Manchester code """
-
     def __init__(self):
         self.painting_number = 0
         self.zoom = 1
