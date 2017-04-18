@@ -1,12 +1,7 @@
-import math
-import operator
-
 import cv2
 import numpy
-import time
 
 import design.vision.constants as constants
-from design.vision.camera import Camera, CameraSettings
 from design.vision.exceptions import RobotNotFound
 from design.vision.world_utils import (calculate_angle,
                                        triangle_shortest_edge,
@@ -26,7 +21,9 @@ class RobotDetector:
         segmented_frame = apply_segmentation(frame, constants.MIN_MAGENTA, constants.MAX_MAGENTA)
         masked_image = cv2.bitwise_and(frame, frame, mask=segmented_frame)
         threshed_image = cv2.cvtColor(masked_image, cv2.COLOR_HSV2BGR)
-        return threshed_image
+        eroded_image = cv2.erode(threshed_image, (5, 5), iterations=5)
+        dilated_image = cv2.dilate(eroded_image, (5, 5), iterations=5)
+        return dilated_image
 
     def find_circles(self, frame: numpy.ndarray):
         frame = self.segment_frame(frame)
@@ -36,7 +33,6 @@ class RobotDetector:
             (cx, cy), radius = cv2.minEnclosingCircle(contour)
             if radius > constants.MIN_ROBOT_CIRCLE_RADIUS:
                 self.circles_coordinates.append((cx, cy))
-                cv2.circle(frame, center=(int(cx), int(cy)), radius=2, color=(255, 0, 0), thickness=2)
 
     def detect_robot_position(self):
         if 3 < len(self.circles_coordinates):
@@ -93,39 +89,6 @@ class RobotDetector:
         robot_information = [self.robot_position, self.robot_orientation]
 
         if robot_information == [(0, 0), 0.0] or not robot_information:
-            print("Robot not found")
             raise RobotNotFound
 
         return robot_information
-
-    def display_robot(self, frame: numpy.ndarray):
-        self.detect_robot(frame)
-        draw_position(frame, self.robot_position)
-        draw_orientation(frame, self.robot_orientation, self.robot_position)
-        smaller = cv2.resize(frame, None, fx=0.5, fy=0.5)
-        cv2.imshow("image", smaller)
-        cv2.waitKey(1)
-
-
-def draw_position(image, point, color=(0, 0, 255)):
-    cv2.circle(image, (int(point[0]), int(point[1])), 5, color, -1)
-
-
-def draw_orientation(image, angle, centroid, color=(0, 0, 255), length=20, thickness=5):
-    point2 = tuple(map(operator.add,
-                       (length * math.cos(math.radians(angle)), length * math.sin(math.radians(angle))), centroid))
-    cv2.line(image, (int(centroid[0]), int(centroid[1])), (int(point2[0]), int(point2[1])), color, thickness)
-
-
-if __name__ == "__main__":
-    robot_detector = RobotDetector()
-    with Camera(1, CameraSettings(width=1600, height=1200), True) as camera:
-        time.sleep(5)
-        for picture in camera.stream_pictures():
-            mask = numpy.zeros(picture.shape, numpy.uint8)
-            mask[258:1018, 31:1600] = picture[258:1018, 31:1600]
-            picture = mask
-            try:
-                robot_detector.display_robot(picture)
-            except RobotNotFound:
-                continue

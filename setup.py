@@ -17,7 +17,7 @@ def get_long_description(file_name):
 if __name__ == '__main__':
     setup(
         name='design',
-        version='1.0.0.1',
+        version='1.0.2',
         description='A package for the course *Design III*',
         author=('Antoine Gagne'
                 'Nadia Chicoine <nadia.chicoine.2@ulaval.ca>,'

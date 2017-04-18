@@ -1,4 +1,5 @@
 from PyQt5.QtCore import pyqtSlot, QTimer
+from PyQt5.QtGui import QTextCursor
 from PyQt5.QtWidgets import QMainWindow
 from design.ui.views.generated.ui_main_view import Ui_main_window
 from design.ui.models.main_model import MainModel
@@ -65,3 +66,4 @@ class MainView(QMainWindow):
 
     def update_console_log(self):
         self.ui.console_log_textEdit.setPlainText(self.model.log_messages)
+        self.ui.console_log_textEdit.moveCursor(QTextCursor.End)

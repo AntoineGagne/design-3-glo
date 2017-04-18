@@ -1,5 +1,6 @@
 import datetime
 import time
+
 from PyQt5.QtWidgets import QApplication
 from pkg_resources import resource_string
 
@@ -25,7 +26,7 @@ from design.ui.controllers.painting_controller import PaintingController
 from design.ui.models.painting_model import PaintingModel
 
 
-class MainApp(QApplication):
+class MainStation(QApplication):
     def __init__(self, sys_argv, telemetry: CommandHandler, main_vision: WorldVision):
         super().__init__(sys_argv)
         self.robot_has_started = False
@@ -39,6 +40,8 @@ class MainApp(QApplication):
                                PacketType.PATH: self.handle_received_path}
         self.last_robot_information = None
         self.setup_interface()
+
+        self.last_time = time.time()
 
         self.telemetry_timer = QTimer()
         self.robot_timer = QTimer()
@@ -118,7 +121,7 @@ class MainApp(QApplication):
 
     def handle_figure_image(self, picture):
         self.main_controller.update_console_log("ONBOARD IMAGE RECEIVED")
-        self.painting_controller.update_world_image(picture)
+        self.painting_controller.update_painting_image(picture)
 
     def handle_figure_vertices(self, vertices: list):
         self.main_controller.update_console_log("ONBOARD IMAGE VERTICES RECEIVED")
@@ -129,8 +132,7 @@ class MainApp(QApplication):
         path_converted = []
         for coordinate in new_path:
             path_converted.append(
-                self.main_vision.converter.get_pixel_coordinates_translated(coordinate[1], coordinate[0], 0,
-                                                                            self.main_vision.rotation_angle_of_table))
+                self.main_vision.converter.get_pixel_coordinates_translated(coordinate[1], coordinate[0], 0))
         self.world_controller.update_path(path_converted)
 
     def send_game_map(self):
@@ -150,10 +152,10 @@ class MainApp(QApplication):
                 continue
 
     def draw_game_map_on_ui(self, static_items: bool = False):
-        if static_items:
-            self.world_controller.update_game_zone_coordinates(self.main_vision.game_map_pixels["table_corners"])
-            self.world_controller.update_drawing_zone(self.main_vision.game_map_pixels["drawing_zone"])
-        else:
+        self.world_controller.update_game_zone_coordinates(self.main_vision.game_map_pixels["table_corners"])
+        self.world_controller.update_drawing_zone(self.main_vision.game_map_pixels["drawing_zone"])
+
+        if not static_items:
             obstacles_coordinates = self.main_vision.game_map_pixels["obstacles"]
             arranged_coordinates = []
             for information in obstacles_coordinates:
@@ -162,15 +164,16 @@ class MainApp(QApplication):
                                                                self.main_vision.game_map_pixels["base_obstacles"])
             self.world_controller.update_robot_position([self.main_vision.game_map_pixels["robot"][0]],
                                                         self.main_vision.game_map_pixels["base_robot"])
-            self.world_controller.update_real_path(self.main_vision.game_map_pixels["robot"][0])
+            self.world_controller.update_real_path(self.main_vision.game_map_pixels["base_robot"])
         self.world_controller.update_world_image(self.main_vision.actual_frame)
 
     def change_axes(self):
-        for index, coordinate in enumerate(self.game_map["drawing_zone"]):
-            self.game_map["drawing_zone"][index] = coordinate[::-1]
+        if not self.robot_has_started:
+            for index, coordinate in enumerate(self.game_map["drawing_zone"]):
+                self.game_map["drawing_zone"][index] = coordinate[::-1]
 
-        for index, coordinate in enumerate(self.game_map["table_corners"]):
-            self.game_map["table_corners"][index] = coordinate[::-1]
+            for index, coordinate in enumerate(self.game_map["table_corners"]):
+                self.game_map["table_corners"][index] = coordinate[::-1]
 
         for obstacle in self.game_map["obstacles"]:
             obstacle[0] = obstacle[0][::-1]
@@ -195,7 +198,7 @@ class MainApp(QApplication):
 
             self.world_controller.update_robot_position([self.main_vision.game_map_pixels["robot"][0]],
                                                         self.main_vision.game_map_pixels["base_robot"])
-            self.world_controller.update_real_path(self.main_vision.game_map_pixels["robot"][0])
+            self.world_controller.update_real_path(self.main_vision.game_map_pixels["base_robot"])
             self.world_controller.update_world_image(self.main_vision.actual_frame)
 
         except RobotNotFound:

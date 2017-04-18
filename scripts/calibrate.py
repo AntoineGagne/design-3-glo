@@ -16,8 +16,8 @@ from errno import EEXIST
 
 DEFAULT_IMAGES_DIRECTORY = './data/*.png'
 DEFAULT_OUTPUT_DIRECTORY = './output/'
-CHESSBOARD_PATTERN_SIZE = (9, 6)
-CHESSBOARD_SQUARE_SIZE = 4.3  # in cm
+CHESSBOARD_PATTERN_SIZE = (15, 8)
+CHESSBOARD_SQUARE_SIZE = 2.7  # in cm
 DEFAULT_TABLE_NUMBER = 1
 
 
@@ -166,9 +166,9 @@ def write_json_file(table_number, intrinsic_matrix, rotation_vector, translation
 
 if __name__ == '__main__':
     rms, matrix_camera, _, rotation_vectors, translation_vectors = calibrate(
-        './camera_data4/photo*.png')
+        './calib/*.png')
     print("The root mean square is {}\nIt should be between 0.1 and 1.0 pixels in a good calibration".format(rms))
-    write_json_file(4,
+    write_json_file(5,
                     matrix_camera.tolist(),
                     rotation_vectors[0].tolist(),
                     translation_vectors[0].tolist())

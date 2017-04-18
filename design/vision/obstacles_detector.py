@@ -2,18 +2,14 @@ import cv2
 import numpy
 import numpy as np
 import math
-
-import time
-
 import design.vision.constants as constants
-from design.vision.camera import CameraSettings, Camera
 from design.vision.exceptions import ObstaclesNotFound
 from design.vision.world_utils import (calculate_angle,
                                        define_cardinal_point,
                                        eliminate_duplicated_points,
                                        triangle_shortest_edge,
                                        calculate_centroid,
-                                       eliminate_close_points_in_list, get_best_information)
+                                       eliminate_close_points_in_list)
 
 
 class ObstaclesDetector:
@@ -110,20 +106,6 @@ class ObstaclesDetector:
 
         return self.obstacles_information
 
-    def draw_obstacles(self, frame: numpy.ndarray):
-        for triangles in self.triangular_obstacles_coordinates:
-            for triangle_coordinates in triangles[1]:
-                for point in triangle_coordinates:
-                    cv2.circle(frame, point, 5, (222, 0, 233), -1)
-        for obstacles in self.obstacles_information:
-            if obstacles[1] == "O":
-                cv2.circle(frame, (obstacles[0][0], obstacles[0][1]), 20, (255, 255, 0), 3)
-
-        smaller = cv2.resize(frame, None, fx=0.5, fy=0.5)
-        cv2.imshow("image", smaller)
-        cv2.waitKey(0)
-        return frame
-
     def calculate_obstacles_information(self, frame: numpy.ndarray):
         self.obstacles_information = []
         self.triangular_obstacles_coordinates = []
@@ -139,18 +121,3 @@ class ObstaclesDetector:
             raise ObstaclesNotFound
 
         return self.obstacles_information
-
-
-if __name__ == "__main__":
-    obstacle_detector = ObstaclesDetector()
-    obstacles_information = []
-    with Camera(0, CameraSettings(width=1600, height=1200), True) as camera:
-        time.sleep(5)
-        for picture in camera.take_pictures(10):
-            try:
-                obstacles_information.append(obstacle_detector.calculate_obstacles_information(picture))
-                print(obstacles_information[-1])
-            except ObstaclesNotFound:
-                continue
-        print("DONE")
-        print(get_best_information(obstacles_information))

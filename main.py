@@ -2,9 +2,6 @@
 """A script that starts the robot or the main station."""
 from threading import Lock
 
-from typing import Tuple
-
-import cv2
 import netifaces
 import queue
 import sys
@@ -13,7 +10,7 @@ from typing import Tuple
 
 import cv2
 
-from design.base_station.main_station import MainApp
+from design.base_station.main_station import MainStation
 from design.decision_making.brain import Brain
 from design.decision_making.constants import RotationStrategyType, TranslationStrategyType
 from design.decision_making.movement_strategy import MovementStrategy
@@ -23,7 +20,6 @@ from design.interfacing.hardware_controllers import (AntennaController,
                                                      WheelsController)
 from design.interfacing.interfacing_controller import InterfacingController
 from design.interfacing.pen_driver import PenDriver
-from design.interfacing.simulated_controllers import SimulatedAntennaController
 from design.interfacing.stm32_driver import Stm32Driver
 from design.telemetry.commands import CommandHandler
 from design.telemetry.selectors import (ClientSelectorFactory,
@@ -144,7 +140,7 @@ def start_main_station(arguments):
                                    drawing_zone_detector,
                                    robot_detector,
                                    camera)
-        app = MainApp(sys.argv, command_handler, world_vision)
+        app = MainStation(sys.argv, command_handler, world_vision)
         sys.exit(app.exec_())
 
 

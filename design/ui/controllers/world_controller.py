@@ -32,7 +32,7 @@ class WorldController:
             if calculate_norm(self.world_model.real_path[-1][0],
                               self.world_model.real_path[-1][1],
                               coordinates[0],
-                              coordinates[1]) > 50:
+                              coordinates[1]) > 25:
                 self.world_model.real_path.append(coordinates)
         else:
             self.world_model.real_path.append(coordinates)

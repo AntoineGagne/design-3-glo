@@ -1,3 +1,4 @@
+import cv2
 import numpy
 
 from design.vision.drawing_zone_detector import DrawingZoneDetector
@@ -40,6 +41,10 @@ class WorldVision:
         self.top_left_table_coordinate = None
 
     def get_world_game_map(self):
+        self.game_map_world["drawing_zone"] = []
+        self.game_map_world["obstacles"] = []
+        self.game_map_pixels["base_obstacles"] = []
+
         for position in self.game_map_pixels["drawing_zone"]:
             world_position = self.converter.get_world_coordinates_translated(0,
                                                                              position[0],
@@ -91,7 +96,7 @@ class WorldVision:
             for picture in self.camera.take_pictures(NUMBER_OF_CAPTURES_TO_COMPARE):
                 try:
                     drawing_zone_information.append(self.drawing_zone_detector.find_drawing_zone_vertices(picture))
-                    self.actual_frame = picture
+                    self.actual_frame = cv2.cvtColor(picture, cv2.COLOR_BGR2RGB)
                 except DrawingZoneNotFound:
                     pass
 
@@ -114,8 +119,7 @@ class WorldVision:
 
     def detect_robot_fast(self):
         for picture in self.camera.take_picture():
-            self.actual_frame = picture
-
+            self.actual_frame = cv2.cvtColor(picture, cv2.COLOR_BGR2RGB)
             self.apply_image_crop()
 
             self.game_map_pixels["robot"] = self.robot_detector.detect_robot(picture)
